@@ -1,0 +1,9 @@
+-- Index plein texte du catalogue (ADR-007). Les colonnes contiennent des
+-- textes déjà normalisés par core/search/normalize.dart.
+CREATE VIRTUAL TABLE hymn_search USING fts5(
+  hymn_id UNINDEXED,
+  number,
+  title,
+  lyrics,
+  tokenize = 'unicode61 remove_diacritics 2'
+);

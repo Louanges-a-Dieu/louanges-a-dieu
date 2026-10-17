@@ -4,6 +4,7 @@
  *
  *   content-tools import <recueil.docx> --edition-name "<nom>" [--edition-number 6] [--out <dossier>]
  *   content-tools load <catalog.draft.json> --as <uuid-éditeur> [--dry-run]
+ *   content-tools export-snapshot --config <apps/mobile/config/env.json> [--snapshot-out <fichier.gz>]
  *
  * Produit dans le dossier de sortie (par défaut ./content/out, hors Git) :
  *   catalog.draft.json   catalogue brouillon (contrat CatalogDraft)
@@ -22,6 +23,7 @@ import { CatalogDraft } from '@lad/shared-contracts';
 import pg from 'pg';
 
 import { connectionConfig } from './db.ts';
+import { exportSnapshot } from './export-snapshot.ts';
 import { loadDraft } from './load.ts';
 import { importDocx } from './pipeline.ts';
 import { renderReport } from './report.ts';
@@ -29,6 +31,7 @@ import { renderReport } from './report.ts';
 const USAGE = [
   'Usage : content-tools import <recueil.docx> --edition-name "<nom>" [--edition-number <n>] [--out <dossier>]',
   '        content-tools load <catalog.draft.json> --as <uuid-éditeur> [--dry-run]',
+  '        content-tools export-snapshot --config <apps/mobile/config/env.json> [--snapshot-out <fichier.gz>]',
 ].join('\n');
 
 const repoRoot = resolve(import.meta.dirname, '../../..');
@@ -68,10 +71,26 @@ async function main(argv: string[]): Promise<number> {
       out: { type: 'string', default: 'content/out' },
       as: { type: 'string' },
       'dry-run': { type: 'boolean', default: false },
+      config: { type: 'string' },
+      'snapshot-out': {
+        type: 'string',
+        default: resolve(repoRoot, 'apps/mobile/assets/catalog/catalog_snapshot.json.gz'),
+      },
     },
   });
 
   const [command, file] = positionals;
+  if (command === 'export-snapshot') {
+    if (!values.config) {
+      console.error(USAGE);
+      return 2;
+    }
+    const r = await exportSnapshot(values.config, values['snapshot-out']);
+    console.log(
+      `Release ${r.releaseId} : ${r.hymnCount} cantiques conformes au contrat, ${Math.round(r.bytes / 1024)} Ko → ${values['snapshot-out']}`,
+    );
+    return 0;
+  }
   if (command === 'load') {
     if (!file || !values.as) {
       console.error(USAGE);

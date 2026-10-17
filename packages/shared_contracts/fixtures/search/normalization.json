@@ -1,0 +1,20 @@
+{
+  "$description": "Cas de normalisation de recherche (ADR-007), partagés entre implémentations. « folded » : minuscules, sans accents, œ→oe, apostrophes et ponctuation → espace, espaces normalisés.",
+  "cases": [
+    { "input": "Ô jour heureux", "folded": "o jour heureux" },
+    { "input": "O jour heureux", "folded": "o jour heureux" },
+    { "input": "L’Éternel est mon berger", "folded": "l eternel est mon berger" },
+    { "input": "l'eternel", "folded": "l eternel" },
+    { "input": "Mon cœur Te loue", "folded": "mon coeur te loue" },
+    { "input": "COEUR", "folded": "coeur" },
+    { "input": "Il vit ! Il vit !", "folded": "il vit il vit" },
+    { "input": "Jésus revient", "folded": "jesus revient" },
+    { "input": "  Gloire,   gloire… (bis)  ", "folded": "gloire gloire bis" },
+    { "input": "Alléluia ! Amen.", "folded": "alleluia amen" },
+    { "input": "Ça, c’est Noël", "folded": "ca c est noel" },
+    { "input": "Kumbaya my Lord", "folded": "kumbaya my lord" },
+    { "input": "37bis", "folded": "37bis" },
+    { "input": "« À Dieu soit la gloire »", "folded": "a dieu soit la gloire" },
+    { "input": "Saint-Esprit — viens", "folded": "saint esprit viens" }
+  ]
+}

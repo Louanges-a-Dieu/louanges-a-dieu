@@ -13,6 +13,8 @@ analyzer:
     - android/**
     - ios/**
     - lib/l10n/generated/**
+    - test/drift/**/generated/**
+    - lib/**/*.g.dart
 
 linter:
   rules:

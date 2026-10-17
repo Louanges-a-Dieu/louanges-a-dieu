@@ -49,3 +49,4 @@ app.*.map.json
 config/*.json
 !config/*.example.json
 lib/l10n/generated/
+assets/catalog/*.gz

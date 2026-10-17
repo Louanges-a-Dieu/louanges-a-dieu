@@ -3,7 +3,7 @@
 > Application mobile (iOS/Android/tablettes), projection web et back-office éditorial
 > du recueil de cantiques « Louanges à Dieu ».
 >
-> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phases 2 et 3 terminées. Prochaine : Phase 4 (SQLite/Drift et synchronisation).**
+> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phases 2, 3 et 4 terminées (4.6 : reste l'essai avec une vraie session, Phase 6). Prochaine : Phase 5 (écrans Flutter).**
 > Les arbitrages du propriétaire sont consignés en §6.0 et priment sur les propositions par défaut.
 >
 > Version du plan : 0.2 — 2026-10-17
@@ -740,21 +740,35 @@ est accompagné d'un test de non-régression.
 
 ### PHASE 4 — Base SQLite/Drift et synchronisation
 
-- [ ] 4.1 Schéma Drift : catalogue (cantiques, sections, lignes, références, relations), table virtuelle FTS5, tables utilisateur avec métadonnées de sync, outbox, `sync_state`
-- [ ] 4.2 Normalisation de recherche partagée (minuscules, diacritiques, `’`→`'`, `œ`→`oe`, espaces insécables, ponctuation) + tests croisés avec la normalisation SQL
-- [ ] 4.3 Service de recherche : numéro exact ou préfixe (`37`, `37bis`, `37 bis`), titre et première ligne (préfixe), paroles (FTS + extrait surligné), classement
-- [ ] 4.4 Script d'export du snapshot de release (CI) + import au premier lancement (transactionnel)
-- [ ] 4.5 Moteur de sync catalogue (manifest, delta, snapshot, atomicité, vérification d'empreinte, rollback)
-- [ ] 4.6 Moteur de sync utilisateur (outbox, push/pull, LWW, tombstones, backoff, détection de connectivité)
-- [ ] 4.7 Migrations Drift versionnées + tests de migration
-- [ ] 4.8 Tests : unitaires sync (faux serveur), interruption pendant un delta, **intégration mode avion**
-- [ ] 4.9 Benchmark de recherche sur le catalogue complet (cible < 100 ms sur poste, < 1 s sur Android d'entrée de gamme)
-- [ ] 4.10 `docs/architecture/sync.md`
+> Code : `apps/mobile/lib/core/` ; documentation : `docs/architecture/sync.md`.
+> **Décision du propriétaire (option B, 2026-10-17)** : le vrai recueil a été validé et publié
+> **techniquement** sur la base de **développement uniquement** (release n° 26, 1 143 cantiques,
+> note « Validation TECHNIQUE — NON éditoriale »), pour développer avec le contenu réel. La
+> validation éditoriale réelle se fera dans le back-office (Phase 9) ; à ne pas reproduire en
+> recette ni en production.
+
+- [x] 4.1 Schéma Drift : catalogue (contenu JSON validé), table FTS5 `hymn_search` (fichier `.drift`), favoris, listes, programmes, `outbox` versionnée, `sync_state` ; clés étrangères actives
+- [x] 4.2 Normalisation de recherche `fold()` + **cas de référence partagés** (`packages/shared_contracts/fixtures/search/normalization.json`)
+- [x] 4.3 Service de recherche : numéro exact puis préfixe (`37`, `37bis`, `37 BIS`), titre/premier vers puis paroles avec vers verbatim, début de mot, accents et `œ` ignorés, saisie avec guillemets sans risque
+- [x] 4.4 `content-tools export-snapshot` (RPC publique, **chaque cantique validé par le contrat Zod**) → `assets/catalog/catalog_snapshot.json.gz` (375 Ko, non versionné) ; import au premier lancement en une transaction. Génération dans les builds de release : Phase 10
+- [x] 4.5 Moteur de sync catalogue : manifeste, delta ou instantané, intervalle d'une heure, atomicité, vérification du nombre de cantiques, rejet d'un contenu invalide, aucune exception en cas de panne réseau
+- [~] 4.6 Moteur de sync utilisateur : outbox versionnée, envoi puis réception, LWW, pierres tombales, modifications en attente jamais écrasées, favoris de visiteur fusionnés à la connexion — testé avec un serveur simulé fidèle aux RPC (deux appareils). **Reste** : exécution de l'adaptateur Supabase avec une vraie session (dépend de l'authentification, Phase 6) ; les RPC serveur sont déjà couvertes par pgTAP
+- [x] 4.7 Schéma local versionné et figé (`drift_schemas/`) ; test qui échoue si le code s'écarte du schéma sans migration (vérifié par mutation) ; tests de migration générés dès la v2
+- [x] 4.8 Tests : contrat Dart sur les fixtures partagées, dépôt, recherche, sync catalogue (**mode avion T-004**), sync utilisateur (**favori hors ligne T-005**), intégration sur le catalogue réel et contre le serveur de développement (sautés et signalés sans données)
+- [x] 4.9 Mesures sur le catalogue réel (poste de développement) : décodage + validation 79 ms, import 471 ms, **recherches ≤ 14 ms** (objectif < 100 ms). Mesure sur Android d'entrée de gamme : Phase 10
+- [x] 4.10 `docs/architecture/sync.md`
 
 **Critères d'acceptation**
-- Installation sans réseau : catalogue complet consultable et recherchable.
-- Une release de test (ajout, modification, retrait) est appliquée par delta ; une interruption forcée laisse la base cohérente.
-- Outbox rejouée deux fois : résultat identique (idempotence).
+- [x] Installation sans réseau : catalogue complet consultable et recherchable (instantané embarqué, test « mode avion »). Vérification sur appareil réel : Phase 10.
+- [x] Release appliquée par delta (ajout, modification, retrait) ; mise à jour incohérente annulée sans altérer le catalogue.
+- [x] Envoi rejoué : résultat identique (upsert côté serveur, entrée d'outbox effacée seulement si inchangée).
+
+**Rapport Phase 4 (2026-10-17)** — 89 tests Flutter, 124 tests pgTAP, analyse sans remarque.
+
+- Bout en bout vérifié : un appel HTTPS anonyme avec la clé publishable lit le manifeste ; la lecture directe d'une table de travail est refusée (42501) ; l'app télécharge et installe les 1 143 cantiques.
+- Contrat vérifié dans les trois langages sur le même contenu : SQL (payload) → Zod (export) → Dart (import).
+- Contrôles par mutation : recherche par début de mot, protection des modifications en attente, garde du schéma local.
+- Problèmes rencontrés : identifiants de section non déterministes dans une fixture de test (corrigé) ; premier test de schéma inopérant (il comparait l'instantané à lui-même), détecté par mutation et corrigé ; `anonKey` déprécié au profit de `publishableKey` dans supabase_flutter (aligné sur notre choix de clé).
 
 ---
 
@@ -889,6 +903,7 @@ est accompagné d'un test de non-régression.
 | Date | Version | Changement |
 |---|---|---|
 | 2026-10-17 | 0.1 | Audit initial et plan (Phase 0). En attente de validation. |
+| 2026-10-17 | 0.6 | Phase 4 : base locale Drift + FTS5, recherche, synchronisation catalogue et données utilisateur ; option B (publication technique sur la base de développement). |
 | 2026-10-17 | 0.5 | Phase 3 terminée : import v8 (1 143 cantiques, fidélité 100 %) chargé en brouillon ; correction du constat A-02 (n° 596). |
 | 2026-10-17 | 0.4 | Phase 2 terminée (12 migrations, 124 tests pgTAP, base reconstruite depuis zéro). En attente : certificat CA, première exécution CI. |
 | 2026-10-17 | 0.3 | Phase 1 : tâches 1.1, 1.3–1.5, 1.7–1.9, 1.13 terminées ; 1.6, 1.10–1.12 partielles ; 1.2 bloquée (comptes). |
