@@ -1,0 +1,18 @@
+@import '@lad/design-tokens/tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--lad-color-background);
+  color: var(--lad-color-text);
+  font-family: var(--lad-font-ui);
+  font-size: var(--lad-type-body-size);
+  line-height: var(--lad-type-body-line-height);
+}

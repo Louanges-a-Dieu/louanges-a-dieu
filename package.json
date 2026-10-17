@@ -1,0 +1,24 @@
+{
+  "name": "louanges-a-dieu",
+  "private": true,
+  "description": "Monorepo Louanges à Dieu : mobile, back-office, projection, contrats, outils de contenu.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "tokens": "pnpm --filter @lad/design-tokens run generate"
+  },
+  "packageManager": "pnpm@10.34.7+sha512.ba98abc585539933375b5971f4bc6d6c73a1b4b7edc4a879e7d102fe5423d1e02309d67c60a11f04955093a96e521ad9c3b138cdd654ca5be563f378b3ae48bd",
+  "devDependencies": {
+    "prettier": "^3.9.10",
+    "turbo": "^2.11.9",
+    "typescript": "^6.0.3"
+  }
+}

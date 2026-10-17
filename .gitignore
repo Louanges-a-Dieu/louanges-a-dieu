@@ -1,0 +1,59 @@
+# --- Secrets : ne jamais versionner -------------------------------------------
+.env
+.env.*
+!.env.example
+*.env.json
+!*.env.example.json
+*.keystore
+*.jks
+key.properties
+*.p8
+*.p12
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+
+# --- Contenu source du recueil (hors Git, voir Q-19) --------------------------
+/content/sources/
+*.docx
+!packages/content_tools/test/fixtures/**/*.docx
+
+# --- Node / Next.js -----------------------------------------------------------
+node_modules/
+.pnpm-store/
+.next/
+out/
+dist/
+coverage/
+.turbo/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# --- Flutter / Dart -----------------------------------------------------------
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+.fvm/flutter_sdk
+.fvm/versions
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/ephemeral/
+**/android/.gradle/
+**/android/local.properties
+**/android/app/release/
+
+# --- Supabase -----------------------------------------------------------------
+supabase/.branches/
+supabase/.temp/
+
+# --- Playwright ---------------------------------------------------------------
+playwright-report/
+test-results/
+
+# --- Divers -------------------------------------------------------------------
+.DS_Store
+*.log
+.idea/
+*.iml

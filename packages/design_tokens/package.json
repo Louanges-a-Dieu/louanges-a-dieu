@@ -1,0 +1,22 @@
+{
+  "name": "@lad/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Source unique du design system (ADR-014) : génère les tokens Dart et CSS.",
+  "type": "module",
+  "exports": {
+    "./tokens.css": "./generated/tokens.css",
+    "./tokens.json": "./tokens.json"
+  },
+  "scripts": {
+    "generate": "node src/cli.ts generate",
+    "check": "node src/cli.ts check",
+    "typecheck": "tsc --noEmit",
+    "lint": "node src/cli.ts check",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "vitest": "^5.0.5"
+  }
+}

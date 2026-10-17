@@ -1,0 +1,183 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Détection des changements
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      mobile: ${{ steps.filter.outputs.mobile }}
+      web: ${{ steps.filter.outputs.web }}
+      db: ${{ steps.filter.outputs.db }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            mobile:
+              - 'apps/mobile/**'
+              - 'packages/design_tokens/**'
+              - 'packages/shared_contracts/fixtures/**'
+              - '.fvmrc'
+            web:
+              - 'apps/admin/**'
+              - 'apps/web/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+            db:
+              - 'supabase/**'
+
+  pr-title:
+    name: Titre de PR (Conventional Commits)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vérifier le titre
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          pattern='^(feat|fix|docs|chore|refactor|test|ci|build|perf|style|revert)(\([a-z0-9_-]+\))?!?: .+'
+          if ! printf '%s' "$TITLE" | grep -Eq "$pattern"; then
+            echo "Titre non conforme : « $TITLE »"
+            echo "Attendu, par exemple : feat(mobile): recherche par numéro"
+            exit 1
+          fi
+
+  js:
+    name: TypeScript (tokens, contrats, admin, web)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Formatage
+        run: pnpm format:check
+      - name: Fichiers générés à jour (tokens, JSON Schema)
+        run: |
+          pnpm --filter @lad/design-tokens run check
+          pnpm --filter @lad/shared-contracts run check
+      - name: Lint, types, tests, build
+        run: pnpm turbo run lint typecheck test build
+
+  mobile:
+    name: Flutter
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v7
+      - name: Version Flutter épinglée (.fvmrc)
+        id: fvm
+        working-directory: .
+        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.fvm.outputs.version }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Formatage
+        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Analyse
+        run: flutter analyze
+      - name: Tests
+        run: flutter test
+      - name: Build Android (vérification)
+        run: flutter build apk --debug
+
+  db:
+    name: Base de données (migrations depuis zéro)
+    needs: changes
+    if: needs.changes.outputs.db == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.121.0
+      - run: supabase db start
+      - name: Migrations depuis zéro
+        run: supabase db reset
+      - name: Tests pgTAP
+        run: |
+          if [ -d supabase/tests ]; then
+            supabase test db
+          else
+            echo "Aucun test pgTAP pour l'instant (Phase 2)."
+          fi
+
+  security:
+    name: Sécurité
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Recherche de secrets (gitleaks, tout l'historique)
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 \
+            git /repo --redact --verbose
+      - name: Aucune clé service_role dans les applications (ADR-011)
+        run: |
+          if grep -rniE 'service_role|SERVICE_ROLE' apps \
+              --include='*.dart' --include='*.ts' --include='*.tsx' --include='*.json' \
+              --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=build; then
+            echo "Référence à service_role trouvée dans une application."
+            exit 1
+          fi
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: pnpm install --frozen-lockfile
+      - name: Audit des dépendances livrées (bloquant)
+        run: pnpm audit --prod --audit-level high
+      # Outillage de développement (lint, build) : signalé mais non bloquant, car
+      # certaines alertes n'ont pas de version corrigée (ex. « braces » via
+      # eslint-config-next, oct. 2026) et ne concernent pas le code livré.
+      - name: Audit de l'outillage de développement (informatif)
+        continue-on-error: true
+        run: pnpm audit --audit-level high
+
+  ci-ok:
+    name: ci-ok
+    if: always()
+    needs: [changes, pr-title, js, mobile, db, security]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Agrégation des résultats
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Résultats : $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in
+              success|skipped) ;;
+              *) echo "Au moins un job a échoué ($r)."; exit 1 ;;
+            esac
+          done

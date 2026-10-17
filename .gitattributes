@@ -1,0 +1,15 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.docx binary
+*.gz binary
+
+# Fichiers générés : exclus des diffs de revue
+*.g.dart linguist-generated=true
+**/generated/** linguist-generated=true
+pnpm-lock.yaml linguist-generated=true

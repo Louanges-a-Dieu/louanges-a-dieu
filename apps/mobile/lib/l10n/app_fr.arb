@@ -1,0 +1,7 @@
+{
+  "@@locale": "fr",
+  "appTitle": "Louanges à Dieu",
+  "@appTitle": { "description": "Nom de l'application" },
+  "homeSubtitle": "Recueil de cantiques",
+  "@homeSubtitle": { "description": "Sous-titre affiché sur l'accueil" }
+}

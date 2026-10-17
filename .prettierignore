@@ -1,0 +1,11 @@
+pnpm-lock.yaml
+**/*.g.dart
+**/generated/**
+apps/mobile/
+supabase/migrations/
+.turbo/
+**/.next/
+**/dist/
+**/coverage/
+IMPLEMENTATION_PLAN.md
+docs/

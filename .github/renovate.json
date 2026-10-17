@@ -1,0 +1,19 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "timezone": "Africa/Abidjan",
+  "schedule": ["before 6am on monday"],
+  "labels": ["dépendances"],
+  "rangeStrategy": "pin",
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<6.1.0",
+      "description": "typescript-eslint n'accepte pas encore TypeScript ≥ 6.1"
+    }
+  ]
+}
