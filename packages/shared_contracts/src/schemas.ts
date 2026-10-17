@@ -1,10 +1,12 @@
 import { z } from 'zod';
 
+import { CatalogDraft } from './catalog-draft.ts';
 import { PublishedHymn } from './hymn.ts';
 
 /** Contrats exportés en JSON Schema (consommés par les tests Dart). */
 export const SCHEMAS = {
   'published-hymn.schema.json': PublishedHymn,
+  'catalog-draft.schema.json': CatalogDraft,
 } as const;
 
 export function toJsonSchemaText(schema: z.ZodType): string {

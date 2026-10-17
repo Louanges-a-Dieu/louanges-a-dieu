@@ -1,0 +1,27 @@
+{
+  "name": "@lad/content-tools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pipeline d'import du recueil source (.docx) vers le catalogue éditorial (ADR-015).",
+  "type": "module",
+  "bin": {
+    "content-tools": "./src/cli.ts"
+  },
+  "scripts": {
+    "cli": "node src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/pg": "^8.23.1",
+    "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "@lad/shared-contracts": "workspace:*",
+    "fflate": "^0.8.3",
+    "pg": "^8.23.1",
+    "saxes": "^6.0.0"
+  }
+}

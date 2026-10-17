@@ -3,7 +3,7 @@
 > Application mobile (iOS/Android/tablettes), projection web et back-office éditorial
 > du recueil de cantiques « Louanges à Dieu ».
 >
-> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phase 2 terminée. Prochaine : Phase 3 (import).**
+> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phases 2 et 3 terminées. Prochaine : Phase 4 (SQLite/Drift et synchronisation).**
 > Les arbitrages du propriétaire sont consignés en §6.0 et priment sur les propositions par défaut.
 >
 > Version du plan : 0.2 — 2026-10-17
@@ -139,7 +139,7 @@ Conventions éditoriales (note liminaire du recueil) :
 | ID | Anomalie | Volume |
 |---|---|---|
 | A-01 | N° 666 absent | 1 |
-| A-02 | N° 596 « Jésus est vivant » absent de l'index alphabétique | 1 |
+| A-02 | ~~N° 596 absent de l'index alphabétique~~ — **erreur du prototype d'audit, corrigée en Phase 3** : le 596 figure bien dans l'index (« Jésus est vivant → 596, 697 ») | 0 |
 | A-03 | Deux régimes de mise en forme (strophes) dans le même document | ≈ 600 → fin |
 | A-04 | Sauts de ligne manuels dans un paragraphe (vers collés si mal extraits) | 239bis, 940, 954 |
 | A-05 | Sections très longues (possible absence de séparation de strophes) | 137, 255, 600 |
@@ -226,7 +226,7 @@ Conventions éditoriales (note liminaire du recueil) :
 
 | ID | Décision du propriétaire | Conséquence dans le plan |
 |---|---|---|
-| Q-01 | La v8 (30/09/2026) fait foi. **Le n° 596 doit être ajouté** (il est absent de l'index alphabétique, A-02) | Dans l'app, l'index A-Z est généré depuis le catalogue : le n° 596 y figure automatiquement. Test dédié en Phase 3/5. Le n° 666 reste absent (rien n'est inventé) |
+| Q-01 | La v8 (30/09/2026) fait foi. Le n° 596 doit figurer dans l'index | **Constat corrigé en Phase 3** : le 596 est déjà dans l'index imprimé (ligne « 596, 697 », mal lue par le prototype d'audit). Dans l'app, l'index A-Z est de toute façon généré depuis le catalogue. Le n° 666 reste absent (rien n'est inventé) |
 | Q-02 | Les cantiques au statut de droits `unknown` **peuvent être publiés** | Règle de `publishable_hymns` : `unknown`, `pending`, `cleared`, `public_domain` publiables ; `restricted` non publiable. Le registre des droits reste en place |
 | Q-03 | **Validation par lots** | Validation groupée dans le back-office (9.6), avec revue individuelle maintenue pour les cantiques porteurs d'une anomalie bloquante |
 | Q-05 | **Non** : pas de listes ni de programmes pour les visiteurs | Visiteur = lecture, recherche, favoris locaux. Listes et programmes exigent un compte (ils restent utilisables hors connexion une fois connecté) |
@@ -708,23 +708,33 @@ est accompagné d'un test de non-régression.
 
 ### PHASE 3 — Pipeline d'import des cantiques
 
-- [ ] 3.1 Contrat `catalog.draft` (Zod/JSON Schema) : édition, cantiques, sections, lignes, annotations de répétition, références, relations proposées, provenance
-- [ ] 3.2 Extracteur .docx → `paragraphs.json` (texte NFC, `w:br` → saut de vers, propriétés de paragraphe et de runs, index)
-- [ ] 3.3 Structurateur déterministe (numéro, titre, strophes, refrains, références, séparateurs, fin à « Index des cantiques »), gérant les deux régimes de mise en forme
-- [ ] 3.4 Annotations de répétition (A-09) et signalement des parenthèses non reconnues (A-10)
-- [ ] 3.5 Relations `bis_of` proposées pour les numéros `bis`
-- [ ] 3.6 Détecteur d'anomalies A-01..A-14 + similarité pour doublons/variantes (A-12) → `report.json` + `report.html`
-- [ ] 3.7 Contrôles : fidélité aller-retour à 100 %, recoupement avec l'index alphabétique, continuité de la numérotation
-- [ ] 3.8 Fixtures .docx synthétiques (deux régimes, `w:br`, refrain initial, bis, référence) + tests Vitest + snapshots
-- [ ] 3.9 CLI `content-tools import <fichier.docx>` documentée (`docs/editorial/import.md`)
-- [ ] 3.10 Exécution sur la source v8 réelle (en local) et remise du rapport d'anomalies au propriétaire
-- [ ] 3.11 (Optionnel, Q-04) Import des tableurs de corrections comme suggestions rattachées par texte
+> Code : `packages/content_tools` (TypeScript). Guide : `docs/editorial/import.md`.
+
+- [x] 3.1 Contrat `CatalogDraft` (Zod → JSON Schema `catalog-draft.schema.json`) : édition, cantiques, sections, références, relations proposées, anomalies, provenance (fichier, SHA-256, version du parseur)
+- [x] 3.2 Extracteur .docx (lecture XML en flux) : texte NFC, sauts manuels `w:br` → vers, alignement, espacements, retraits, bordure, part d'italique/gras (`w:val="0"` respecté), texte supprimé (`w:delText`) ignoré — 22 711 paragraphes en ~0,2 s
+- [x] 3.3 Structuration déterministe (numéro, titre, strophes, refrains, références, séparateurs, fin à l'index), deux régimes de mise en forme
+- [x] 3.4 Marqueurs de répétition conservés dans le texte ; formes non standard, ambiguës ou en milieu de vers signalées (A-09) ; autres parenthèses signalées (A-10)
+- [x] 3.5 Relations `bis_of` proposées (6 sur la v8, toutes vers le bon numéro)
+- [x] 3.6 Anomalies A-01 à A-19 (+ A-20/A-21 au réimport), similarité de texte par triplets de mots (A-12) ; rapport `report.html` autonome
+- [x] 3.7 Fidélité aller-retour par **relecture indépendante** du XML : 0 écart sur 1 143 cantiques (18 052 vers) ; recoupement avec l'index (0 divergence de numéro) ; continuité de numérotation
+- [x] 3.8 Tests : 37 tests unitaires sur .docx **synthétiques** générés à la volée (deux régimes, `w:br`, refrain, bis, référence, index « 1, 4 », italique désactivé, texte supprimé) + 4 tests d'intégration en base (sautés et signalés sans accès base) ; contrôle par mutation (les tests détectent une règle cassée)
+- [x] 3.9 CLI `content-tools import` / `load` documentée (`docs/editorial/import.md`)
+- [x] 3.10 Exécution sur la v8 réelle et chargement en brouillon dans la base de développement ; rapport d'anomalies remis au propriétaire (`content/out/report.html`, hors Git)
+- [ ] 3.11 (Optionnel, Q-04) Import des tableurs de corrections comme suggestions — **non fait** (proposition par défaut : après le MVP)
 
 **Critères d'acceptation**
-- Sur v8 : 1 143 cantiques, 6 relations `bis_of` proposées, 9 références, 0 auteur/thème/tonalité inventé, 100 % en `draft`.
-- Fidélité aller-retour : 100 % des cantiques identiques ligne à ligne à la source.
-- Index alphabétique : 0 divergence de titre ; anomalies A-01, A-02, A-04, A-05 présentes dans le rapport.
-- Réimport du même fichier : 0 changement détecté.
+- [x] Sur v8 : 1 143 cantiques, 6 relations `bis_of`, 9 références, **0** auteur/thème/tonalité, **100 % en `draft`**, 0 release (rien de public sans validation humaine) — vérifié en base.
+- [x] Fidélité aller-retour : 100 % des cantiques identiques vers par vers à la source.
+- [x] Index alphabétique : 0 divergence de numéro ; anomalies connues présentes (A-01 n° 666, A-04 sauts manuels, A-05 sections longues…).
+- [x] Réimport du même fichier : 0 changement, aucun lot créé.
+
+**Rapport Phase 3 (2026-10-17)**
+
+- Résultat de l'import v8 : 0 anomalie bloquante, 87 à vérifier, 43 informations — détail dans `content/out/report.html`.
+- Constat d'audit corrigé : le n° 596 n'est pas absent de l'index (erreur du prototype, voir §3.3 et §6.0).
+- Doublons (A-12) : la v8 n'en contient plus que 4 paires détectables (dont 788/830, « le même chant noté deux fois » selon l'analyse de septembre) ; les traductions très différentes d'un même chant ne sont pas détectables automatiquement.
+- Prettier avait inscrit des espaces insécables **littéraux** (invisibles) dans des expressions régulières : remplacés par des échappements explicites.
+- Ajout au contrat : un cantique sans titre détecté (A-19) reçoit son premier vers comme titre, signalé bloquant pour validation humaine.
 
 ---
 
@@ -879,6 +889,7 @@ est accompagné d'un test de non-régression.
 | Date | Version | Changement |
 |---|---|---|
 | 2026-10-17 | 0.1 | Audit initial et plan (Phase 0). En attente de validation. |
+| 2026-10-17 | 0.5 | Phase 3 terminée : import v8 (1 143 cantiques, fidélité 100 %) chargé en brouillon ; correction du constat A-02 (n° 596). |
 | 2026-10-17 | 0.4 | Phase 2 terminée (12 migrations, 124 tests pgTAP, base reconstruite depuis zéro). En attente : certificat CA, première exécution CI. |
 | 2026-10-17 | 0.3 | Phase 1 : tâches 1.1, 1.3–1.5, 1.7–1.9, 1.13 terminées ; 1.6, 1.10–1.12 partielles ; 1.2 bloquée (comptes). |
 | 2026-10-17 | 0.2 | Plan validé. Arbitrages §6.0 intégrés : design blanc épuré + typographie, Vercel, projection sans Internet (ADR-013 révisé), pas de listes visiteur, validation par lots, droits `unknown` publiables, comptes stores individuels (R-06, R-16, R-17). Début de la Phase 1. |

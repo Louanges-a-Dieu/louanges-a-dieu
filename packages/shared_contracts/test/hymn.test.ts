@@ -49,10 +49,17 @@ describe('numéros spéciaux', () => {
 });
 
 describe('JSON Schema', () => {
-  it('est généré pour chaque contrat et décrit les champs obligatoires', () => {
-    for (const schema of Object.values(SCHEMAS)) {
+  const expectedRequired: Record<keyof typeof SCHEMAS, string[]> = {
+    'published-hymn.schema.json': ['id', 'numberLabel', 'sections'],
+    'catalog-draft.schema.json': ['format', 'version', 'source', 'hymns', 'issues'],
+  };
+
+  for (const [file, schema] of Object.entries(SCHEMAS)) {
+    it(`${file} décrit les champs obligatoires`, () => {
       const json = JSON.parse(toJsonSchemaText(schema)) as { required?: string[] };
-      expect(json.required).toEqual(expect.arrayContaining(['id', 'numberLabel', 'sections']));
-    }
-  });
+      expect(json.required).toEqual(
+        expect.arrayContaining(expectedRequired[file as keyof typeof SCHEMAS]),
+      );
+    });
+  }
 });

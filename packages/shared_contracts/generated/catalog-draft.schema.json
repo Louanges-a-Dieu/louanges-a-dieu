@@ -1,0 +1,296 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "string",
+      "const": "lad.catalog-draft"
+    },
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "filename": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "parserVersion": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "filename",
+        "sha256",
+        "parserVersion"
+      ],
+      "additionalProperties": false
+    },
+    "edition": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "editionNumber": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "editionNumber"
+      ],
+      "additionalProperties": false
+    },
+    "hymns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "numberLabel": {
+            "type": "string",
+            "pattern": "^[1-9]\\d{0,3}(bis|ter)?$"
+          },
+          "numberNumeric": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9999
+          },
+          "numberSuffix": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "bis",
+                  "ter"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "openingLine": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sourceParagraphStart": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "sourceParagraphEnd": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "sections": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "verse",
+                    "refrain"
+                  ]
+                },
+                "order": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "order",
+                "text"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "bibleReferences": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "displayText": {
+                  "type": "string"
+                },
+                "book": {
+                  "type": "string"
+                },
+                "chapterStart": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "verseStart": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "chapterEnd": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "verseEnd": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "displayText",
+                "book",
+                "chapterStart",
+                "verseStart",
+                "chapterEnd",
+                "verseEnd"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "relations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "bis_of"
+                },
+                "relatedNumberLabel": {
+                  "type": "string",
+                  "pattern": "^[1-9]\\d{0,3}(bis|ter)?$"
+                }
+              },
+              "required": [
+                "type",
+                "relatedNumberLabel"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "numberLabel",
+          "numberNumeric",
+          "numberSuffix",
+          "title",
+          "openingLine",
+          "sourceParagraphStart",
+          "sourceParagraphEnd",
+          "sections",
+          "bibleReferences",
+          "relations"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Z]-[0-9]{2}$"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "info",
+              "warning",
+              "blocking"
+            ]
+          },
+          "numberLabel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[1-9]\\d{0,3}(bis|ter)?$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "code",
+          "severity",
+          "numberLabel",
+          "message",
+          "details"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "format",
+    "version",
+    "source",
+    "edition",
+    "hymns",
+    "issues"
+  ],
+  "additionalProperties": false
+}

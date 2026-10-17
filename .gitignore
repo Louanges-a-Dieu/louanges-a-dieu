@@ -15,6 +15,7 @@ GoogleService-Info.plist
 
 # --- Contenu source du recueil (hors Git, voir Q-19) --------------------------
 /content/sources/
+/content/out/
 *.docx
 !packages/content_tools/test/fixtures/**/*.docx
 
