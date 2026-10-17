@@ -702,7 +702,7 @@ est accompagné d'un test de non-régression.
   - **Faille détectée par les tests** : `anon` pouvait exécuter les RPC de synchronisation et de partage (droit `PUBLIC` par défaut de PostgreSQL). Non exploitable (connexion exigée), corrigée par la migration 0011 et verrouillée par un test général.
   - `supabase migration new` lit l'entrée standard hors terminal : une exécution en arrière-plan a enregistré la migration 0012 **vide**. Historique réparé (`migration repair`), migration réappliquée, puis base **reconstruite depuis zéro** pour prouver la cohérence fichiers ↔ base.
   - `supabase test db` exige Docker même en mode distant : exécuteur pgTAP Node ajouté (`tools/pgtap`).
-- **En attente** : certificat CA Supabase (`supabase/ca/prod-ca-2021.crt`, à télécharger depuis le tableau de bord) pour la vérification TLS complète ; d'ici là, tests lancés avec `PGTAP_INSECURE_TLS=1` sur la base de développement uniquement.
+- Certificat CA Supabase versionné (`supabase/ca/prod-ca-2021.crt`, « Supabase Root 2021 CA », expire en 2031) : tests exécutés avec **vérification TLS complète** (124/124).
 
 ---
 
