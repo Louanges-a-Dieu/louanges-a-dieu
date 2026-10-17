@@ -2,6 +2,7 @@ packages:
   - 'apps/admin'
   - 'apps/web'
   - 'packages/*'
+  - 'tools/pgtap'
 
 ignoredBuiltDependencies:
   - sharp

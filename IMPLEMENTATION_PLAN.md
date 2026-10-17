@@ -3,7 +3,7 @@
 > Application mobile (iOS/Android/tablettes), projection web et back-office éditorial
 > du recueil de cantiques « Louanges à Dieu ».
 >
-> **Statut : plan validé par le propriétaire le 2026-10-17. PHASE 1 en cours.**
+> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phase 2 terminée. Prochaine : Phase 3 (import).**
 > Les arbitrages du propriétaire sont consignés en §6.0 et priment sur les propositions par défaut.
 >
 > Version du plan : 0.2 — 2026-10-17
@@ -671,25 +671,38 @@ est accompagné d'un test de non-régression.
 
 ### PHASE 2 — Base PostgreSQL, migrations et RLS
 
-- [ ] 2.1 `0001_baseline_v1.sql` : schéma V1 **tel que fourni** (traçabilité)
-- [ ] 2.2 `0002_structural_fixes.sql` : `edition_id NOT NULL`, triggers `updated_at`, `unaccent` + `f_unaccent()` immuable, colonnes FTS générées, contraintes (`number_label` cohérent avec numéro + suffixe, pas d'auto-relation, `repeat_count` requis si `custom`), contraintes d'ordre `DEFERRABLE`, annotations de répétition par ligne (C-02)
-- [ ] 2.3 `0003_roles.sql` : `app_role`, `user_roles`, `has_role()`
-- [ ] 2.4 `0004_profiles.sql` : `profiles` lié à `auth.users` (trigger à l'inscription), remplace l'usage de `app_users` (C-14) — migration documentée
-- [ ] 2.5 `0005_editorial_workflow.sql` : fonctions de transition, `audit_log` + triggers, `import_batches`, `import_issues`
-- [ ] 2.6 `0006_catalog_releases.sql` : `catalog_releases`, `published_hymns`, `publish_release()`, RPC `get_catalog_manifest`, `get_catalog_delta`, `get_catalog_snapshot`
-- [ ] 2.7 `0007_user_sync.sql` : `server_revision` (séquence + trigger), `deleted_at` sur favoris, listes, éléments, programmes ; RPC `sync_pull`
-- [ ] 2.8 `0008_sharing.sql` : jeton, révocation, expiration ; RPC `get_shared_program`
+> Base de développement : projet Supabase `ssvhoqpvxvfkhwxkewwl` (PostgreSQL 17.11).
+> Migrations dans `supabase/migrations/` (0001 → 0012), tests dans `supabase/tests/`.
+
+- [x] 2.1 `baseline_v1` : schéma V1 **tel que fourni** (identique au fichier source, hors en-tête)
+- [x] 2.2 `structural_fixes` : `edition_id NOT NULL`, triggers `updated_at`, `unaccent` + `private.f_unaccent()` immuable, colonnes `search_vector` + index GIN, contraintes « jamais de chaîne vide » (espaces insécables compris), libellé de numéro cohérent, ordre unique **différable**, index des clés étrangères. **C-02 résolu autrement que prévu** : les marqueurs `(bis)`… restent dans le texte et l'annotation par ligne est **dérivée à la publication** (aucune colonne à maintenir, une seule implémentation)
+- [x] 2.3 `roles` : `app_role`, `user_roles`, `private.has_role()` (schéma non exposé, `SECURITY DEFINER`, `search_path` figé)
+- [x] 2.4 `profiles` : `app_users` → `profiles` lié à `auth.users`, e-mail non dupliqué, création automatique à l'inscription, suppression en cascade
+- [x] 2.5 `editorial_workflow` : `audit_log` + triggers, `import_batches` / `import_issues`, transitions contrôlées, **retour automatique en brouillon** à toute modification d'un cantique validé, refus de validation (sans section, anomalie bloquante, droits restreints), validation par lots `set_hymns_status` (Q-03)
+- [x] 2.6 `editorial_policies` + `catalog_releases` : accès éditeur uniquement à la copie de travail ; releases immuables, `publish_release()` idempotente avec report de la version publiée (T-009) ; RPC `get_catalog_manifest`, `get_catalog_snapshot`, `get_catalog_delta`
+- [x] 2.7 `user_data_sync` : `server_revision` (séquence serveur) + verrou par utilisateur, pierres tombales, RPC `sync_push_*` / `sync_pull`
+- [x] 2.8 `sharing` : jeton 192 bits, révocation, expiration, régénération ; `get_shared_program` (numéros et titres publiés, Q-09)
 - [ ] ~~2.9 `0009_projection.sql`~~ — retiré du MVP (ADR-013 révisé : projection locale, sans état serveur)
-- [ ] 2.10 `0010_rights_gating.sql` : vue `publishable_hymns` (Q-02 : seul `restricted` bloque la publication)
-- [ ] 2.11 RLS activée sur toutes les tables + politiques (§14)
-- [ ] 2.12 Tests pgTAP : matrice d'accès complète, transitions, publication, partage, sync
-- [ ] 2.13 Seed synthétique de développement (aucun contenu protégé)
-- [ ] 2.14 `docs/architecture/data-model.md` (diagramme ER) et `docs/api/rpc.md`
+- [x] 2.10 Droits (Q-02) : statut effectif `private.effective_rights_status()` + vue `hymn_rights` (`security_invoker`) ; un cantique `restricted` ne peut pas être validé et est exclu des releases (contrôle à la validation et à la publication plutôt qu'une vue `publishable_hymns`)
+- [x] 2.11 RLS sur toutes les tables, refus par défaut, droits explicites. Correctif `function_privileges` (0011) : retrait du droit `PUBLIC` sur les fonctions, détecté par les tests
+- [x] 2.12 Tests pgTAP : **124 tests** (couverture de sécurité globale, rôles, workflow, releases, synchronisation, partage) ; exécuteur `tools/pgtap` sans Docker
+- [x] 2.13 `supabase/seed.sql` : catalogue de démonstration **synthétique** passant par le vrai circuit (validation + release)
+- [x] 2.14 `docs/architecture/data-model.md` (diagramme), `docs/api/rpc.md`, `docs/architecture/security.md`, `docs/deployment/database-tests.md`
 
 **Critères d'acceptation**
-- `supabase db reset` depuis zéro réussit en CI.
-- pgTAP 100 % vert, dont : anon ne lit aucun brouillon ; l'utilisateur B ne lit ni ne modifie les données de A ; un non-éditeur ne peut ni importer ni publier ; un jeton révoqué ne renvoie rien ; modifier un cantique publié ne change pas la release courante (T-009 côté base).
-- Advisors de sécurité Supabase : 0 erreur.
+- [x] `supabase db reset` depuis zéro réussit (base de développement : 12 migrations + seed). En CI : à confirmer à la première exécution (dépend de 1.2).
+- [x] pgTAP 100 % vert (124/124 après reconstruction depuis zéro), dont : anon ne lit aucun brouillon ; l'utilisateur B ne lit ni ne modifie les données de A ; un non-éditeur ne peut ni importer ni publier ; un jeton révoqué ne renvoie rien ; modifier un cantique publié ne change pas la release courante (T-009).
+- [x] Advisors de sécurité Supabase : 0 erreur. 3 avertissements **acceptés et documentés** (`get_shared_program`, `publish_release`, voir `docs/architecture/security.md`).
+
+**Rapport Phase 2 (2026-10-17)**
+
+- Problèmes rencontrés et traités :
+  - Deux migrations créées dans la même seconde par la CLI (même version) : renumérotées avant toute application.
+  - Nom de politique formaté comme littéral (`%L` au lieu de `%I`) : migration annulée atomiquement, corrigée, réappliquée.
+  - **Faille détectée par les tests** : `anon` pouvait exécuter les RPC de synchronisation et de partage (droit `PUBLIC` par défaut de PostgreSQL). Non exploitable (connexion exigée), corrigée par la migration 0011 et verrouillée par un test général.
+  - `supabase migration new` lit l'entrée standard hors terminal : une exécution en arrière-plan a enregistré la migration 0012 **vide**. Historique réparé (`migration repair`), migration réappliquée, puis base **reconstruite depuis zéro** pour prouver la cohérence fichiers ↔ base.
+  - `supabase test db` exige Docker même en mode distant : exécuteur pgTAP Node ajouté (`tools/pgtap`).
+- **En attente** : certificat CA Supabase (`supabase/ca/prod-ca-2021.crt`, à télécharger depuis le tableau de bord) pour la vérification TLS complète ; d'ici là, tests lancés avec `PGTAP_INSECURE_TLS=1` sur la base de développement uniquement.
 
 ---
 
@@ -866,5 +879,6 @@ est accompagné d'un test de non-régression.
 | Date | Version | Changement |
 |---|---|---|
 | 2026-10-17 | 0.1 | Audit initial et plan (Phase 0). En attente de validation. |
+| 2026-10-17 | 0.4 | Phase 2 terminée (12 migrations, 124 tests pgTAP, base reconstruite depuis zéro). En attente : certificat CA, première exécution CI. |
 | 2026-10-17 | 0.3 | Phase 1 : tâches 1.1, 1.3–1.5, 1.7–1.9, 1.13 terminées ; 1.6, 1.10–1.12 partielles ; 1.2 bloquée (comptes). |
 | 2026-10-17 | 0.2 | Plan validé. Arbitrages §6.0 intégrés : design blanc épuré + typographie, Vercel, projection sans Internet (ADR-013 révisé), pas de listes visiteur, validation par lots, droits `unknown` publiables, comptes stores individuels (R-06, R-16, R-17). Début de la Phase 1. |

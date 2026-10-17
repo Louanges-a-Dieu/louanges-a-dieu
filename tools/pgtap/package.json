@@ -1,0 +1,16 @@
+{
+  "name": "@lad/pgtap-runner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Exécute les tests pgTAP de supabase/tests sur une base distante, sans Docker.",
+  "type": "module",
+  "scripts": {
+    "test:db": "node run.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/pg": "^8.23.1",
+    "pg": "^8.23.1"
+  }
+}

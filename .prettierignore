@@ -9,3 +9,7 @@ supabase/migrations/
 **/coverage/
 IMPLEMENTATION_PLAN.md
 docs/
+.agents/
+.claude/
+.mcp.json
+skills-lock.json
