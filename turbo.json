@@ -12,7 +12,8 @@
       "dependsOn": ["^build"]
     },
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "passThroughEnv": ["SUPABASE_DB_PASSWORD", "DATABASE_URL"]
     },
     "generate": {
       "cache": false
@@ -25,7 +26,14 @@
     },
     "e2e": {
       "dependsOn": ["build"],
-      "cache": false
+      "cache": false,
+      "passThroughEnv": [
+        "SUPABASE_DB_PASSWORD",
+        "DATABASE_URL",
+        "CHROME_PATH",
+        "ADMIN_SHOT",
+        "PROJECTION_SHOT"
+      ]
     }
   }
 }

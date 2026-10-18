@@ -38,7 +38,7 @@ select set_eq(
       where n.nspname = 'public' and p.prosecdef $$,
   array['publish_release', 'get_shared_program', 'delete_my_account', 'preview_release',
         'rollback_release', 'admin_list_team', 'admin_grant_role', 'admin_revoke_role',
-        'admin_audit_log']::text[],
+        'admin_audit_log', 'preview_hymn']::text[],
   'seules les fonctions SECURITY DEFINER attendues existent dans public'
 );
 

@@ -1,0 +1,39 @@
+.filters {
+  display: grid;
+  grid-template-columns: 2fr repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--lad-space-sm);
+  align-items: end;
+  margin-bottom: var(--lad-space-lg);
+}
+
+.filters button {
+  margin-bottom: var(--lad-space-md);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--lad-space-sm);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--lad-space-sm) 0;
+  position: sticky;
+  top: 0;
+  background: var(--lad-color-background);
+  z-index: 1;
+}
+
+.pager {
+  display: flex;
+  gap: var(--lad-space-sm);
+  margin-top: var(--lad-space-lg);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

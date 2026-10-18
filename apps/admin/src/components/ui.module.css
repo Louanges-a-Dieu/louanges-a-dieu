@@ -1,0 +1,197 @@
+/* Éléments communs du back-office (tokens générés, thème clair). */
+.button,
+.buttonPrimary,
+.buttonDanger,
+.buttonGhost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--lad-space-xs);
+  min-height: 2.5rem;
+  padding: 0 var(--lad-space-lg);
+  border-radius: var(--lad-radius-pill);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.button {
+  border: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+  background: var(--lad-color-surface);
+  color: var(--lad-color-text);
+}
+
+.buttonPrimary {
+  border: 0;
+  background: var(--lad-color-gold-text);
+  color: var(--lad-color-background);
+}
+
+.buttonDanger {
+  border: var(--lad-stroke-hairline) solid var(--lad-color-error);
+  background: var(--lad-color-surface);
+  color: var(--lad-color-error);
+}
+
+.buttonGhost {
+  border: 0;
+  background: none;
+  color: var(--lad-color-gold-text);
+  padding: 0 var(--lad-space-sm);
+}
+
+.button:disabled,
+.buttonPrimary:disabled,
+.buttonDanger:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.field {
+  display: grid;
+  gap: var(--lad-space-xxs);
+  margin-bottom: var(--lad-space-md);
+}
+
+.label {
+  font-size: var(--lad-type-caption-size);
+  color: var(--lad-color-text-secondary);
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: var(--lad-space-xs) var(--lad-space-sm);
+  border: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+  border-radius: var(--lad-radius-md);
+  background: var(--lad-color-surface);
+  color: var(--lad-color-text);
+  font: inherit;
+}
+
+.textarea {
+  min-height: 7rem;
+  font-family: var(--lad-font-lyrics);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.hint {
+  margin: 0;
+  font-size: var(--lad-type-caption-size);
+  color: var(--lad-color-text-secondary);
+}
+
+.ok,
+.error {
+  margin: 0 0 var(--lad-space-lg);
+  padding: var(--lad-space-sm) var(--lad-space-md);
+  border-radius: var(--lad-radius-md);
+  border: var(--lad-stroke-hairline) solid currentColor;
+  white-space: pre-line;
+}
+
+.ok {
+  color: var(--lad-color-success);
+}
+
+.error {
+  color: var(--lad-color-error);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--lad-type-body-size);
+}
+
+.table th {
+  text-align: left;
+  font-weight: 500;
+  font-size: var(--lad-type-caption-size);
+  color: var(--lad-color-text-secondary);
+  border-bottom: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+  padding: var(--lad-space-xs) var(--lad-space-sm);
+}
+
+.table td {
+  border-bottom: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+  padding: var(--lad-space-xs) var(--lad-space-sm);
+  vertical-align: top;
+}
+
+.number {
+  color: var(--lad-color-gold-text);
+  font-family: var(--lad-type-list-number-family);
+  font-weight: 600;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0 var(--lad-space-sm);
+  border-radius: var(--lad-radius-pill);
+  border: var(--lad-stroke-hairline) solid currentColor;
+  font-size: var(--lad-type-caption-size);
+  white-space: nowrap;
+}
+
+.draft {
+  color: var(--lad-color-text-secondary);
+}
+
+.review {
+  color: var(--lad-color-info);
+}
+
+.published {
+  color: var(--lad-color-success);
+}
+
+.archived,
+.blocking {
+  color: var(--lad-color-error);
+}
+
+.warning {
+  color: var(--lad-color-gold-text);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--lad-space-sm);
+  align-items: center;
+}
+
+.card {
+  padding: var(--lad-space-lg);
+  border: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+  border-radius: var(--lad-radius-lg);
+  background: var(--lad-color-surface);
+  margin-bottom: var(--lad-space-lg);
+}
+
+.h1 {
+  margin: 0 0 var(--lad-space-lg);
+  font-family: var(--lad-type-display-family);
+  font-size: var(--lad-type-display-size);
+  line-height: var(--lad-type-display-line-height);
+  font-weight: var(--lad-type-display-weight);
+}
+
+.h2 {
+  margin: 0 0 var(--lad-space-md);
+  font-family: var(--lad-type-headline-family);
+  font-size: var(--lad-type-headline-size);
+  font-weight: var(--lad-type-headline-weight);
+}
+
+.muted {
+  color: var(--lad-color-text-secondary);
+  font-size: var(--lad-type-caption-size);
+}

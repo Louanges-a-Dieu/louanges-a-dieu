@@ -1,0 +1,65 @@
+.shell {
+  display: grid;
+  grid-template-columns: 15rem 1fr;
+  min-height: 100vh;
+}
+
+@media (max-width: 52rem) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nav {
+  padding: var(--lad-space-xl) var(--lad-space-md);
+  border-right: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+  background: var(--lad-color-surface);
+}
+
+.brand {
+  margin: 0 0 var(--lad-space-xl);
+  font-family: var(--lad-type-display-family);
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+
+.brand small {
+  display: block;
+  color: var(--lad-color-gold-text);
+  font-family: var(--lad-font-ui);
+  font-size: var(--lad-type-caption-size);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.links {
+  display: grid;
+  gap: var(--lad-space-xxs);
+  margin: 0 0 var(--lad-space-xl);
+  padding: 0;
+  list-style: none;
+}
+
+.links a {
+  display: block;
+  padding: var(--lad-space-xs) var(--lad-space-sm);
+  border-radius: var(--lad-radius-md);
+  color: var(--lad-color-text);
+  text-decoration: none;
+}
+
+.links a:hover {
+  background: color-mix(in srgb, var(--lad-color-gold) 12%, transparent);
+}
+
+.account {
+  font-size: var(--lad-type-caption-size);
+  color: var(--lad-color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.main {
+  min-width: 0;
+  padding: var(--lad-space-xl);
+  max-width: 80rem;
+}

@@ -3,7 +3,7 @@
 > Application mobile (iOS/Android/tablettes), projection web et back-office éditorial
 > du recueil de cantiques « Louanges à Dieu ».
 >
-> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phases 2, 3 et 4 terminées. Phase 5 terminée (sauf 5.10 sur appareil, 5.12 bloquée). Phase 6 terminée côté code (6.2 : configuration Auth à faire par le propriétaire). Phase 7 terminée côté code (restent : durée d'expiration dans l'app, lien « ouvrir dans l'app », déploiement Vercel, E2E en CI). Phase 8 terminée côté code (reste : essais sur appareils réels). Prochaine : Phase 9 (back-office éditorial).**
+> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phases 2, 3 et 4 terminées. Phase 5 terminée (sauf 5.10 sur appareil, 5.12 bloquée). Phase 6 terminée côté code (6.2 : configuration Auth à faire par le propriétaire). Phase 7 terminée côté code (restent : durée d'expiration dans l'app, lien « ouvrir dans l'app », déploiement Vercel, E2E en CI). Phase 8 terminée côté code (reste : essais sur appareils réels). Phase 9 terminée (reste : connexion par e-mail à essayer après branchement du service d'e-mail). Prochaine : Phase 10 (tests, sécurité, préparation production).**
 > Les arbitrages du propriétaire sont consignés en §6.0 et priment sur les propositions par défaut.
 >
 > Version du plan : 0.2 — 2026-10-17
@@ -866,21 +866,25 @@ est accompagné d'un test de non-régression.
 
 ### PHASE 9 — Back-office éditorial
 
-- [ ] 9.1 Authentification admin + MFA obligatoire ; gestion des rôles (super admin)
-- [ ] 9.2 Tableau de bord : publiés, brouillons, en revue, anomalies ouvertes, progression de la revue
-- [ ] 9.3 Liste des cantiques : filtres (statut, anomalie, droits), recherche plein texte
-- [ ] 9.4 Édition : métadonnées (nullables, sans valeur par défaut fictive), sections (ajout, suppression, ordre, type, répétitions), références, relations, statut de droits
-- [ ] 9.5 Aperçu « comme sur mobile » (même rendu que l'app)
-- [ ] 9.6 Workflow draft → review → published → archived (contrôles côté serveur **et** RLS) ; validation par lots selon Q-03
-- [ ] 9.7 Publication de release avec résumé du diff ; retour arrière vers la release précédente
-- [ ] 9.8 File d'anomalies : résoudre / ignorer avec justification
-- [ ] 9.9 Import : upload du `catalog.draft.json`, rapport, diff de réimport
-- [ ] 9.10 Journal des modifications consultable
-- [ ] 9.11 Registre des droits minimal (statut par cantique, détenteur, notes)
-- [ ] 9.12 Sécurité : CSP, en-têtes, validation Zod, limitation de débit sur l'authentification
-- [ ] 9.13 Tests : unitaires, intégration (Server Actions contre Supabase local), E2E parcours Administrateur, T-009
+- [~] 9.1 Connexion sans mot de passe (code par e-mail) + **second facteur TOTP obligatoire, appliqué par la base** (`has_role()` exige `aal2`, migration 0015) ; enrôlement guidé ; page Équipe (super administrateur : attribution par e-mail, retrait, jamais le dernier). **Reste** : l'étape « code par e-mail » ne peut être essayée qu'une fois le service d'e-mail branché (6.2) — le reste du parcours est testé de bout en bout
+- [x] 9.2 Tableau de bord par édition : validés, en relecture, brouillons, anomalies (bloquantes, ouvertes), progression de la revue, dernière release
+- [x] 9.3 Liste : recherche sans accents (numéro, titre, premier vers, texte des sections), filtres statut / anomalies / droits / édition, pagination
+- [x] 9.4 Édition : titre, premier vers, notes internes (vide = inconnu, jamais de valeur fictive), sections (type, numéro, texte, ordre, ajout, suppression ; répétitions par « (bis) », « (ter) », « (4x) » reconnues à l'aperçu), références, cantiques liés, **auteurs et thèmes**, registre des droits
+- [x] 9.5 Aperçu « comme sur mobile » : contenu exact d'une publication (`preview_hymn`), mêmes polices et règles d'affichage (rien d'inconnu affiché, T-010)
+- [x] 9.6 Workflow appliqué par la base (déclencheurs + RLS) ; transitions proposées selon le statut et le rôle (archivage : super administrateur) ; **validation par lots** (Q-03) avec le motif de chaque refus
+- [x] 9.7 Publication : diff de la prochaine release (`preview_release`), publication, historique, **retour arrière** (`rollback_release` : nouvelle release reçue par les apps comme une mise à jour)
+- [x] 9.8 File d'anomalies : filtres, résoudre / ignorer (justification obligatoire) / rouvrir, par lot ; auteur de la décision fixé par le serveur
+- [x] 9.9 Import : fichier validé par le contrat Zod, **simulation = diff de réimport**, puis import ; logique unique en SQL (`import_catalog_draft`), aussi utilisée par `content-tools load` (ses tests d'intégration passent sur le portage)
+- [x] 9.10 Journal : toutes les modifications avec l'auteur, filtrable par objet, historique sur chaque cantique
+- [x] 9.11 Registre des droits : statut, détenteur, licence, validité, notes ; le plus récent fait foi ; « restreint » bloque validation et publication
+- [x] 9.12 Sécurité : CSP stricte à nonce, en-têtes (DENY, nosniff, no-referrer, noindex, no-store, HSTS), Zod sur toutes les actions, pas de redirection ouverte, aucune clé secrète ; limitation de débit par Supabase Auth (limite commune à l'équipe, documentée dans `docs/deployment/admin.md`)
+- [x] 9.13 Tests : pgTAP 09 (194 au total), 11 tests unitaires, **accès par l'API réelle** (anonyme, sans rôle, éditeur sans second facteur : aucun accès), **parcours administrateur de bout en bout dans Chrome** (second facteur, import, lots, publication, T-009, retour arrière, auteurs et thèmes, anomalie, journal, équipe, aucune violation de CSP)
 
 **Critères d'acceptation** : T-009 vert ; un utilisateur sans rôle ne peut ni lire les brouillons ni publier, y compris en appelant l'API directement ; chaque modification apparaît dans le journal.
+
+- [x] T-009 : vert (pgTAP et parcours de bout en bout).
+- [x] Sans rôle (et même avec un rôle mais sans second facteur) : ni lecture des brouillons ni publication, **vérifié contre l'API réelle**.
+- [x] Chaque modification apparaît dans le journal, avec son auteur.
 
 ---
 
@@ -938,6 +942,7 @@ est accompagné d'un test de non-régression.
 | 2026-10-18 | 0.8 | Phase 6 : compte sans mot de passe, suppression de compte, listes, synchronisation branchée ; test réel à deux appareils. |
 | 2026-10-18 | 0.9 | Phase 7 : programmes de culte (onglet Culte, archivage), partage par lien réutilisé (0014), page publique `apps/web` ; tests avec le vrai serveur. |
 | 2026-10-18 | 1.0 | Phase 8 : projection sans Internet — diapositives Dart/TS, serveur local et pilote dans l'app, écran projeté partagé, mode ordinateur seul (PWA) ; tests en navigateur réel hors ligne. |
+| 2026-10-18 | 1.1 | Phase 9 : back-office éditorial — MFA appliquée par la base, import SQL partagé, diff et retour arrière de release, éditeur avec aperçu mobile, anomalies, journal, équipe ; parcours de bout en bout. |
 | 2026-10-18 | 0.7 | Phase 5 : écrans Flutter (accueil, recueil, recherche, fiche, lecture, favoris, réglages, à propos), aperçu web de développement (option B), polices OFL. |
 | 2026-10-17 | 0.6 | Phase 4 : base locale Drift + FTS5, recherche, synchronisation catalogue et données utilisateur ; option B (publication technique sur la base de développement). |
 | 2026-10-17 | 0.5 | Phase 3 terminée : import v8 (1 143 cantiques, fidélité 100 %) chargé en brouillon ; correction du constat A-02 (n° 596). |

@@ -1,0 +1,71 @@
+.phone {
+  max-width: 24rem;
+  padding: var(--lad-space-xl) var(--lad-space-lg);
+  border: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+  border-radius: 1.5rem;
+  background: var(--lad-color-background);
+}
+
+.number {
+  margin: 0;
+  color: var(--lad-color-gold-text);
+  font-family: var(--lad-type-hymn-number-family);
+  font-size: var(--lad-type-hymn-number-size);
+  font-weight: var(--lad-type-hymn-number-weight);
+  line-height: 1;
+  font-variant-numeric: lining-nums;
+}
+
+.title {
+  margin: var(--lad-space-xs) 0 var(--lad-space-sm);
+  font-family: var(--lad-type-title-family);
+  font-size: var(--lad-type-title-size);
+  font-weight: var(--lad-type-title-weight);
+  line-height: var(--lad-type-title-line-height);
+}
+
+.references,
+.meta {
+  margin: 0 0 var(--lad-space-lg);
+  color: var(--lad-color-text-secondary);
+  font-size: var(--lad-type-caption-size);
+}
+
+.section,
+.refrain {
+  margin: 0 0 var(--lad-space-lg);
+  font-family: var(--lad-font-lyrics);
+  font-size: var(--lad-lyrics-size-default);
+  line-height: var(--lad-type-lyrics-line-height);
+}
+
+.refrain {
+  padding-left: var(--lad-space-md);
+  border-left: var(--lad-stroke-refrain-rule) solid var(--lad-color-gold);
+  font-style: italic;
+}
+
+.sectionName {
+  margin: 0 0 var(--lad-space-xxs);
+  color: var(--lad-color-gold-text);
+  font-family: var(--lad-font-ui);
+  font-size: var(--lad-type-caption-size);
+  font-style: normal;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.line {
+  margin: 0;
+}
+
+.repeat {
+  margin-left: var(--lad-space-xs);
+  padding: 0 var(--lad-space-xs);
+  border-radius: var(--lad-radius-pill);
+  background: color-mix(in srgb, var(--lad-color-gold) 15%, transparent);
+  color: var(--lad-color-gold-text);
+  font-family: var(--lad-font-ui);
+  font-size: 0.7em;
+  font-style: normal;
+}

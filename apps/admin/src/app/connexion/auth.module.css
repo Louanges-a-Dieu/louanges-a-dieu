@@ -1,0 +1,19 @@
+.page {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: var(--lad-space-xl) var(--lad-space-md);
+}
+
+.panel {
+  width: 100%;
+  max-width: 26rem;
+}
+
+.brand {
+  margin: 0 0 var(--lad-space-xs);
+  color: var(--lad-color-gold-text);
+  font-size: var(--lad-type-caption-size);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

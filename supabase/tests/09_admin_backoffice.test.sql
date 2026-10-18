@@ -12,6 +12,9 @@ insert into public.user_roles (user_id, role) values
   ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'editor'),
   ('55555555-5555-4555-8555-555555555555', 'super_admin');
 delete from public.catalog_releases;
+-- Seul super_admin de la transaction (la base de dev peut en avoir d'autres, ex. compte E2E).
+delete from public.user_roles
+ where role = 'super_admin' and user_id <> '55555555-5555-4555-8555-555555555555';
 
 create function pg_temp.as_user(p_id text, p_aal text) returns void language sql as $$
   select set_config('request.jwt.claims',
@@ -162,6 +165,22 @@ select is((public.get_catalog_delta(current_setting('test.r2')::integer) -> 'ups
 select is(public.rollback_release(current_setting('test.edition')::uuid, current_setting('test.r1')::integer),
           current_setting('test.r3')::integer, 'retour vers un contenu identique : rien de nouveau');
 
+-- ------------------------------------------------- aperçu et anomalies
+select is((public.preview_hymn((select id from public.hymns where number_label = '1'
+             and edition_id = current_setting('test.edition')::uuid)) -> 'sections' -> 1 -> 'lines' -> 0 -> 'repeat' ->> 'count'),
+          '2', 'aperçu : contenu publié calculé (répétition « (bis) »)');
+select is(public.preview_hymn(gen_random_uuid()), null, 'aperçu d''un cantique inconnu');
+select throws_ok(
+  $$ select public.resolve_issues(array(select id from public.import_issues where code = 'A-21'), 'ignored', '  ') $$,
+  '23514', null, 'ignorer sans justification : refusé');
+select is(public.resolve_issues(array(select id from public.import_issues where code = 'A-21'),
+                                'ignored', 'Retiré volontairement de la v8'), 1, 'anomalie ignorée avec justification');
+select is((select resolved_by from public.import_issues where code = 'A-21'),
+          'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'::uuid, 'auteur de la décision fixé par le serveur');
+select is(public.resolve_issues(array(select id from public.import_issues where code = 'A-21'), 'open'), 1,
+          'anomalie rouverte');
+select is((select resolved_at from public.import_issues where code = 'A-21'), null, 'réouverture : décision effacée');
+
 -- -------------------------------------------------------------- équipe
 select throws_ok($$ select public.admin_grant_role('fidele@test.invalid', 'editor') $$, '42501', null,
                  'un éditeur ne peut pas attribuer de rôle');
@@ -192,6 +211,7 @@ set local role anon;
 select throws_ok($$ select * from public.admin_audit_log() $$, '42501', null, 'anon : refusé');
 select throws_ok($$ select public.rollback_release(gen_random_uuid(), 1) $$, '42501', null,
                  'anon : retour arrière refusé');
+select throws_ok($$ select public.preview_hymn(gen_random_uuid()) $$, '42501', null, 'anon : aperçu refusé');
 reset role;
 
 select * from finish();

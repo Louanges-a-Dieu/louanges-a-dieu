@@ -148,3 +148,15 @@ export class Chrome {
     rmSync(this.profile, { recursive: true, force: true });
   }
 }
+
+/** Accepte automatiquement les boîtes « confirmer » de la page. */
+export async function acceptDialogs(page: Page) {
+  const timer = setInterval(() => {
+    const dialog = page.events.findIndex((e) => e.method === 'Page.javascriptDialogOpening');
+    if (dialog >= 0) {
+      page.events.splice(dialog, 1);
+      void page.send('Page.handleJavaScriptDialog', { accept: true });
+    }
+  }, 20);
+  return () => clearInterval(timer);
+}

@@ -64,7 +64,9 @@ en appelant l'API directement.
 | `preview_release(p_edition_id)` | editor | cantiques `added` / `changed` / `removed` si l'on publiait maintenant |
 | `rollback_release(p_edition_id, p_release_id, p_notes?)` | editor | nouvelle release au contenu d'une release précédente |
 | `search_hymns_admin(p_query?, p_status?, p_issues?, p_rights?, p_limit?, p_offset?, p_edition_id?)` | editor (RLS) | liste filtrée, recherche sans accents (numéro, titre, premier vers, texte) |
-| `editorial_stats()` | editor | compteurs du tableau de bord |
+| `editorial_stats(p_edition_id?)` | editor | compteurs du tableau de bord (par édition, migration 0018) |
+| `preview_hymn(p_hymn_id)` | editor | contenu exact qu'une publication enverrait (aperçu « comme sur mobile ») |
+| `resolve_issues(p_issue_ids, p_status, p_note?)` | editor | résoudre / ignorer (justification obligatoire) / rouvrir ; auteur fixé par le serveur |
 | `admin_list_team()`, `admin_grant_role(p_email, p_role)`, `admin_revoke_role(p_user_id, p_role)` | super_admin | équipe ; jamais de retrait du dernier super_admin |
 | `admin_audit_log(p_record_id?, p_limit?, p_before?)` | editor | journal avec l'adresse de l'auteur |
 

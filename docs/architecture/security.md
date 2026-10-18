@@ -19,6 +19,14 @@ Référence : §14 du plan, ADR-010, ADR-011, ADR-012, ADR-018.
 Ces règles sont vérifiées automatiquement par `supabase/tests/01_security_coverage.test.sql`
 pour toute table ou fonction ajoutée plus tard.
 
+## Second facteur obligatoire, appliqué par la base (Phase 9)
+
+`private.has_role()` ne reconnaît un rôle éditorial qu'avec une session `aal2` (code TOTP
+vérifié par Supabase Auth). Toutes les politiques RLS éditoriales et les fonctions de
+publication, d'import et d'administration passent par elle : une session volée sans second
+facteur n'a aucun droit éditorial, même en appelant l'API directement. Vérifié par pgTAP
+(`09_admin_backoffice`) et contre l'API réelle (`apps/admin/test/integration`).
+
 ## Alertes `supabase db advisors` acceptées
 
 | Alerte | Objet | Justification |

@@ -15,7 +15,7 @@ import { resolve } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { Chrome, chromePath, freePort, sleep, type Page } from './cdp';
+import { Chrome, chromePath, freePort, sleep, type Page } from '../../../tools/e2e/cdp';
 import { createSharedProgram, envFile, hasTestUser } from './dev-backend';
 
 const web = resolve(import.meta.dirname, '..');

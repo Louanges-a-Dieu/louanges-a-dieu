@@ -8,20 +8,29 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "predev": "node scripts/sync-fonts.mts",
+    "prebuild": "node scripts/sync-fonts.mts",
+    "e2e": "vitest run --config vitest.e2e.config.mts"
   },
   "dependencies": {
     "@lad/design-tokens": "workspace:*",
+    "@lad/shared-contracts": "workspace:*",
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.117.2",
     "next": "16.4.2",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^24",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
+    "pg": "^8.23.1",
     "typescript": "~6.0.3",
     "vitest": "^5.0.5"
   }
