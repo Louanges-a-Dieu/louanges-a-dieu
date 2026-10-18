@@ -3,7 +3,7 @@
 > Application mobile (iOS/Android/tablettes), projection web et back-office éditorial
 > du recueil de cantiques « Louanges à Dieu ».
 >
-> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phases 2, 3 et 4 terminées. Phase 5 terminée (sauf 5.10 sur appareil, 5.12 bloquée). Phase 6 terminée côté code (6.2 : configuration Auth à faire par le propriétaire). Phase 7 terminée côté code (restent : durée d'expiration dans l'app, lien « ouvrir dans l'app », déploiement Vercel, E2E en CI). Phase 8 terminée côté code (reste : essais sur appareils réels). Phase 9 terminée (reste : connexion par e-mail à essayer après branchement du service d'e-mail). Prochaine : Phase 10 (tests, sécurité, préparation production).**
+> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phases 2, 3 et 4 terminées. Phase 5 terminée (sauf 5.10 sur appareil, 5.12 bloquée). Phase 6 terminée côté code (6.2 : configuration Auth à faire par le propriétaire). Phase 7 terminée côté code (restent : durée d'expiration dans l'app, lien « ouvrir dans l'app », déploiement Vercel, E2E en CI). Phase 8 terminée côté code (reste : essais sur appareils réels). Phase 9 terminée (reste : connexion par e-mail à essayer après branchement du service d'e-mail). Phase 10 : tout ce qui ne dépend pas d'appareils ou de comptes est fait ; restent la recette sur appareils, la mise en service des comptes de production et les décisions du propriétaire (voir 10.x).**
 > Les arbitrages du propriétaire sont consignés en §6.0 et priment sur les propositions par défaut.
 >
 > Version du plan : 0.2 — 2026-10-17
@@ -890,18 +890,18 @@ est accompagné d'un test de non-régression.
 
 ### PHASE 10 — Tests, sécurité, optimisation, préparation production
 
-- [ ] 10.1 Exécution du cahier de recette T-001..T-010 sur iPhone, Android et tablette ; rapport dans `docs/qa/`
-- [ ] 10.2 Protocole mode avion manuel (installation, première ouverture, recherche, lecture, favoris, programme) + automatisé
-- [ ] 10.3 Revue de sécurité : audit RLS, advisors, dépendances, secrets, test des liens publics et du back-office
-- [ ] 10.4 Performance : démarrage à froid, latence de recherche, taille de l'app, latence de projection
-- [ ] 10.5 Observabilité : crash reporting (Q-16) mobile et web, logs structurés sans données personnelles
-- [ ] 10.6 Sauvegardes : sauvegardes Supabase + dump hebdomadaire chiffré vers R2 ; **restauration testée et documentée**
-- [ ] 10.7 Stores : icônes, splash, captures, fiche, politique de confidentialité, « App Privacy » / « Data safety », suppression de compte, classification
-- [ ] 10.8 Signature : Play App Signing + clé d'upload dans le coffre ; App Store Connect API key ; procédure documentée
-- [ ] 10.9 Déploiement production (migrations via environnement approuvé, web, mobile)
-- [ ] 10.10 Documentation finale : README, installation locale, variables, déploiement, sauvegarde/restauration, runbook d'incident
-- [ ] 10.11 Transfert : checklist de propriété signée (comptes, secrets, domaines, certificats, CI)
-- [ ] 10.12 Décision écrite du propriétaire sur les droits (Q-02) avant publication publique
+- [!] 10.1 Recette T-001..T-010 sur iPhone, Android et tablette — **bloquée** (aucun appareil ni SDK mobile sur ce poste) ; protocole et grille prêts : `docs/qa/recette.md`. Tous les T ont déjà leurs tests automatisés verts
+- [~] 10.2 Mode avion : partie automatisée verte (synchronisation hors ligne, instantané embarqué, projection sans requête externe, ordinateur seul serveur arrêté + réseau coupé) ; protocole manuel prêt (`docs/qa/recette.md`). **Reste** : exécution sur appareils
+- [x] 10.3 Revue de sécurité : advisors (alertes acceptées et justifiées), pgTAP 10 (**chaque** fonction privilégiée refuse compte sans rôle et éditeur sans second facteur ; 232 tests), dépendances livrées sans vulnérabilité, aucun secret dans l'historique Git, **CSP ajoutée au site public** (aucune violation au test de bout en bout). Rapport : `docs/architecture/security.md`
+- [~] 10.4 Performance : recherche ≤ 14 ms, projection 1 ms (navigateur réel) et 5–7 ms (ordinateur seul), catalogue 450 Ko ; `docs/qa/performance.md`. **Reste** : démarrage à froid, taille de l'app, Wi-Fi réel (appareils)
+- [x] 10.5 Observabilité : journaux d'erreurs JSON sans données personnelles (site, back-office), Sentry serveur et mobile activés par `SENTRY_DSN` avec filtrage testé (vrai SDK, faux serveur Sentry — le test a conduit à exclure variables locales et lignes de code voisines). Mise en service : compte Sentry du propriétaire (`docs/operations/observability.md`)
+- [~] 10.6 Sauvegarde hebdomadaire (rôles, schéma, données) avec **restauration vérifiée à chaque fois** dans une base Supabase neuve, chiffrement age, envoi R2 ; procédure de restauration après incident (`docs/operations/backup-restore.md`). **Reste** : première exécution (GitHub, R2, clé age du propriétaire) — la restauration n'est donc pas encore vérifiée en réel
+- [~] 10.7 Stores : politique de confidentialité et page de suppression de compte (site), lien dans l'app, suppression de compte dans l'app, fiches, classification, déclarations « Sécurité des données » / « Confidentialité de l'app » (`docs/stores/README.md`). **Reste** : icône et écran de démarrage (épi vectorisé), captures, relecture juridique de la politique
+- [~] 10.8 Signature : build Android lisant la clé d'envoi (`key.properties`), échec explicite d'un build « store » sans clé (au lieu d'une signature de débogage) ; procédures Android et iOS (`docs/deployment/mobile-signing.md`). **Reste** : génération des clés par le propriétaire ; build Android vérifié en CI seulement
+- [~] 10.9 Déploiement : workflow `deploiement-base` (manuel, environnement protégé, aperçu, avertissements, pgTAP en staging) ; procédure complète `docs/deployment/production.md`. **Reste** : comptes de production (Supabase, Vercel, stores, domaine)
+- [x] 10.10 Documentation : README (installation, variables, lancement, tests, index), mise en production, back-office, site, e-mail, signature, sauvegarde/restauration, observabilité, runbook d'incident
+- [~] 10.11 Transfert : checklist à signer (`docs/ownership/transfer.md`), inventaire des comptes et secrets à jour. **Reste** : vérifications et signature du propriétaire
+- [!] 10.12 Décision écrite sur les droits : modèle prêt (`docs/ownership/rights-decision.md`) — **décision du propriétaire**
 
 **Critères d'acceptation** : tous les tests T verts sur appareils réels ; restauration vérifiée ; tous les comptes au nom du propriétaire ; aucun secret détenu exclusivement par le développeur.
 
@@ -943,6 +943,7 @@ est accompagné d'un test de non-régression.
 | 2026-10-18 | 0.9 | Phase 7 : programmes de culte (onglet Culte, archivage), partage par lien réutilisé (0014), page publique `apps/web` ; tests avec le vrai serveur. |
 | 2026-10-18 | 1.0 | Phase 8 : projection sans Internet — diapositives Dart/TS, serveur local et pilote dans l'app, écran projeté partagé, mode ordinateur seul (PWA) ; tests en navigateur réel hors ligne. |
 | 2026-10-18 | 1.1 | Phase 9 : back-office éditorial — MFA appliquée par la base, import SQL partagé, diff et retour arrière de release, éditeur avec aperçu mobile, anomalies, journal, équipe ; parcours de bout en bout. |
+| 2026-10-18 | 1.2 | Phase 10 : revue de sécurité (CSP site, test des fonctions privilégiées), observabilité sans données personnelles, sauvegarde avec restauration vérifiée, confidentialité et stores, signature, déploiement, documentation et transfert. |
 | 2026-10-18 | 0.7 | Phase 5 : écrans Flutter (accueil, recueil, recherche, fiche, lecture, favoris, réglages, à propos), aperçu web de développement (option B), polices OFL. |
 | 2026-10-17 | 0.6 | Phase 4 : base locale Drift + FTS5, recherche, synchronisation catalogue et données utilisateur ; option B (publication technique sur la base de développement). |
 | 2026-10-17 | 0.5 | Phase 3 terminée : import v8 (1 143 cantiques, fidélité 100 %) chargé en brouillon ; correction du constat A-02 (n° 596). |

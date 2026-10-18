@@ -31,12 +31,11 @@ secrets du propriétaire.
 | 8 | Apple Developer Program (individuel) | Titulaire désigné | ☐ | Vendeur affiché = nom légal du titulaire |
 | 9 | Google Play Console (personnel) | Titulaire désigné | ☐ | Test fermé obligatoire (≥ 12 testeurs, 14 jours) avant la production |
 | 9b | Service d'envoi d'e-mails (SMTP : Resend, Brevo, Postmark…) + domaine d'expédition vérifié | Propriétaire | ☐ | Indispensable avant la production (connexion par e-mail) — voir docs/deployment/auth-email.md |
-| 10 | Sentry (crash reporting) | Propriétaire | ☐ | Phase 10 |
-| 11 | Clé d'upload Android + App Store Connect API key | Propriétaire | ☐ | Générées en Phase 10, déposées dans le coffre |
+| 10 | Sentry (suivi des plantages, Q-16) : organisation au nom du projet, région UE, projets `louanges-mobile` et `louanges-web` | Propriétaire | ☐ | `docs/operations/observability.md` ; facultatif (sans DSN, rien n'est envoyé) |
+| 11 | Clé d'envoi Android + clé API App Store Connect | Propriétaire | ☐ | `docs/deployment/mobile-signing.md` |
+| 12 | Clé de chiffrement des sauvegardes (age) + bucket R2 `louanges-sauvegardes` | Propriétaire | ☐ | Clé privée dans le coffre **et** hors ligne — `docs/operations/backup-restore.md` |
+| 13 | Environnements GitHub `staging` et `production` (approbation du propriétaire pour `production`) | Propriétaire | ☐ | Secrets : `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_DB_URL`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` ; variables : `SUPABASE_PROJECT_REF`, `BACKUP_AGE_RECIPIENT`, `R2_ENDPOINT`, `R2_BACKUP_BUCKET` |
 
-## Transfert final (Phase 10)
+## Transfert final
 
-- [ ] Tous les comptes ci-dessus appartiennent au propriétaire ou au titulaire désigné
-- [ ] Tous les secrets de CI sont dans les environnements GitHub du propriétaire
-- [ ] Les accès du développeur ont été réduits ou révoqués
-- [ ] Le propriétaire a vérifié qu'il peut construire et déployer sans le développeur
+Voir la checklist signée : `docs/ownership/transfer.md`.

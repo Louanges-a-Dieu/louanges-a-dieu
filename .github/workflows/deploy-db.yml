@@ -1,0 +1,65 @@
+# Déploiement des migrations (tâche 10.9, ADR-011) : uniquement par ce
+# workflow, déclenché à la main, sur un environnement GitHub protégé
+# (`production` : approbation du propriétaire requise). Aperçu des migrations,
+# puis application ; en staging, tests pgTAP sur la base déployée.
+name: deploiement-base
+
+on:
+  workflow_dispatch:
+    inputs:
+      cible:
+        description: Environnement
+        type: choice
+        options: [staging, production]
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploiement-base-${{ inputs.cible }}
+  cancel-in-progress: false
+
+jobs:
+  migrations:
+    name: Migrations → ${{ inputs.cible }}
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.cible }}
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.121.0
+
+      - name: Projet cible
+        run: |
+          test -n "$SUPABASE_PROJECT_REF"
+          supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Aperçu des migrations à appliquer
+        run: supabase db push --dry-run --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Application
+        run: supabase db push --yes --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Avertissements de sécurité et de performance
+        run: supabase db advisors --linked --type all --level warn
+
+      - uses: pnpm/action-setup@v6
+        if: inputs.cible == 'staging'
+      - uses: actions/setup-node@v7
+        if: inputs.cible == 'staging'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Tests pgTAP sur la base déployée (staging)
+        if: inputs.cible == 'staging'
+        run: |
+          pnpm install --frozen-lockfile
+          node tools/pgtap/run.ts
