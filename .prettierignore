@@ -13,3 +13,7 @@ docs/
 .claude/
 .mcp.json
 skills-lock.json
+
+# Copies générées (non versionnées)
+apps/web/public/projection-ecran/
+apps/admin/public/fonts/
