@@ -1,0 +1,69 @@
+# Sauvegarde hebdomadaire de la base de production (tâche 10.6).
+# Rôles, schéma et données (méthode officielle Supabase), RESTAURATION
+# VÉRIFIÉE à chaque fois dans une base neuve, chiffrement « age » (clé privée
+# détenue hors ligne par le propriétaire), envoi vers Cloudflare R2.
+# Procédure complète : docs/operations/backup-restore.md
+name: sauvegarde
+
+on:
+  schedule:
+    - cron: '0 3 * * 1' # lundi, 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sauvegarde
+  cancel-in-progress: false
+
+jobs:
+  sauvegarde:
+    name: Sauvegarde et restauration vérifiée
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.121.0
+
+      - name: Outils (psql, age)
+        run: sudo apt-get update -q && sudo apt-get install -y -q postgresql-client age
+
+      - name: Empreinte de la source puis export
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir -p sauvegarde
+          psql "$SUPABASE_DB_URL" --no-align --tuples-only --file tools/backup/counts.sql \
+            > sauvegarde/source-counts.txt
+          supabase db dump --db-url "$SUPABASE_DB_URL" --role-only -f sauvegarde/roles.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f sauvegarde/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" --data-only --use-copy -f sauvegarde/data.sql
+
+      - name: Restauration vérifiée dans une base neuve
+        run: tools/backup/verify-restore.sh sauvegarde
+
+      - name: Chiffrement
+        env:
+          BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+        run: |
+          test -n "$BACKUP_AGE_RECIPIENT"
+          name="louanges-a-dieu-$(date -u +%Y-%m-%dT%H%MZ).tar.gz.age"
+          tar -czf - sauvegarde | age --recipient "$BACKUP_AGE_RECIPIENT" --output "$name"
+          echo "ARCHIVE=$name" >> "$GITHUB_ENV"
+          rm -rf sauvegarde
+
+      - name: Envoi vers Cloudflare R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+          R2_BUCKET: ${{ vars.R2_BACKUP_BUCKET }}
+        run: |
+          aws s3 cp "$ARCHIVE" "s3://${R2_BUCKET}/supabase/${ARCHIVE}" --endpoint-url "$R2_ENDPOINT"
+          echo "Sauvegarde envoyée : ${ARCHIVE}"
