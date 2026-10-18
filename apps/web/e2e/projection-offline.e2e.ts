@@ -62,6 +62,7 @@ describe.skipIf(!ready)('projection sur ordinateur seul, sans Internet', () => {
   it('prépare, coupe tout, puis projette', async () => {
     const base = `http://127.0.0.1:${port}`;
     const console_ = await chrome.newPage();
+    await console_.send('Log.enable');
 
     // 1. Avec Internet : programme gardé depuis son lien de partage.
     if (program) {
@@ -104,6 +105,7 @@ describe.skipIf(!ready)('projection sur ordinateur seul, sans Internet', () => {
 
     // 5. L'écran projeté (deuxième onglet) s'ouvre aussi sans réseau.
     const screen = await chrome.newPage();
+    await screen.send('Log.enable');
     await screen.send('Network.emulateNetworkConditions', offline);
     await screen.goto(`${base}/projection-ecran/screen.html?canal=local`);
     await screen.waitFor("document.body.textContent.includes('Louanges à Dieu')");
@@ -166,6 +168,18 @@ describe.skipIf(!ready)('projection sur ordinateur seul, sans Internet', () => {
     expect(failedOrSent.map((e) => (e.params.response as { url: string }).url)).toEqual([]);
     expect(console_.events.filter((e) => e.method === 'Runtime.exceptionThrown')).toEqual([]);
     expect(screen.events.filter((e) => e.method === 'Runtime.exceptionThrown')).toEqual([]);
+    // Politique de sécurité (CSP) respectée partout.
+    for (const p of [console_, screen]) {
+      expect(
+        p.events.filter(
+          (e) =>
+            e.method === 'Log.entryAdded' &&
+            /Content Security Policy|Refused to/i.test(
+              String((e.params.entry as { text: string }).text),
+            ),
+        ),
+      ).toEqual([]);
+    }
 
     if (process.env.PROJECTION_SHOT) {
       for (const [page, name] of [

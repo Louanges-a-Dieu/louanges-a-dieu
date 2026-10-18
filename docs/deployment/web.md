@@ -37,6 +37,14 @@ L'application mobile doit connaître l'adresse du site pour composer les liens :
   Exécuté seulement si `apps/web/.env.local` et `apps/mobile/config/dev-test-user.json`
   existent (ignoré en CI).
 
+## En-têtes de sécurité
+
+Tout le site : `nosniff`, `X-Frame-Options: DENY`, `Permissions-Policy` et une **CSP**
+(`next.config.ts`) : aucune origine externe sauf Supabase (téléchargement du recueil par la
+console), `object-src 'none'`, `frame-ancestors 'none'`, `base-uri 'none'`. Les pages
+statiques ne pouvant porter de nonce, les scripts en ligne de Next sont admis. Le test de bout
+en bout vérifie l'absence de toute violation.
+
 ## Page `/projection` (mode « ordinateur seul », Phase 8.4)
 
 Page statique : `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY` sont lues **à la compilation**

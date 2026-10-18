@@ -35,4 +35,28 @@ facteur n'a aucun droit éditorial, même en appelant l'API directement. Vérifi
 | `authenticated_security_definer_function_executable` | `publish_release` | Doit lire toute la copie de travail et écrire le catalogue publié, interdit en écriture directe. Contrôle `has_role('editor')` en tête de fonction. Testé (04_catalog_releases). |
 | `authenticated_security_definer_function_executable` | `delete_my_account` | Suppression de compte exigée par les stores : seul le propriétaire de la base peut supprimer une ligne de `auth.users`. Aucun paramètre : l'utilisateur ne supprime que son propre compte (`auth.uid()`). Testé (07_account_deletion). |
 
+| `authenticated_security_definer_function_executable` | `preview_release`, `rollback_release`, `preview_hymn` | Lisent toute la copie de travail et, pour le retour arrière, écrivent le catalogue publié (interdit en écriture directe). Contrôle `has_role('editor')` en tête (donc second facteur exigé). Testé (09, 10). |
+| `authenticated_security_definer_function_executable` | `admin_list_team`, `admin_grant_role`, `admin_revoke_role`, `admin_audit_log` | Doivent lire `auth.users` (adresses de l'équipe), inaccessible autrement. Contrôle `has_role('super_admin')` (équipe) ou `has_role('editor')` (journal) ; le dernier super_admin ne peut pas être retiré. Testé (09, 10). |
+| `auth_leaked_password_protection` | Auth | Les applications n'utilisent **aucun mot de passe** (code par e-mail, Q-13). Vérification HaveIBeenPwned réservée à l'offre Pro : à activer sur le projet de production s'il passe en Pro. |
+| `unused_index` (information) | `hymns_number_idx`, `hymns_search_vector_idx`, `hymn_sections_search_vector_idx`, `favorites_hymn_id_idx`, `playlists_user_id_idx` | Base de développement peu sollicitée. Les deux derniers indexent des clés étrangères (suppressions en cascade, alerte 0001) ; les autres servent les tris et la recherche plein texte du back-office. Coût négligeable (≈ 1 150 cantiques). |
+
+Le test `10_privileged_functions` vérifie que **chaque** fonction privilégiée refuse un compte
+sans rôle et un éditeur sans second facteur.
+
 Toute autre alerte de sécurité doit être corrigée avant fusion.
+
+## Revue de sécurité du 2026-10-18 (tâche 10.3)
+
+| Contrôle | Résultat |
+|---|---|
+| `supabase db advisors` (sécurité, performance) | Uniquement les alertes acceptées ci-dessus |
+| RLS | Toutes les tables (test 01), refus par défaut ; 232 tests pgTAP |
+| Fonctions privilégiées | Refus vérifié pour compte sans rôle et éditeur sans second facteur (test 10) |
+| Second facteur | Exigé par la base (`aal2`), vérifié aussi contre l'API réelle |
+| Dépendances livrées (`pnpm audit --prod`) | Aucune vulnérabilité connue |
+| Dépendances de développement | `braces` ≤ 3.0.3 (déni de service par expression régulière) via `eslint-config-next` : outil de lint uniquement, motifs maîtrisés, aucun correctif publié — accepté |
+| Paquets Dart (`flutter pub get`) | Aucun avis de sécurité |
+| Secrets dans l'historique Git complet | Aucun (recherche de clés `sb_secret_`, jetons `sbp_`, JWT, chaînes de connexion, clés privées) ; seuls des `.env.example` sont versionnés |
+| Liens publics de programme | Jeton aléatoire, réponses indistinguables, `noindex`, `no-referrer`, `no-store` (tests 06, 08, test réel) |
+| Back-office | CSP à nonce, en-têtes, Zod, pas de redirection ouverte ; parcours complet sans violation de CSP |
+| Site public | CSP ajoutée lors de cette revue (voir `docs/deployment/web.md`) |
