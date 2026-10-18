@@ -226,5 +226,43 @@
   "unarchive": "Désarchiver",
   "archivedSection": "Archivés",
   "statusArchived": "Archivé",
-  "archivedInfo": "Programme archivé : son lien de partage ne fonctionne plus."
+  "archivedInfo": "Programme archivé : son lien de partage ne fonctionne plus.",
+  "project": "Projeter",
+  "projectionTitle": "Projection",
+  "connectScreen": "Connecter un écran",
+  "noScreenConnected": "Aucun écran connecté",
+  "screensConnected": "{count, plural, =1{1 écran connecté} other{{count} écrans connectés}}",
+  "@screensConnected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "previousSlide": "Précédente",
+  "nextSlide": "Suivante",
+  "blankScreen": "Écran noir",
+  "blankScreenOn": "Écran noir activé",
+  "upNext": "Ensuite : {label}",
+  "@upNext": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "lastSlide": "Dernière diapositive",
+  "repeatRefrain": "Répéter le refrain après chaque couplet",
+  "connectStep1": "Reliez l’ordinateur du projecteur au même Wi-Fi que ce téléphone, ou au point d’accès de ce téléphone. Internet n’est pas nécessaire.",
+  "connectStep2": "Dans le navigateur de l’ordinateur, ouvrez l’adresse ci-dessous (ou scannez le code).",
+  "connectStep3": "Cliquez sur la page pour passer en plein écran. Gardez cette application ouverte pendant la projection.",
+  "otherAddresses": "Autres adresses possibles",
+  "noNetwork": "Aucun réseau local : activez le Wi-Fi ou le point d’accès de ce téléphone.",
+  "stopProjectionTitle": "Arrêter la projection ?",
+  "stopProjectionMessage": "L’écran projeté n’affichera plus les cantiques.",
+  "stopProjection": "Arrêter",
+  "projectionUnavailable": "La projection n’a pas pu démarrer sur ce téléphone.",
+  "nothingToProject": "Rien à projeter",
+  "nothingToProjectMessage": "Ce programme ne contient aucun cantique ni moment.",
+  "allSlides": "Toutes les diapositives"
 }

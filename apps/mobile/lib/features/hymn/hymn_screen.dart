@@ -53,6 +53,11 @@ class HymnScreen extends ConsumerWidget {
               icon: const Icon(Icons.chrome_reader_mode_outlined),
               onPressed: () => context.push('/lecture/$hymnId'),
             ),
+            IconButton(
+              tooltip: l10n.project,
+              icon: const Icon(Icons.cast),
+              onPressed: () => context.push('/projection?cantique=$hymnId'),
+            ),
           ],
         ],
       ),

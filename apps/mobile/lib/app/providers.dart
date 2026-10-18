@@ -1,5 +1,6 @@
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -8,6 +9,7 @@ import '../core/catalog/bundled_catalog.dart';
 import '../core/catalog/catalog_repository.dart';
 import '../core/database/app_database.dart';
 import '../core/network/supabase_remotes.dart';
+import '../core/projection/projection_server.dart';
 import '../core/search/search_service.dart';
 import '../core/sharing/share_links.dart';
 import '../core/sync/catalog_sync.dart';
@@ -107,3 +109,27 @@ final shareLinksProvider = Provider<ShareLinks?>((ref) {
   final client = ref.watch(supabaseClientProvider);
   return client == null ? null : SupabaseShareLinks(client);
 });
+
+/// Démarre l'hôte de projection (serveur local) ; remplacé dans les tests.
+typedef ProjectionHostFactory = Future<ProjectionHost> Function({
+  String? token,
+  int? port,
+});
+
+final projectionHostFactoryProvider = Provider<ProjectionHostFactory>(
+  (ref) =>
+      ({token, port}) => ProjectionServer.start(
+        assets: _bundleAsset,
+        token: token,
+        preferredPort: port ?? 47100,
+      ),
+);
+
+Future<List<int>?> _bundleAsset(String path) async {
+  try {
+    final data = await rootBundle.load(path);
+    return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+  } on Object {
+    return null;
+  }
+}

@@ -12,6 +12,8 @@ const repoDir = resolve(packageDir, '../..');
 const outputs = (css: string, dart: string): Array<[string, string]> => [
   [resolve(packageDir, 'generated/tokens.css'), css],
   [resolve(repoDir, 'apps/mobile/lib/core/design_system/tokens.g.dart'), dart],
+  // Servi par le serveur de projection de l'app (écran projeté, Phase 8).
+  [resolve(repoDir, 'apps/mobile/assets/projection/tokens.css'), css],
 ];
 
 function main(command: string | undefined): number {

@@ -1,0 +1,125 @@
+/* GÉNÉRÉ par packages/design_tokens à partir de tokens.json — NE PAS MODIFIER. */
+
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+  --lad-color-background: #FFFFFF;
+  --lad-color-surface: #FAFAF8;
+  --lad-color-hairline: #ECE8E2;
+  --lad-color-text: #1F1A17;
+  --lad-color-text-secondary: #6B625B;
+  --lad-color-gold: #B08D57;
+  --lad-color-gold-text: #8A6A35;
+  --lad-color-error: #9B2C2C;
+  --lad-color-success: #3F6B4A;
+  --lad-color-info: #4F5F68;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --lad-color-background: #121110;
+    --lad-color-surface: #1B1A18;
+    --lad-color-hairline: #2C2925;
+    --lad-color-text: #F2EEE8;
+    --lad-color-text-secondary: #A89F96;
+    --lad-color-gold: #C9A46B;
+    --lad-color-gold-text: #D4B27A;
+    --lad-color-error: #E38B8B;
+    --lad-color-success: #8FC39C;
+    --lad-color-info: #9FB2BC;
+  }
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --lad-color-background: #121110;
+  --lad-color-surface: #1B1A18;
+  --lad-color-hairline: #2C2925;
+  --lad-color-text: #F2EEE8;
+  --lad-color-text-secondary: #A89F96;
+  --lad-color-gold: #C9A46B;
+  --lad-color-gold-text: #D4B27A;
+  --lad-color-error: #E38B8B;
+  --lad-color-success: #8FC39C;
+  --lad-color-info: #9FB2BC;
+}
+
+[data-theme='projection'] {
+  color-scheme: dark;
+  --lad-color-background: #000000;
+  --lad-color-surface: #000000;
+  --lad-color-hairline: #262626;
+  --lad-color-text: #FFFFFF;
+  --lad-color-text-secondary: #BDBDBD;
+  --lad-color-gold: #C9A46B;
+  --lad-color-gold-text: #D4B27A;
+  --lad-color-error: #E38B8B;
+  --lad-color-success: #8FC39C;
+  --lad-color-info: #9FB2BC;
+}
+
+:root {
+  --lad-font-display: 'Cormorant Garamond', Georgia, serif;
+  --lad-font-lyrics: 'Literata', Georgia, serif;
+  --lad-font-ui: 'Inter', system-ui, sans-serif;
+  --lad-type-display-family: var(--lad-font-display);
+  --lad-type-display-size: 40px;
+  --lad-type-display-line-height: 1.1;
+  --lad-type-display-weight: 500;
+  --lad-type-hymn-number-family: var(--lad-font-display);
+  --lad-type-hymn-number-size: 32px;
+  --lad-type-hymn-number-line-height: 1.1;
+  --lad-type-hymn-number-weight: 600;
+  --lad-type-title-family: var(--lad-font-display);
+  --lad-type-title-size: 26px;
+  --lad-type-title-line-height: 1.2;
+  --lad-type-title-weight: 600;
+  --lad-type-list-number-family: var(--lad-font-display);
+  --lad-type-list-number-size: 20px;
+  --lad-type-list-number-line-height: 1.2;
+  --lad-type-list-number-weight: 600;
+  --lad-type-headline-family: var(--lad-font-ui);
+  --lad-type-headline-size: 20px;
+  --lad-type-headline-line-height: 1.3;
+  --lad-type-headline-weight: 600;
+  --lad-type-lyrics-family: var(--lad-font-lyrics);
+  --lad-type-lyrics-size: 20px;
+  --lad-type-lyrics-line-height: 1.55;
+  --lad-type-lyrics-weight: 400;
+  --lad-type-body-family: var(--lad-font-ui);
+  --lad-type-body-size: 16px;
+  --lad-type-body-line-height: 1.5;
+  --lad-type-body-weight: 400;
+  --lad-type-label-family: var(--lad-font-ui);
+  --lad-type-label-size: 14px;
+  --lad-type-label-line-height: 1.4;
+  --lad-type-label-weight: 500;
+  --lad-type-caption-family: var(--lad-font-ui);
+  --lad-type-caption-size: 12px;
+  --lad-type-caption-line-height: 1.4;
+  --lad-type-caption-weight: 400;
+  --lad-space-xxs: 2px;
+  --lad-space-xs: 4px;
+  --lad-space-sm: 8px;
+  --lad-space-md: 12px;
+  --lad-space-lg: 16px;
+  --lad-space-xl: 24px;
+  --lad-space-xxl: 32px;
+  --lad-space-xxxl: 48px;
+  --lad-space-huge: 64px;
+  --lad-radius-none: 0px;
+  --lad-radius-sm: 4px;
+  --lad-radius-md: 8px;
+  --lad-radius-lg: 12px;
+  --lad-radius-pill: 999px;
+  --lad-stroke-hairline: 1px;
+  --lad-stroke-refrain-rule: 2px;
+  --lad-duration-fast: 120ms;
+  --lad-duration-base: 200ms;
+  --lad-duration-slow: 320ms;
+  --lad-touch-target-min: 48px;
+  --lad-lyrics-size-min: 16px;
+  --lad-lyrics-size-default: 20px;
+  --lad-lyrics-size-max: 34px;
+}

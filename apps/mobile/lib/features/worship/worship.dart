@@ -153,6 +153,11 @@ class WorshipEditorScreen extends ConsumerWidget {
         title: Text(service.title),
         actions: [
           IconButton(
+            tooltip: l10n.project,
+            icon: const Icon(Icons.cast),
+            onPressed: () => context.push('/projection?programme=$serviceId'),
+          ),
+          IconButton(
             tooltip: l10n.share,
             icon: const Icon(Icons.ios_share),
             onPressed: () => shareProgram(context, ref, service),

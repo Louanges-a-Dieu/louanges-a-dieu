@@ -1,0 +1,218 @@
+{
+  "description": "Sections longues découpées en parties équilibrées (7 → 4+3, 13 → 5+4+4) ; note non projetée ; introduction : ordre imprimé conservé",
+  "options": {
+    "repeatRefrain": true,
+    "maxLines": 6
+  },
+  "hymn": {
+    "id": "00000000-0000-4000-8000-000000000010",
+    "numberLabel": "37bis",
+    "numberNumeric": 37,
+    "numberSuffix": "bis",
+    "title": "Cantique B",
+    "openingLine": null,
+    "languageCode": "fr",
+    "sections": [
+      {
+        "id": "00000000-0000-4000-8000-000000000006",
+        "type": "intro",
+        "number": null,
+        "order": 0,
+        "lines": [
+          {
+            "text": "Introduction, vers 1",
+            "repeat": null
+          },
+          {
+            "text": "Introduction, vers 2",
+            "repeat": null
+          }
+        ]
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000007",
+        "type": "verse",
+        "number": 1,
+        "order": 1,
+        "lines": [
+          {
+            "text": "Couplet 1, vers 1",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 1, vers 2",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 1, vers 3",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 1, vers 4",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 1, vers 5",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 1, vers 6",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 1, vers 7",
+            "repeat": null
+          }
+        ]
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "type": "note",
+        "number": null,
+        "order": 2,
+        "lines": [
+          {
+            "text": "(Se chante sur l'air du 37)",
+            "repeat": null
+          }
+        ]
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000009",
+        "type": "verse",
+        "number": 2,
+        "order": 3,
+        "lines": [
+          {
+            "text": "Couplet 2, vers 1",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 2",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 3",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 4",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 5",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 6",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 7",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 8",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 9",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 10",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 11",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 12",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 13",
+            "repeat": null
+          }
+        ]
+      }
+    ],
+    "bibleReferences": [],
+    "relations": [],
+    "people": [],
+    "themes": []
+  },
+  "expected": [
+    {
+      "kind": "title",
+      "numberLabel": "37bis",
+      "title": "Cantique B"
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "37bis",
+      "sectionType": "intro",
+      "sectionNumber": null,
+      "part": 1,
+      "parts": 1,
+      "lines": ["Introduction, vers 1", "Introduction, vers 2"]
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "37bis",
+      "sectionType": "verse",
+      "sectionNumber": 1,
+      "part": 1,
+      "parts": 2,
+      "lines": ["Couplet 1, vers 1", "Couplet 1, vers 2", "Couplet 1, vers 3", "Couplet 1, vers 4"]
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "37bis",
+      "sectionType": "verse",
+      "sectionNumber": 1,
+      "part": 2,
+      "parts": 2,
+      "lines": ["Couplet 1, vers 5", "Couplet 1, vers 6", "Couplet 1, vers 7"]
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "37bis",
+      "sectionType": "verse",
+      "sectionNumber": 2,
+      "part": 1,
+      "parts": 3,
+      "lines": [
+        "Couplet 2, vers 1",
+        "Couplet 2, vers 2",
+        "Couplet 2, vers 3",
+        "Couplet 2, vers 4",
+        "Couplet 2, vers 5"
+      ]
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "37bis",
+      "sectionType": "verse",
+      "sectionNumber": 2,
+      "part": 2,
+      "parts": 3,
+      "lines": ["Couplet 2, vers 6", "Couplet 2, vers 7", "Couplet 2, vers 8", "Couplet 2, vers 9"]
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "37bis",
+      "sectionType": "verse",
+      "sectionNumber": 2,
+      "part": 3,
+      "parts": 3,
+      "lines": [
+        "Couplet 2, vers 10",
+        "Couplet 2, vers 11",
+        "Couplet 2, vers 12",
+        "Couplet 2, vers 13"
+      ]
+    }
+  ]
+}

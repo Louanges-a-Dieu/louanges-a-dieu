@@ -6,6 +6,8 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Louanges à Dieu utilise le réseau local pour afficher les cantiques sur l’ordinateur relié au projecteur.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

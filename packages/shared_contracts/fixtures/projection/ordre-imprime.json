@@ -1,0 +1,149 @@
+{
+  "description": "Option désactivée : ordre imprimé",
+  "options": {
+    "repeatRefrain": false,
+    "maxLines": 6
+  },
+  "hymn": {
+    "id": "00000000-0000-4000-8000-000000000005",
+    "numberLabel": "12",
+    "numberNumeric": 12,
+    "numberSuffix": null,
+    "title": "Cantique A",
+    "openingLine": null,
+    "languageCode": "fr",
+    "sections": [
+      {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "type": "verse",
+        "number": 1,
+        "order": 0,
+        "lines": [
+          {
+            "text": "Couplet 1, vers 1",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 1, vers 2",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 1, vers 3",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 1, vers 4",
+            "repeat": null
+          }
+        ]
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "type": "refrain",
+        "number": null,
+        "order": 1,
+        "lines": [
+          {
+            "text": "Refrain, vers 1",
+            "repeat": null
+          },
+          {
+            "text": "Refrain, vers 2",
+            "repeat": null
+          }
+        ]
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000003",
+        "type": "verse",
+        "number": 2,
+        "order": 2,
+        "lines": [
+          {
+            "text": "Couplet 2, vers 1",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 2",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 3",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 4",
+            "repeat": null
+          }
+        ]
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000004",
+        "type": "verse",
+        "number": 3,
+        "order": 3,
+        "lines": [
+          {
+            "text": "Couplet 3, vers 1",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 3, vers 2",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 3, vers 3",
+            "repeat": null
+          }
+        ]
+      }
+    ],
+    "bibleReferences": [],
+    "relations": [],
+    "people": [],
+    "themes": []
+  },
+  "expected": [
+    {
+      "kind": "title",
+      "numberLabel": "12",
+      "title": "Cantique A"
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "12",
+      "sectionType": "verse",
+      "sectionNumber": 1,
+      "part": 1,
+      "parts": 1,
+      "lines": ["Couplet 1, vers 1", "Couplet 1, vers 2", "Couplet 1, vers 3", "Couplet 1, vers 4"]
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "12",
+      "sectionType": "refrain",
+      "sectionNumber": null,
+      "part": 1,
+      "parts": 1,
+      "lines": ["Refrain, vers 1", "Refrain, vers 2"]
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "12",
+      "sectionType": "verse",
+      "sectionNumber": 2,
+      "part": 1,
+      "parts": 1,
+      "lines": ["Couplet 2, vers 1", "Couplet 2, vers 2", "Couplet 2, vers 3", "Couplet 2, vers 4"]
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "12",
+      "sectionType": "verse",
+      "sectionNumber": 3,
+      "part": 1,
+      "parts": 1,
+      "lines": ["Couplet 3, vers 1", "Couplet 3, vers 2", "Couplet 3, vers 3"]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "description": "Un seul couplet : aucune répétition supposée, ordre imprimé",
+  "options": {
+    "repeatRefrain": true,
+    "maxLines": 6
+  },
+  "hymn": {
+    "id": "00000000-0000-4000-8000-000000000017",
+    "numberLabel": "3",
+    "numberNumeric": 3,
+    "numberSuffix": null,
+    "title": "Cantique D",
+    "openingLine": null,
+    "languageCode": "fr",
+    "sections": [
+      {
+        "id": "00000000-0000-4000-8000-000000000015",
+        "type": "verse",
+        "number": 1,
+        "order": 0,
+        "lines": [
+          {
+            "text": "Couplet unique, vers 1",
+            "repeat": null
+          },
+          {
+            "text": "Couplet unique, vers 2",
+            "repeat": null
+          },
+          {
+            "text": "Couplet unique, vers 3",
+            "repeat": null
+          },
+          {
+            "text": "Couplet unique, vers 4",
+            "repeat": null
+          }
+        ]
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000016",
+        "type": "refrain",
+        "number": null,
+        "order": 1,
+        "lines": [
+          {
+            "text": "Refrain, vers 1",
+            "repeat": null
+          },
+          {
+            "text": "Refrain, vers 2",
+            "repeat": null
+          }
+        ]
+      }
+    ],
+    "bibleReferences": [],
+    "relations": [],
+    "people": [],
+    "themes": []
+  },
+  "expected": [
+    {
+      "kind": "title",
+      "numberLabel": "3",
+      "title": "Cantique D"
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "3",
+      "sectionType": "verse",
+      "sectionNumber": 1,
+      "part": 1,
+      "parts": 1,
+      "lines": [
+        "Couplet unique, vers 1",
+        "Couplet unique, vers 2",
+        "Couplet unique, vers 3",
+        "Couplet unique, vers 4"
+      ]
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "3",
+      "sectionType": "refrain",
+      "sectionNumber": null,
+      "part": 1,
+      "parts": 1,
+      "lines": ["Refrain, vers 1", "Refrain, vers 2"]
+    }
+  ]
+}

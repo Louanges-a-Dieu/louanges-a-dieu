@@ -1,0 +1,126 @@
+{
+  "description": "Refrain imprimé en tête : chanté d'abord puis après chaque couplet",
+  "options": {
+    "repeatRefrain": true,
+    "maxLines": 6
+  },
+  "hymn": {
+    "id": "00000000-0000-4000-8000-000000000014",
+    "numberLabel": "245",
+    "numberNumeric": 245,
+    "numberSuffix": null,
+    "title": "Cantique C",
+    "openingLine": null,
+    "languageCode": "fr",
+    "sections": [
+      {
+        "id": "00000000-0000-4000-8000-000000000011",
+        "type": "refrain",
+        "number": null,
+        "order": 0,
+        "lines": [
+          {
+            "text": "Refrain, vers 1",
+            "repeat": null
+          },
+          {
+            "text": "Refrain, vers 2",
+            "repeat": null
+          },
+          {
+            "text": "Refrain, vers 3",
+            "repeat": null
+          }
+        ]
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000012",
+        "type": "verse",
+        "number": 1,
+        "order": 1,
+        "lines": [
+          {
+            "text": "Couplet 1, vers 1",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 1, vers 2",
+            "repeat": null
+          }
+        ]
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000013",
+        "type": "verse",
+        "number": 2,
+        "order": 2,
+        "lines": [
+          {
+            "text": "Couplet 2, vers 1",
+            "repeat": null
+          },
+          {
+            "text": "Couplet 2, vers 2",
+            "repeat": null
+          }
+        ]
+      }
+    ],
+    "bibleReferences": [],
+    "relations": [],
+    "people": [],
+    "themes": []
+  },
+  "expected": [
+    {
+      "kind": "title",
+      "numberLabel": "245",
+      "title": "Cantique C"
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "245",
+      "sectionType": "refrain",
+      "sectionNumber": null,
+      "part": 1,
+      "parts": 1,
+      "lines": ["Refrain, vers 1", "Refrain, vers 2", "Refrain, vers 3"]
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "245",
+      "sectionType": "verse",
+      "sectionNumber": 1,
+      "part": 1,
+      "parts": 1,
+      "lines": ["Couplet 1, vers 1", "Couplet 1, vers 2"]
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "245",
+      "sectionType": "refrain",
+      "sectionNumber": null,
+      "part": 1,
+      "parts": 1,
+      "lines": ["Refrain, vers 1", "Refrain, vers 2", "Refrain, vers 3"]
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "245",
+      "sectionType": "verse",
+      "sectionNumber": 2,
+      "part": 1,
+      "parts": 1,
+      "lines": ["Couplet 2, vers 1", "Couplet 2, vers 2"]
+    },
+    {
+      "kind": "lyrics",
+      "numberLabel": "245",
+      "sectionType": "refrain",
+      "sectionNumber": null,
+      "part": 1,
+      "parts": 1,
+      "lines": ["Refrain, vers 1", "Refrain, vers 2", "Refrain, vers 3"]
+    }
+  ]
+}

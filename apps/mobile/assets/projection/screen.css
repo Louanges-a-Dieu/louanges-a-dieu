@@ -1,0 +1,155 @@
+/* Écran projeté (Phase 8). Couleurs : tokens générés (thème « projection »). */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('fonts/cormorant.ttf') format('truetype');
+  font-weight: 300 700;
+}
+
+@font-face {
+  font-family: 'Literata';
+  src: url('fonts/literata.ttf') format('truetype');
+  font-weight: 200 900;
+}
+
+@font-face {
+  font-family: 'Literata';
+  src: url('fonts/literata-italic.ttf') format('truetype');
+  font-weight: 200 900;
+  font-style: italic;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--lad-color-background);
+  color: var(--lad-color-text);
+  font-family: var(--lad-font-lyrics);
+}
+
+body.idle {
+  cursor: none;
+}
+
+.stage {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5vh 6vw;
+}
+
+.content {
+  max-width: 100%;
+  max-height: 100%;
+  text-align: center;
+  transition: opacity 120ms linear;
+}
+
+body.blank .content {
+  opacity: 0;
+}
+
+.brand {
+  margin: 0 0 0.4em;
+  color: var(--lad-color-gold-text);
+  font-family: var(--lad-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.5em;
+}
+
+.waiting-text {
+  margin: 0;
+  color: var(--lad-color-text-secondary);
+  font-size: 0.6em;
+}
+
+.number {
+  margin: 0;
+  color: var(--lad-color-gold-text);
+  font-family: var(--lad-font-display);
+  font-weight: 600;
+  font-variant-numeric: lining-nums;
+}
+
+.title {
+  margin: 0.2em 0 0;
+  font-family: var(--lad-font-display);
+  font-weight: 500;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.label {
+  margin: 0;
+  font-family: var(--lad-font-display);
+  font-weight: 500;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.section-name {
+  margin: 0 0 0.5em;
+  color: var(--lad-color-gold-text);
+  font-family: var(--lad-font-ui);
+  font-size: 0.42em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lines {
+  margin: 0;
+  line-height: 1.35;
+}
+
+.lines p {
+  margin: 0;
+  text-wrap: balance;
+}
+
+.refrain .lines {
+  font-style: italic;
+}
+
+.hint,
+.status {
+  position: fixed;
+  margin: 0;
+  padding: 0.4em 0.8em;
+  font-family: var(--lad-font-ui);
+  font-size: 14px;
+  color: var(--lad-color-text-secondary);
+}
+
+.hint {
+  left: 50%;
+  bottom: 2vh;
+  transform: translateX(-50%);
+  border: 1px solid var(--lad-color-hairline);
+  border-radius: 999px;
+}
+
+.status {
+  right: 1.5vw;
+  bottom: 1.5vh;
+  opacity: 0.7;
+}
+
+.status::before {
+  content: '';
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  margin-right: 0.5em;
+  border-radius: 50%;
+  background: var(--lad-color-error);
+}

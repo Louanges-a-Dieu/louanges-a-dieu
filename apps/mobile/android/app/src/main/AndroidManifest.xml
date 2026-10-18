@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Réseau : synchronisation (Supabase) et serveur local de projection
+         (Phase 8). Sans cette ligne, la version publiée n'a aucun accès réseau. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Louanges à Dieu"
         android:name="${applicationName}"

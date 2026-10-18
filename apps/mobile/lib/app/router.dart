@@ -9,6 +9,7 @@ import '../features/hymn/hymn_screen.dart';
 import '../features/hymnal/hymnal_screen.dart';
 import '../features/lists/lists.dart';
 import '../features/more/more_screen.dart';
+import '../features/projection/projection_screen.dart';
 import '../features/reader/reader_screen.dart';
 import '../features/search/search_screen.dart';
 import '../features/shell/app_shell.dart';
@@ -102,6 +103,18 @@ final routerProvider = Provider<GoRouter>(
         path: '/cantique/:id',
         parentNavigatorKey: _rootKey,
         builder: (_, state) => HymnScreen(hymnId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/projection',
+        parentNavigatorKey: _rootKey,
+        builder: (_, state) {
+          final params = state.uri.queryParameters;
+          final programme = params['programme'];
+          return ProjectionScreen(
+            hymnId: programme == null ? params['cantique'] ?? '' : null,
+            serviceId: programme,
+          );
+        },
       ),
       GoRoute(
         path: '/lecture/:id',
