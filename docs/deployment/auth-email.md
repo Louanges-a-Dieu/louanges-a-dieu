@@ -1,45 +1,100 @@
-# Connexion par e-mail (Supabase Auth)
+# Connexion par e-mail (Supabase Auth + Resend)
 
 L'application se connecte **sans mot de passe** (Q-13) : l'utilisateur reçoit un e-mail
-contenant un **lien** qui rouvre l'application et, si le modèle d'e-mail le permet, un **code**
-à saisir. Les deux sont gérés par l'app (`lib/core/auth/auth_service.dart`).
+contenant un **code** à saisir et un **lien** qui rouvre l'application. Les deux sont gérés par
+l'app (`apps/mobile/lib/core/auth/auth_service.dart`).
 
-## État du projet de développement (2026-10-18)
+## Pourquoi un service d'envoi dédié
 
-| Réglage | Valeur | Conséquence |
-|---|---|---|
-| Serveur d'envoi | celui de Supabase (par défaut) | modèles d'e-mail **non modifiables** sur l'offre gratuite pour les projets créés après le 3 juin 2026 : lien seulement, pas de code |
-| Limite d'envoi | **2 e-mails par heure** | suffisant pour tester, inutilisable en production |
-| URL de retour autorisées | aucune | le lien de connexion ne peut pas rouvrir l'app |
+Le projet Supabase (offre gratuite, créé après le 3 juin 2026) envoie par défaut **2 e-mails
+par heure** et **interdit de modifier les modèles** (donc d'y ajouter le code). Brancher un
+serveur SMTP dédié lève ces deux limites.
 
-## À configurer par le propriétaire
+Service retenu : **Resend** — offre gratuite de 3 000 e-mails par mois (100 par jour), guide
+officiel pour Supabase : <https://resend.com/docs/send-with-supabase-smtp>.
 
-### 1. Adresses de retour autorisées (indispensable)
+## Procédure (propriétaire)
 
-Tableau de bord Supabase → **Authentication → URL Configuration → Redirect URLs** :
+### Étape 1 — Compte Resend au nom du projet
+
+1. Créer un compte sur <https://resend.com> avec l'adresse du projet `louangesaDieu04@gmail.com`.
+2. Activer la double authentification ; noter les codes de secours dans le coffre.
+
+### Étape 2 — Domaine d'expédition
+
+Les e-mails partent d'une adresse sur un domaine que vous contrôlez. Recommandation : un
+**sous-domaine dédié**, qui isole la réputation d'envoi du domaine principal, par exemple
+`louanges.eglisedabidjan.com` ; adresse d'expédition `connexion@louanges.eglisedabidjan.com`.
+
+1. Resend → **Domains → Add Domain** → saisir le sous-domaine ; région **Ireland (eu-west-1)**
+   (même région que la base Supabase).
+2. Resend affiche des enregistrements DNS (en général : un `TXT` DKIM, un `MX` et un `TXT` SPF
+   sur un sous-domaine `send`). Les ajouter **tels quels** chez le gestionnaire DNS du domaine.
+3. Revenir dans Resend → **Verify DNS Records**. La vérification peut prendre de quelques
+   minutes à quelques heures.
+
+### Étape 3 — Clé d'API Resend
+
+Resend → **API Keys → Create API Key** : nom `supabase-auth`, permission **Sending access**
+(envoi uniquement), limitée au domaine de l'étape 2. Copier la clé **directement** dans
+Supabase (étape 4) et dans le coffre. **Ne jamais la transmettre par messagerie ou chat.**
+
+### Étape 4 — Brancher Resend dans Supabase
+
+Tableau de bord Supabase → projet → **Authentication → Emails → SMTP Settings** → activer
+**Enable Custom SMTP** :
+
+| Champ | Valeur |
+|---|---|
+| Sender email | `connexion@louanges.eglisedabidjan.com` (adresse du domaine vérifié) |
+| Sender name | `Louanges à Dieu` |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | la clé d'API de l'étape 3 |
+
+Enregistrer.
+
+### Étape 5 — Réglages de sécurité Auth
+
+- **Authentication → Rate Limits** : « Rate limit for sending emails » → `30` par heure
+  (suffisant ; à ajuster selon l'usage).
+- **Authentication → Providers → Email** : « Email OTP Expiration » → `600` secondes (10 min) ;
+  « Email OTP Length » : laisser `8`.
+- **Authentication → URL Configuration → Redirect URLs** : ajouter
+  `org.louangesadieu.app://login-callback/` et `http://localhost:8080`.
+
+### Étape 6 — Modèles d'e-mail en français (avec le code)
+
+**Authentication → Emails → Templates**. Le même contenu pour **Magic Link** (utilisateur
+existant) et **Confirm signup** (première connexion).
+
+Objet :
 
 ```text
-org.louangesadieu.app://login-callback/
-http://localhost:8080
+Votre code de connexion — Louanges à Dieu
 ```
 
-La première rouvre l'application mobile (schéma déclaré dans `AndroidManifest.xml` et
-`Info.plist`) ; la seconde sert à l'aperçu web de développement.
-
-### 2. Service d'envoi d'e-mails (indispensable avant la production)
-
-Brancher un serveur SMTP dédié (**Authentication → Emails → SMTP Settings**) lève la limite de
-2 e-mails/heure et permet de personnaliser les modèles, donc d'y ajouter le **code** :
+Corps (HTML) :
 
 ```html
-<p>Votre code de connexion : <strong>{{ .Token }}</strong></p>
-<p>Ou touchez ce lien depuis votre téléphone : <a href="{{ .ConfirmationURL }}">Se connecter</a></p>
+<div style="font-family: Georgia, 'Times New Roman', serif; max-width: 480px; margin: 0 auto; color: #1F1A17;">
+  <h2 style="font-weight: 600; margin-bottom: 24px;">Louanges à Dieu</h2>
+  <p>Voici votre code de connexion :</p>
+  <p style="font-size: 30px; letter-spacing: 6px; font-weight: 600; margin: 16px 0;">{{ .Token }}</p>
+  <p>Saisissez-le dans l’application. Vous pouvez aussi toucher ce lien <strong>depuis votre téléphone</strong> :</p>
+  <p><a href="{{ .ConfirmationURL }}" style="color: #8A6A35;">Se connecter à Louanges à Dieu</a></p>
+  <p style="color: #6B625B; font-size: 13px; margin-top: 32px;">
+    Ce code expire dans 10 minutes. Si vous n’avez pas demandé cette connexion, ignorez simplement ce message.
+  </p>
+</div>
 ```
 
-Fournisseurs possibles (offre gratuite suffisante au démarrage) : Resend, Brevo, Postmark,
-Amazon SES. Il faut un **nom de domaine d'expédition** vérifié (enregistrements DNS SPF/DKIM),
-par exemple un sous-domaine de `eglisedabidjan.com`. Le compte du fournisseur doit être créé au
-nom du projet (`docs/ownership/accounts.md`).
+### Étape 7 — Vérification
+
+Le développeur relit la configuration (lecture seule via l'API de gestion : SMTP actif,
+modèles contenant `{{ .Token }}`, adresses de retour) puis un essai réel de connexion est fait
+depuis l'aperçu web avec l'adresse du projet.
 
 ## Tests sans e-mail
 
