@@ -14,7 +14,7 @@ insert into public.user_roles (user_id, role) values
 
 -- ---------------------------------------------------------------- éditeur
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","role":"authenticated","aal":"aal2"}', true);
 
 select lives_ok(
   $$ insert into public.editions (id, name, edition_number)
@@ -173,14 +173,14 @@ select ok(
 );
 
 -- ------------------------------------------------------------ super_admin
-select set_config('request.jwt.claims', '{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","aal":"aal2"}', true);
 select lives_ok(
   $$ update public.hymns set status = 'archived' where id = 'a0000000-0000-4000-8000-000000000001' $$,
   'le super_admin archive'
 );
 
 -- ------------------------------------------------------- utilisateur simple
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 select is_empty($$ select 1 from public.hymns $$, 'un utilisateur simple ne voit pas la copie de travail');
 select is_empty($$ select 1 from public.audit_log $$, 'ni le journal');
 select throws_ok(

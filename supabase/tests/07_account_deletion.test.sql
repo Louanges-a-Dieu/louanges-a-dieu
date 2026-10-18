@@ -11,7 +11,7 @@ insert into public.hymns (id, edition_id, number_label, number_numeric, title) v
   ('a0000000-0000-4000-8000-000000000001', 'ed000000-0000-4000-8000-000000000006', '1', 1, 'Un');
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 select public.sync_push_favorites('[{"hymnId":"a0000000-0000-4000-8000-000000000001"}]');
 select public.sync_push_playlist('{"id":"b1000000-0000-4000-8000-000000000001","name":"Liste A",
   "items":[{"hymnId":"a0000000-0000-4000-8000-000000000001","order":0}]}');
@@ -41,7 +41,7 @@ select throws_ok($$ select public.delete_my_account() $$, '42501', null, 'anon n
 reset role;
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"role":"authenticated","aal":"aal2"}', true);
 select throws_ok($$ select public.delete_my_account() $$, '42501', null, 'sans identité, rien n''est supprimé');
 reset role;
 

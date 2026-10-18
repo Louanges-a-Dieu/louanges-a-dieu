@@ -14,7 +14,7 @@ insert into public.hymns (id, edition_id, number_label, number_numeric, title) v
 
 -- --------------------------------------------------------------- utilisateur A
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 
 select lives_ok(
   $$ select public.sync_push_favorites('[{"hymnId":"a0000000-0000-4000-8000-000000000001"},
@@ -95,7 +95,7 @@ select throws_ok(
 );
 
 -- --------------------------------------------------------------- utilisateur B
-select set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated","aal":"aal2"}', true);
 select is(
   public.sync_pull(0) - 'revision',
   '{"favorites": [], "playlists": [], "worshipServices": []}'::jsonb,

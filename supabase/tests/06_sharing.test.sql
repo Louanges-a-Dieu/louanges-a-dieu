@@ -12,7 +12,7 @@ delete from public.catalog_releases;
 
 -- Catalogue publié : le cantique 1 est publié, le 2 ne l'est pas.
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","role":"authenticated","aal":"aal2"}', true);
 insert into public.editions (id, name) values ('ed000000-0000-4000-8000-000000000006', 'Test');
 insert into public.hymns (id, edition_id, number_label, number_numeric, title) values
   ('a0000000-0000-4000-8000-000000000001', 'ed000000-0000-4000-8000-000000000006', '1', 1, 'Titre publié'),
@@ -24,7 +24,7 @@ select public.set_hymns_status(array['a0000000-0000-4000-8000-000000000001']::uu
 select public.publish_release('ed000000-0000-4000-8000-000000000006');
 
 -- Programme de A, en brouillon
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 select public.sync_push_worship_service('{"id":"c1000000-0000-4000-8000-000000000001",
   "title":"Culte de Pâques","serviceDate":"2027-03-28","status":"draft",
   "items":[{"label":"Accueil","order":0},
@@ -45,7 +45,7 @@ select is(public.get_shared_program(current_setting('test.token')), null,
 reset role;
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 update public.worship_services set status = 'published' where id = 'c1000000-0000-4000-8000-000000000001';
 
 -- ------------------------------------------------------------ vue publique
@@ -81,7 +81,7 @@ reset role;
 
 -- ------------------------------------------------------------- autre compte
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated","aal":"aal2"}', true);
 select throws_ok(
   $$ select public.create_share_link('c1000000-0000-4000-8000-000000000001') $$,
   'P0002', null, 'B ne peut pas créer de lien pour le programme de A'
@@ -92,7 +92,7 @@ select throws_ok(
 );
 
 -- ------------------------------------------------- révocation et régénération
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 select public.revoke_share_link('c1000000-0000-4000-8000-000000000001');
 reset role;
 set local role anon;
@@ -100,7 +100,7 @@ select is(public.get_shared_program(current_setting('test.token')), null, 'un li
 reset role;
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 select set_config('test.token2', public.create_share_link('c1000000-0000-4000-8000-000000000001'), true);
 select isnt(current_setting('test.token2'), current_setting('test.token'), 'un nouveau lien a un nouveau jeton');
 reset role;

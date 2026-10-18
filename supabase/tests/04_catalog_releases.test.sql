@@ -22,7 +22,7 @@ reset role;
 
 -- --------------------------------------------------------- contenu éditorial
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","role":"authenticated","aal":"aal2"}', true);
 
 insert into public.editions (id, name, edition_number)
 values ('ed000000-0000-4000-8000-000000000006', 'Louanges à Dieu (test)', 6);
@@ -131,7 +131,7 @@ reset role;
 
 -- --------------------------------------------------- release 2 : correction
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","role":"authenticated","aal":"aal2"}', true);
 update public.hymns set status = 'review' where id = 'a0000000-0000-4000-8000-000000000001';
 update public.hymns set status = 'published' where id = 'a0000000-0000-4000-8000-000000000001';
 select isnt(
@@ -157,7 +157,7 @@ reset role;
 
 -- ------------------------------------------------- release 3 : archivage
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","aal":"aal2"}', true);
 update public.hymns set status = 'archived' where id = 'a0000000-0000-4000-8000-000000000003';
 select set_config('test.r2', (select max(id)::text from public.catalog_releases), true);
 select ok(public.publish_release('ed000000-0000-4000-8000-000000000006') > current_setting('test.r2')::integer,
@@ -195,7 +195,7 @@ select throws_ok(
 reset role;
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 select throws_ok(
   $$ select public.publish_release('ed000000-0000-4000-8000-000000000006') $$,
   '42501', null, 'un utilisateur sans rôle ne peut pas publier'

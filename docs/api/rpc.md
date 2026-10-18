@@ -52,6 +52,22 @@ Transitions autorisées : `draft → review → published`, `review → draft`, 
 La validation est refusée si le cantique n'a aucune section, a une anomalie bloquante ouverte
 ou des droits `restricted`.
 
+## Back-office (Phase 9) — session avec second facteur (`aal2`) obligatoire
+
+Depuis la migration 0015, `private.has_role()` ne reconnaît un rôle qu'avec une session
+`aal2` (TOTP vérifié) : sans second facteur, un éditeur n'a **aucun** droit éditorial, même
+en appelant l'API directement.
+
+| Fonction | Rôle | Effet |
+|---|---|---|
+| `import_catalog_draft(p_draft, p_dry_run?)` | editor | charge un `catalog.draft.json` (jamais d'écrasement : A-20 / A-21) ; `p_dry_run` = diff de réimport sans écriture. Aussi utilisée par `content-tools load` |
+| `preview_release(p_edition_id)` | editor | cantiques `added` / `changed` / `removed` si l'on publiait maintenant |
+| `rollback_release(p_edition_id, p_release_id, p_notes?)` | editor | nouvelle release au contenu d'une release précédente |
+| `search_hymns_admin(p_query?, p_status?, p_issues?, p_rights?, p_limit?, p_offset?, p_edition_id?)` | editor (RLS) | liste filtrée, recherche sans accents (numéro, titre, premier vers, texte) |
+| `editorial_stats()` | editor | compteurs du tableau de bord |
+| `admin_list_team()`, `admin_grant_role(p_email, p_role)`, `admin_revoke_role(p_user_id, p_role)` | super_admin | équipe ; jamais de retrait du dernier super_admin |
+| `admin_audit_log(p_record_id?, p_limit?, p_before?)` | editor | journal avec l'adresse de l'auteur |
+
 ## Amorçage du premier super_admin
 
 Aucun compte n'est privilégié par défaut. Après la première inscription du responsable, le

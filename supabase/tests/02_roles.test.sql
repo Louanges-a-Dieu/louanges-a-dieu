@@ -25,7 +25,7 @@ select set_config('test.total_roles', ((select count(*) from public.user_roles) 
 
 -- Utilisateur sans rôle
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated","aal":"aal2"}', true);
 select ok(not private.has_role('editor'), 'un utilisateur ordinaire n''est pas éditeur');
 select is_empty($$ select 1 from public.user_roles $$, 'il ne voit aucun rôle');
 select throws_ok(
@@ -35,7 +35,7 @@ select throws_ok(
 );
 
 -- Éditeur
-select set_config('request.jwt.claims', '{"sub":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","role":"authenticated","aal":"aal2"}', true);
 select ok(private.has_role('editor'), 'l''éditeur a le rôle editor');
 select ok(not private.has_role('super_admin'), 'l''éditeur n''est pas super_admin');
 select results_eq($$ select role::text from public.user_roles $$, array['editor'], 'l''éditeur ne voit que son rôle');
@@ -46,7 +46,7 @@ select throws_ok(
 );
 
 -- Super admin
-select set_config('request.jwt.claims', '{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"55555555-5555-4555-8555-555555555555","role":"authenticated","aal":"aal2"}', true);
 select ok(private.has_role('editor'), 'le super_admin détient aussi le rôle editor');
 select lives_ok(
   $$ insert into public.user_roles (user_id, role, granted_by)
