@@ -18,6 +18,7 @@ dependencies:
   intl: ^0.20.3
   path: ^1.9.1
   path_provider: ^2.1.6
+  share_plus: ^13.3.1
   supabase_flutter: ^2.18.3
   wakelock_plus: ^1.8.1
 

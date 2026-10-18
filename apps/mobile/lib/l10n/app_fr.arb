@@ -180,5 +180,51 @@
         "type": "int"
       }
     }
-  }
+  },
+  "navWorship": "Culte",
+  "worshipNeedAccountTitle": "Les programmes sont liés à votre compte",
+  "worshipNeedAccountMessage": "Connectez-vous pour préparer un programme de culte, le partager et le projeter.",
+  "worshipEmptyTitle": "Aucun programme",
+  "worshipEmptyMessage": "Préparez le déroulé d’un culte : cantiques et moments libres, dans l’ordre.",
+  "newProgram": "Nouveau programme",
+  "programTitle": "Titre du programme",
+  "programDate": "Date du culte",
+  "noDate": "Sans date",
+  "statusDraft": "Brouillon",
+  "statusPublished": "Publié",
+  "published": "Publié (visible par le lien de partage)",
+  "addHymn": "Ajouter un cantique",
+  "addSection": "Ajouter un moment",
+  "sectionLabel": "Intitulé (accueil, prière, annonces…)",
+  "sectionNotes": "Note (facultative)",
+  "editNote": "Modifier la note",
+  "duplicate": "Dupliquer",
+  "copyOf": "{title} (copie)",
+  "@copyOf": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteProgramTitle": "Supprimer ce programme ?",
+  "programEmptyTitle": "Programme vide",
+  "programEmptyMessage": "Ajoutez des cantiques et des moments, puis réordonnez-les.",
+  "chooseHymn": "Choisir un cantique",
+  "share": "Partager",
+  "shareLinkTitle": "Lien de partage",
+  "shareLinkInfo": "Toute personne ayant ce lien voit le programme (numéros et titres), sans accès à votre compte.",
+  "copyLink": "Copier le lien",
+  "linkCopied": "Lien copié",
+  "revokeLink": "Désactiver le lien",
+  "linkRevoked": "Lien désactivé : il ne fonctionne plus.",
+  "regenerateLink": "Créer un nouveau lien",
+  "shareNeedsNetwork": "Le partage nécessite une connexion Internet.",
+  "shareUnavailable": "Le partage n’est pas disponible dans cette version.",
+  "openWorship": "Préparer un culte",
+  "archive": "Archiver",
+  "unarchive": "Désarchiver",
+  "archivedSection": "Archivés",
+  "statusArchived": "Archivé",
+  "archivedInfo": "Programme archivé : son lien de partage ne fonctionne plus."
 }

@@ -11,6 +11,7 @@ final class Env {
     required this.environment,
     required this.supabaseUrl,
     required this.supabasePublishableKey,
+    this.publicWebUrl = '',
   });
 
   /// Lit les valeurs fournies au build.
@@ -20,6 +21,7 @@ final class Env {
     'SUPABASE_PUBLISHABLE_KEY': String.fromEnvironment(
       'SUPABASE_PUBLISHABLE_KEY',
     ),
+    'PUBLIC_WEB_URL': String.fromEnvironment('PUBLIC_WEB_URL'),
   });
 
   /// Valide une configuration brute. Lève [FormatException] si elle est
@@ -32,6 +34,10 @@ final class Env {
     }
     final url = values['SUPABASE_URL'] ?? '';
     final key = values['SUPABASE_PUBLISHABLE_KEY'] ?? '';
+    final web = (values['PUBLIC_WEB_URL'] ?? '').replaceFirst(
+      RegExp(r'/+$'),
+      '',
+    );
     if (environment != AppEnvironment.dev) {
       if (!url.startsWith('https://')) {
         throw FormatException('SUPABASE_URL doit être en HTTPS en $name');
@@ -39,11 +45,15 @@ final class Env {
       if (key.isEmpty) {
         throw FormatException('SUPABASE_PUBLISHABLE_KEY manquant en $name');
       }
+      if (!web.startsWith('https://')) {
+        throw FormatException('PUBLIC_WEB_URL doit être en HTTPS en $name');
+      }
     }
     return Env(
       environment: environment,
       supabaseUrl: url,
       supabasePublishableKey: key,
+      publicWebUrl: web,
     );
   }
 
@@ -51,10 +61,16 @@ final class Env {
   final String supabaseUrl;
   final String supabasePublishableKey;
 
+  /// Site public (pages des programmes partagés), sans « / » final.
+  final String publicWebUrl;
+
   /// Vrai si un backend est configuré. Sans backend, l'app reste pleinement
   /// utilisable hors connexion (lecture et recherche).
   bool get hasBackend =>
       supabaseUrl.isNotEmpty && supabasePublishableKey.isNotEmpty;
+
+  /// Adresse publique d'un programme partagé.
+  String sharedProgramUrl(String token) => '$publicWebUrl/programme/$token';
 }
 
 /// Fourni par `main()` via un override.

@@ -94,6 +94,11 @@ class HomeScreen extends ConsumerWidget {
               onTap: () => context.go('/recueil'),
             ),
             _Shortcut(
+              icon: Icons.event_note_outlined,
+              label: l10n.openWorship,
+              onTap: () => context.go('/culte'),
+            ),
+            _Shortcut(
               icon: Icons.star_outline,
               label: l10n.openFavorites,
               onTap: () => context.go('/favoris'),

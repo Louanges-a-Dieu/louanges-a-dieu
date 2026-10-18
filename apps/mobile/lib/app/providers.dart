@@ -9,6 +9,7 @@ import '../core/catalog/catalog_repository.dart';
 import '../core/database/app_database.dart';
 import '../core/network/supabase_remotes.dart';
 import '../core/search/search_service.dart';
+import '../core/sharing/share_links.dart';
 import '../core/sync/catalog_sync.dart';
 import '../core/sync/user_sync.dart';
 import '../core/user_data/user_data_repository.dart';
@@ -99,4 +100,10 @@ final catalogBootstrapProvider = FutureProvider<bool>((ref) async {
   }
   final outcome = await sync.refresh(force: true);
   return outcome is CatalogUpdated;
+});
+
+/// Liens de partage, ou null sans backend.
+final shareLinksProvider = Provider<ShareLinks?>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  return client == null ? null : SupabaseShareLinks(client);
 });

@@ -7,6 +7,7 @@ import '../../app/providers.dart';
 import '../../app/state.dart';
 import '../../core/catalog/catalog_models.dart';
 import '../../core/design_system/components.dart';
+import '../../core/design_system/dialogs.dart';
 import '../../core/design_system/tokens.g.dart';
 import '../../l10n/generated/app_localizations.dart';
 
@@ -74,63 +75,13 @@ Future<String?> _nameDialog(
   required String title,
   required String action,
   String initial = '',
-}) => showDialog<String>(
-  context: context,
-  builder: (_) => _NameDialog(title: title, action: action, initial: initial),
+}) => textInputDialog(
+  context,
+  title: title,
+  label: AppLocalizations.of(context).listName,
+  action: action,
+  initial: initial,
 );
-
-/// Saisie d'un nom de liste. Le contrôleur appartient à l'état du dialogue :
-/// il n'est détruit qu'après l'animation de fermeture.
-class _NameDialog extends StatefulWidget {
-  const _NameDialog({
-    required this.title,
-    required this.action,
-    required this.initial,
-  });
-
-  final String title;
-  final String action;
-  final String initial;
-
-  @override
-  State<_NameDialog> createState() => _NameDialogState();
-}
-
-class _NameDialogState extends State<_NameDialog> {
-  late final _controller = TextEditingController(text: widget.initial);
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final name = _controller.text.trim();
-    if (name.isNotEmpty) Navigator.pop(context, name);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return AlertDialog(
-      title: Text(widget.title),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        decoration: InputDecoration(labelText: l10n.listName),
-        onSubmitted: (_) => _submit(),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(onPressed: _submit, child: Text(widget.action)),
-      ],
-    );
-  }
-}
 
 /// Détail d'une liste : réordonnancement par glisser-déposer, ou par les
 /// commandes « monter / descendre » (accessibilité).

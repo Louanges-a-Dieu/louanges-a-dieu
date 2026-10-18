@@ -22,7 +22,9 @@ texte **verbatim** et, si un marqueur de fin de ligne est reconnu, `repeat: { co
 
 `hymn` vaut `{ id, numberLabel, title }` (version publiée), `{ unavailable: true }` si le
 cantique n'est pas publié, ou `null` pour une section libre. Lien inconnu, révoqué, expiré ou
-programme non publié : `null` (réponses indistinguables).
+programme non publié (brouillon ou archivé) : `null` (réponses indistinguables). La page
+publique `apps/web` (`/programme/<jeton>`) affiche alors un message unique « Programme
+indisponible ».
 
 ## Utilisateur connecté (`authenticated`)
 
@@ -32,7 +34,8 @@ programme non publié : `null` (réponses indistinguables).
 | `sync_push_playlist(p_playlist)` | `{ id, name, description?, deleted?, items: [{ hymnId, order }] }` — éléments remplacés en bloc |
 | `sync_push_worship_service(p_service)` | `{ id, title, serviceDate?, status?, deleted?, items: [{ id?, hymnId?, label?, notes?, order }] }` |
 | `sync_pull(p_since)` | `{ revision, favorites, playlists, worshipServices }` modifiés depuis `p_since` |
-| `create_share_link(p_service_id, p_expires_at?)` | crée ou remplace le lien, renvoie le jeton |
+| `ensure_share_link(p_service_id)` | renvoie le lien actif (non révoqué, non expiré) ou en crée un — partager deux fois donne le **même** lien (0014) |
+| `create_share_link(p_service_id, p_expires_at?)` | crée un **nouveau** lien (l'ancien cesse de fonctionner), renvoie le jeton |
 | `revoke_share_link(p_service_id)` | révoque immédiatement le lien |
 
 Politique de conflit : la dernière écriture reçue par le serveur l'emporte (ADR-006).

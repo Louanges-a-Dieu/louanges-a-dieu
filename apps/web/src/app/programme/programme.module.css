@@ -1,0 +1,98 @@
+.main {
+  min-height: 100vh;
+  padding: var(--lad-space-xxl) var(--lad-space-md);
+}
+
+.program {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: var(--lad-space-xl);
+  padding-bottom: var(--lad-space-lg);
+  border-bottom: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+}
+
+.brand {
+  margin: 0 0 var(--lad-space-sm);
+  color: var(--lad-color-gold-text);
+  font-size: var(--lad-type-caption-size);
+  line-height: var(--lad-type-caption-line-height);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--lad-type-display-family);
+  font-size: var(--lad-type-display-size);
+  line-height: var(--lad-type-display-line-height);
+  font-weight: var(--lad-type-display-weight);
+  overflow-wrap: anywhere;
+}
+
+.date {
+  margin: var(--lad-space-sm) 0 0;
+  color: var(--lad-color-text-secondary);
+}
+
+.date::first-letter {
+  text-transform: uppercase;
+}
+
+.items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  padding: var(--lad-space-md) 0;
+  border-bottom: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+}
+
+.hymn,
+.section {
+  display: flex;
+  gap: var(--lad-space-md);
+  align-items: baseline;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.number {
+  flex: 0 0 4.5rem;
+  color: var(--lad-color-gold-text);
+  font-family: var(--lad-type-list-number-family);
+  font-size: var(--lad-type-list-number-size);
+  font-weight: var(--lad-type-list-number-weight);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.section {
+  font-style: italic;
+  color: var(--lad-color-text-secondary);
+}
+
+.notes {
+  margin: var(--lad-space-xs) 0 0 calc(4.5rem + var(--lad-space-md));
+  color: var(--lad-color-text-secondary);
+  font-size: var(--lad-type-caption-size);
+  line-height: var(--lad-type-caption-line-height);
+}
+
+.muted {
+  margin: 0;
+  color: var(--lad-color-text-secondary);
+}
+
+@media (max-width: 30rem) {
+  .number {
+    flex-basis: 3.5rem;
+  }
+
+  .notes {
+    margin-left: calc(3.5rem + var(--lad-space-md));
+  }
+}

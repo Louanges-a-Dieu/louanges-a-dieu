@@ -3,7 +3,7 @@
 > Application mobile (iOS/Android/tablettes), projection web et back-office éditorial
 > du recueil de cantiques « Louanges à Dieu ».
 >
-> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phases 2, 3 et 4 terminées. Phase 5 terminée (sauf 5.10 sur appareil, 5.12 bloquée). Phase 6 terminée côté code (6.2 : configuration Auth à faire par le propriétaire). Prochaine : Phase 7 (programme de culte et partage).**
+> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phases 2, 3 et 4 terminées. Phase 5 terminée (sauf 5.10 sur appareil, 5.12 bloquée). Phase 6 terminée côté code (6.2 : configuration Auth à faire par le propriétaire). Phase 7 terminée côté code (restent : durée d'expiration dans l'app, lien « ouvrir dans l'app », déploiement Vercel, E2E Playwright). Prochaine : Phase 8 (projection).**
 > Les arbitrages du propriétaire sont consignés en §6.0 et priment sur les propositions par défaut.
 >
 > Version du plan : 0.2 — 2026-10-17
@@ -829,14 +829,18 @@ est accompagné d'un test de non-régression.
 
 ### PHASE 7 — Programme de culte et partage
 
-- [ ] 7.1 Modèle : programme (titre, date, statut), éléments ordonnés (cantique **ou** section libre avec libellé et notes)
-- [ ] 7.2 UI : créer, éditer, ajouter un cantique via la recherche, ajouter une section libre, réordonner, dupliquer, archiver
-- [ ] 7.3 Création et édition hors connexion + sync
-- [ ] 7.4 Publication + partage : génération du lien, feuille de partage native, révocation, régénération, expiration
-- [ ] 7.5 Page publique (`apps/web`) : rendu côté serveur, `noindex`, lecture seule, contenu selon Q-09, états « expiré / désactivé / non publié »
-- [ ] 7.6 Tests : T-006, T-007 ; tests de sécurité (jeton aléatoire, révoqué, expiré : réponse indistinguable) ; E2E Playwright
+- [x] 7.1 Modèle : programme (titre, date, statut brouillon / publié / archivé), éléments ordonnés (cantique **ou** moment libre avec intitulé, notes) — tables et synchronisation de la Phase 2/4
+- [x] 7.2 UI : nouvel onglet **Culte** (et raccourci sur l'accueil) ; créer, renommer, dater, publier, ajouter un cantique **via la recherche**, ajouter un moment libre, annoter, réordonner (glisser-déposer **et** « Monter / Descendre »), dupliquer, **archiver / désarchiver** (section « Archivés »), supprimer. Réservé aux comptes (Q-05)
+- [x] 7.3 Création et édition hors connexion, envoi automatique quelques secondes après chaque modification. Correctif découvert par les tests : la demande de synchronisation partait **dans** la transaction d'écriture (« transaction used after being closed ») ; elle part désormais après
+- [~] 7.4 Partage : le bouton « Partager » publie le programme, l'envoie au serveur, puis obtient son lien (migration 0014 `ensure_share_link` : **même lien** à chaque partage, pour ne pas casser les liens déjà envoyés) ; feuille de partage native (`share_plus`), copie, désactivation, création d'un nouveau lien ; hors connexion, message clair. **Reste** : l'expiration est prise en charge et testée côté serveur, mais l'app ne propose pas encore de durée (liens sans expiration, désactivables) — à décider si utile
+- [~] 7.5 Page publique `apps/web` `/programme/<jeton>` : rendu serveur à chaque requête, `noindex` (balise + en-tête), `no-referrer`, `no-store`, lecture seule, contenu Q-09 (numéros, titres, moments, notes — ni paroles ni créateur). Les états « expiré / désactivé / non publié » sont **volontairement fusionnés** en un seul message « Programme indisponible » (exigence 7.6 : réponses indistinguables). Voir `docs/deployment/web.md`. **Reste** : lien « ouvrir dans l'app » (Q-09) — nécessite le domaine définitif et les liens universels (Phase 9) ; déploiement Vercel (compte propriétaire)
+- [~] 7.6 Tests : 5 tests d'écran (invitation visiteur, **T-006**, **T-007**, partage hors connexion, archivage) ; pgTAP 08 (réutilisation du lien, isolation entre comptes) ; 13 tests web (jeton, appel avec la seule clé publique, rendu) ; **test avec le vrai serveur** : lien réutilisé, désactivé, dépublié, expiré et jeton au hasard → même réponse, aucune donnée du créateur ; contrôle HTTP et visuel de la page compilée. **Reste** : E2E Playwright en CI (Phase 10)
 
 **Critères d'acceptation** : T-006 et T-007 verts ; la page publique n'expose ni l'identité ni l'e-mail du créateur ; un lien révoqué est inopérant immédiatement.
+
+- [x] T-006 et T-007 : tests automatisés verts.
+- [x] Aucune donnée du créateur dans la réponse publique — **vérifié avec le vrai serveur**.
+- [x] Lien désactivé inopérant immédiatement (lecture sans cache) — **vérifié avec le vrai serveur**.
 
 ---
 
@@ -927,6 +931,7 @@ est accompagné d'un test de non-régression.
 |---|---|---|
 | 2026-10-17 | 0.1 | Audit initial et plan (Phase 0). En attente de validation. |
 | 2026-10-18 | 0.8 | Phase 6 : compte sans mot de passe, suppression de compte, listes, synchronisation branchée ; test réel à deux appareils. |
+| 2026-10-18 | 0.9 | Phase 7 : programmes de culte (onglet Culte, archivage), partage par lien réutilisé (0014), page publique `apps/web` ; tests avec le vrai serveur. |
 | 2026-10-18 | 0.7 | Phase 5 : écrans Flutter (accueil, recueil, recherche, fiche, lecture, favoris, réglages, à propos), aperçu web de développement (option B), polices OFL. |
 | 2026-10-17 | 0.6 | Phase 4 : base locale Drift + FTS5, recherche, synchronisation catalogue et données utilisateur ; option B (publication technique sur la base de développement). |
 | 2026-10-17 | 0.5 | Phase 3 terminée : import v8 (1 143 cantiques, fidélité 100 %) chargé en brouillon ; correction du constat A-02 (n° 596). |

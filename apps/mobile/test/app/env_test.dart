@@ -42,9 +42,26 @@ void main() {
         'APP_ENV': 'prod',
         'SUPABASE_URL': 'https://exemple.supabase.co',
         'SUPABASE_PUBLISHABLE_KEY': 'cle-publishable',
+        'PUBLIC_WEB_URL': 'https://louanges.exemple.org/',
       });
       expect(env.environment, AppEnvironment.prod);
+      expect(
+        env.sharedProgramUrl('abc'),
+        'https://louanges.exemple.org/programme/abc',
+      );
       expect(env.hasBackend, isTrue);
+    });
+
+    test('exige PUBLIC_WEB_URL en HTTPS hors dev', () {
+      expect(
+        () => Env.parse(const {
+          'APP_ENV': 'prod',
+          'SUPABASE_URL': 'https://exemple.supabase.co',
+          'SUPABASE_PUBLISHABLE_KEY': 'cle-publishable',
+          'PUBLIC_WEB_URL': 'http://louanges.exemple.org',
+        }),
+        throwsFormatException,
+      );
     });
   });
 }

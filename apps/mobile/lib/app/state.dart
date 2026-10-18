@@ -104,3 +104,13 @@ final playlistHymnIdsProvider = StreamProvider.autoDispose
       (ref, id) =>
           ref.watch(userDataRepositoryProvider).watchPlaylistHymnIds(id),
     );
+
+final worshipServicesProvider = StreamProvider<List<WorshipServiceRow>>(
+  (ref) => ref.watch(userDataRepositoryProvider).watchWorshipServices(),
+);
+
+final worshipItemsProvider = StreamProvider.autoDispose
+    .family<List<WorshipServiceItemRow>, String>(
+      (ref, id) =>
+          ref.watch(userDataRepositoryProvider).watchWorshipServiceItems(id),
+    );

@@ -26,6 +26,7 @@ void testApp(
   List<Map<String, Object?>>? hymns,
   DateTime? today,
   List<Override> overrides = const [],
+  Map<String, String> env = const {'APP_ENV': 'dev'},
 }) {
   testWidgets(description, (tester) async {
     final db = memoryDatabase();
@@ -36,7 +37,7 @@ void testApp(
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          envProvider.overrideWithValue(Env.parse(const {'APP_ENV': 'dev'})),
+          envProvider.overrideWithValue(Env.parse(env)),
           appDatabaseProvider.overrideWithValue(db),
           catalogBootstrapProvider.overrideWith((ref) async => true),
           todayProvider.overrideWithValue(today ?? DateTime(2026, 10, 18)),

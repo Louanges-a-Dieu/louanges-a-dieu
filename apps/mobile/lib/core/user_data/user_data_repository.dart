@@ -36,7 +36,7 @@ class UserDataRepository {
           .map((rows) => {for (final r in rows) r.hymnId});
 
   Future<void> setFavorite(String hymnId, {required bool isFavorite}) =>
-      _db.transaction(() async {
+      _write(() async {
         await _db
             .into(_db.favorites)
             .insertOnConflictUpdate(
@@ -59,7 +59,7 @@ class UserDataRepository {
 
   Future<String> createPlaylist(String name, {String? description}) async {
     final id = _newId();
-    await _db.transaction(() async {
+    await _write(() async {
       await _db
           .into(_db.playlists)
           .insert(
@@ -75,18 +75,17 @@ class UserDataRepository {
     return id;
   }
 
-  Future<void> renamePlaylist(String id, String name) =>
-      _db.transaction(() async {
-        await (_db.update(_db.playlists)..where((p) => p.id.equals(id))).write(
-          PlaylistsCompanion(
-            name: Value(_required(name, 'Nom de liste')),
-            updatedAt: Value(_now()),
-          ),
-        );
-        await _enqueue(playlist, id);
-      });
+  Future<void> renamePlaylist(String id, String name) => _write(() async {
+    await (_db.update(_db.playlists)..where((p) => p.id.equals(id))).write(
+      PlaylistsCompanion(
+        name: Value(_required(name, 'Nom de liste')),
+        updatedAt: Value(_now()),
+      ),
+    );
+    await _enqueue(playlist, id);
+  });
 
-  Future<void> deletePlaylist(String id) => _db.transaction(() async {
+  Future<void> deletePlaylist(String id) => _write(() async {
     await (_db.update(_db.playlists)..where((p) => p.id.equals(id))).write(
       PlaylistsCompanion(deleted: const Value(true), updatedAt: Value(_now())),
     );
@@ -112,7 +111,7 @@ class UserDataRepository {
 
   /// Remplace le contenu ordonné de la liste (ajout, retrait, réordonnancement).
   Future<void> setPlaylistHymns(String playlistId, List<String> hymnIds) =>
-      _db.transaction(() async {
+      _write(() async {
         await _replacePlaylistItems(playlistId, hymnIds);
         await (_db.update(_db.playlists)..where((p) => p.id.equals(playlistId)))
             .write(PlaylistsCompanion(updatedAt: Value(_now())));
@@ -151,7 +150,7 @@ class UserDataRepository {
     String? serviceDate,
   }) async {
     final id = _newId();
-    await _db.transaction(() async {
+    await _write(() async {
       await _db
           .into(_db.worshipServices)
           .insert(
@@ -172,7 +171,7 @@ class UserDataRepository {
     String? title,
     String? serviceDate,
     String? status,
-  }) => _db.transaction(() async {
+  }) => _write(() async {
     await (_db.update(
       _db.worshipServices,
     )..where((w) => w.id.equals(id))).write(
@@ -190,7 +189,7 @@ class UserDataRepository {
     await _enqueue(worshipService, id);
   });
 
-  Future<void> deleteWorshipService(String id) => _db.transaction(() async {
+  Future<void> deleteWorshipService(String id) => _write(() async {
     await (_db.update(
       _db.worshipServices,
     )..where((w) => w.id.equals(id))).write(
@@ -202,6 +201,43 @@ class UserDataRepository {
     await _enqueue(worshipService, id);
   });
 
+  /// Éléments ordonnés d'un programme, mis à jour en continu.
+  Stream<List<WorshipServiceItemRow>> watchWorshipServiceItems(
+    String serviceId,
+  ) =>
+      (_db.select(_db.worshipServiceItems)
+            ..where((i) => i.serviceId.equals(serviceId))
+            ..orderBy([(i) => OrderingTerm.asc(i.position)]))
+          .watch();
+
+  /// Identifiant d'un nouvel élément de programme (créé hors connexion).
+  String newItemId() => _newId();
+
+  /// Copie un programme (titre fourni, même date, mêmes éléments, en brouillon).
+  Future<String> duplicateWorshipService(
+    String sourceId, {
+    required String title,
+  }) async {
+    final source = await (_db.select(
+      _db.worshipServices,
+    )..where((w) => w.id.equals(sourceId))).getSingle();
+    final items = await worshipServiceItems(sourceId);
+    final id = await createWorshipService(
+      title,
+      serviceDate: source.serviceDate,
+    );
+    await setWorshipServiceItems(id, [
+      for (final i in items)
+        WorshipItemDto(
+          id: _newId(),
+          hymnId: i.hymnId,
+          label: i.label,
+          notes: i.notes,
+        ),
+    ]);
+    return id;
+  }
+
   Future<List<WorshipServiceItemRow>> worshipServiceItems(String serviceId) =>
       (_db.select(_db.worshipServiceItems)
             ..where((i) => i.serviceId.equals(serviceId))
@@ -212,7 +248,7 @@ class UserDataRepository {
   Future<void> setWorshipServiceItems(
     String serviceId,
     List<WorshipItemDto> items,
-  ) => _db.transaction(() async {
+  ) => _write(() async {
     for (final item in items) {
       if (item.hymnId == null &&
           (item.label == null || item.label!.trim().isEmpty)) {
@@ -296,6 +332,15 @@ class UserDataRepository {
         ),
       );
 
+  /// Écriture utilisateur : transaction, PUIS notification (jamais à
+  /// l'intérieur de la transaction, sinon les lectures déclenchées par la
+  /// notification seraient rattachées à une transaction déjà fermée).
+  Future<T> _write<T>(Future<T> Function() action) async {
+    final result = await _db.transaction(action);
+    onChanged?.call();
+    return result;
+  }
+
   // -------------------------------------------------------------------- outbox
 
   Future<int> pendingCount() async {
@@ -314,7 +359,6 @@ class UserDataRepository {
       'version = version + 1, attempts = 0, last_error = NULL, updated_at = excluded.updated_at',
       [entity, entityId, _now().toUtc().toIso8601String()],
     );
-    onChanged?.call();
   }
 
   /// Après déconnexion : retire de l'appareil les listes et programmes (liés au

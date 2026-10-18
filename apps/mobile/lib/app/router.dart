@@ -12,6 +12,7 @@ import '../features/more/more_screen.dart';
 import '../features/reader/reader_screen.dart';
 import '../features/search/search_screen.dart';
 import '../features/shell/app_shell.dart';
+import '../features/worship/worship.dart';
 
 final _rootKey = GlobalKey<NavigatorState>();
 
@@ -41,6 +42,11 @@ final routerProvider = Provider<GoRouter>(
                 path: '/favoris',
                 builder: (_, _) => const FavoritesScreen(),
               ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/culte', builder: (_, _) => const WorshipTab()),
             ],
           ),
           StatefulShellBranch(
@@ -75,6 +81,17 @@ final routerProvider = Provider<GoRouter>(
         parentNavigatorKey: _rootKey,
         builder: (_, state) =>
             PlaylistScreen(playlistId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/culte/:id',
+        parentNavigatorKey: _rootKey,
+        builder: (_, state) =>
+            WorshipEditorScreen(serviceId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/choisir-cantique',
+        parentNavigatorKey: _rootKey,
+        builder: (_, _) => const HymnPickerScreen(),
       ),
       GoRoute(
         path: '/recherche',
