@@ -264,5 +264,7 @@
   "projectionUnavailable": "La projection n’a pas pu démarrer sur ce téléphone.",
   "nothingToProject": "Rien à projeter",
   "nothingToProjectMessage": "Ce programme ne contient aucun cantique ni moment.",
-  "allSlides": "Toutes les diapositives"
+  "allSlides": "Toutes les diapositives",
+  "privacyPolicy": "Confidentialité",
+  "linkOpenFailed": "Impossible d’ouvrir le lien."
 }

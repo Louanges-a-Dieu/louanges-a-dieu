@@ -19,3 +19,15 @@
   margin: 0;
   color: var(--lad-color-text-secondary);
 }
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--lad-space-lg);
+  justify-content: center;
+  margin-top: var(--lad-space-lg);
+}
+
+.links a {
+  color: var(--lad-color-gold-text);
+}

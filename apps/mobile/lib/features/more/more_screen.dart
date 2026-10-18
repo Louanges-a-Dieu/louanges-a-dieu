@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../app/env.dart';
 import '../../app/state.dart';
 import '../../core/design_system/components.dart';
 import '../../core/design_system/theme.dart';
@@ -85,6 +87,26 @@ class MoreScreen extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/plus/a-propos'),
           ),
+          if (ref.watch(envProvider).publicWebUrl.isNotEmpty)
+            ListTile(
+              leading: const Icon(Icons.privacy_tip_outlined),
+              title: Text(l10n.privacyPolicy),
+              trailing: const Icon(Icons.open_in_new),
+              onTap: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                final url = Uri.parse(
+                  '${ref.read(envProvider).publicWebUrl}/confidentialite',
+                );
+                if (!await launchUrl(
+                  url,
+                  mode: LaunchMode.externalApplication,
+                )) {
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(l10n.linkOpenFailed)),
+                  );
+                }
+              },
+            ),
           ListTile(
             leading: const Icon(Icons.description_outlined),
             title: Text(l10n.licenses),

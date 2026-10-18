@@ -1,0 +1,56 @@
+.page {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: var(--lad-space-xxl) var(--lad-space-md);
+}
+
+.brand {
+  margin: 0 0 var(--lad-space-sm);
+  color: var(--lad-color-gold-text);
+  font-size: var(--lad-type-caption-size);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.page h1 {
+  margin: 0 0 var(--lad-space-sm);
+  font-family: var(--lad-type-display-family);
+  font-size: var(--lad-type-display-size);
+  line-height: var(--lad-type-display-line-height);
+  font-weight: var(--lad-type-display-weight);
+}
+
+.page h2 {
+  margin: var(--lad-space-xl) 0 var(--lad-space-sm);
+  font-family: var(--lad-type-headline-family);
+  font-size: var(--lad-type-headline-size);
+  font-weight: var(--lad-type-headline-weight);
+}
+
+.page p,
+.page li {
+  line-height: 1.6;
+}
+
+.updated {
+  color: var(--lad-color-text-secondary);
+  font-size: var(--lad-type-caption-size);
+}
+
+.page table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--lad-type-caption-size);
+}
+
+.page th,
+.page td {
+  padding: var(--lad-space-xs) var(--lad-space-sm);
+  border-bottom: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+  text-align: left;
+  vertical-align: top;
+}
+
+.page a {
+  color: var(--lad-color-gold-text);
+}
