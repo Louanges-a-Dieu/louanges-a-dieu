@@ -12,6 +12,7 @@ final class Env {
     required this.supabaseUrl,
     required this.supabasePublishableKey,
     this.publicWebUrl = '',
+    this.sentryDsn = '',
   });
 
   /// Lit les valeurs fournies au build.
@@ -22,6 +23,7 @@ final class Env {
       'SUPABASE_PUBLISHABLE_KEY',
     ),
     'PUBLIC_WEB_URL': String.fromEnvironment('PUBLIC_WEB_URL'),
+    'SENTRY_DSN': String.fromEnvironment('SENTRY_DSN'),
   });
 
   /// Valide une configuration brute. Lève [FormatException] si elle est
@@ -54,6 +56,7 @@ final class Env {
       supabaseUrl: url,
       supabasePublishableKey: key,
       publicWebUrl: web,
+      sentryDsn: values['SENTRY_DSN'] ?? '',
     );
   }
 
@@ -63,6 +66,9 @@ final class Env {
 
   /// Site public (pages des programmes partagés), sans « / » final.
   final String publicWebUrl;
+
+  /// Suivi des plantages (Sentry) ; vide = désactivé.
+  final String sentryDsn;
 
   /// Vrai si un backend est configuré. Sans backend, l'app reste pleinement
   /// utilisable hors connexion (lecture et recherche).

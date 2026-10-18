@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app/app.dart';
 import 'app/env.dart';
 import 'app/licenses.dart';
+import 'core/observability/crash_reporting.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,10 +18,14 @@ Future<void> main() async {
       publishableKey: env.supabasePublishableKey,
     );
   }
-  runApp(
-    ProviderScope(
-      overrides: [envProvider.overrideWithValue(env)],
-      child: const LouangesApp(),
+  await runWithCrashReporting(
+    dsn: env.sentryDsn,
+    environment: env.environment.name,
+    appRunner: () async => runApp(
+      ProviderScope(
+        overrides: [envProvider.overrideWithValue(env)],
+        child: const LouangesApp(),
+      ),
     ),
   );
 }

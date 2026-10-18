@@ -15,7 +15,9 @@
   },
   "dependencies": {
     "@lad/design-tokens": "workspace:*",
+    "@lad/observability": "workspace:*",
     "@lad/shared-contracts": "workspace:*",
+    "@sentry/nextjs": "10.76.0",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.117.2",
     "next": "16.4.2",

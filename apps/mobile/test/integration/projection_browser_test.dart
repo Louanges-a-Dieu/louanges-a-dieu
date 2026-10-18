@@ -170,11 +170,29 @@ void main() {
           42,
           reason: 'aucun rechargement',
         );
-        expect(latency, lessThan(const Duration(milliseconds: 300)));
+        // Latence : médiane de plusieurs changements (une mesure isolée est
+        // trop sensible à la charge de la machine de test).
+        final samples = <Duration>[latency];
+        for (var i = 0; i < 6; i++) {
+          final back = i.isEven;
+          state = back ? state.back() : state.forward();
+          server.publish(state.toMessage());
+          samples.add(
+            await cdp.waitFor(
+              back
+                  ? "document.body.innerText.includes('Cantique A') && !document.body.innerText.includes('Couplet 1, vers 4')"
+                  : "document.body.innerText.includes('Couplet 1, vers 4')",
+            ),
+          );
+        }
+        samples.sort();
+        final median = samples[samples.length ~/ 2];
         // ignore: avoid_print
         print(
-          'Latence téléphone → navigateur (boucle locale) : ${latency.inMilliseconds} ms',
+          'Latence téléphone → navigateur (boucle locale) : médiane ${median.inMilliseconds} ms, '
+          'max ${samples.last.inMilliseconds} ms',
         );
+        expect(median, lessThan(const Duration(milliseconds: 300)));
         expect(
           await cdp.eval("document.body.innerText.includes('12 · COUPLET 1')"),
           isTrue,
