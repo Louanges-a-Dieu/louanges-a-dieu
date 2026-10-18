@@ -36,3 +36,14 @@ L'application mobile doit connaître l'adresse du site pour composer les liens :
   serveur de développement (lien réutilisé, désactivé, dépublié, expiré, jeton au hasard).
   Exécuté seulement si `apps/web/.env.local` et `apps/mobile/config/dev-test-user.json`
   existent (ignoré en CI).
+
+## Page `/projection` (mode « ordinateur seul », Phase 8.4)
+
+Page statique : `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY` sont lues **à la compilation**
+(valeurs publiques). Le service worker `/sw.js` (en-tête `Cache-Control: no-cache`) ne met en
+cache que `/projection`, `/projection-ecran/*`, `/_next/static/*`, le manifeste et les icônes ;
+jamais les pages `/programme/*`. Voir `docs/architecture/projection.md`.
+
+Test de bout en bout : `pnpm --filter @lad/web e2e` (après `pnpm build`, Chrome requis).
+Next ne lit pas `.env.local` quand `NODE_ENV=test` : le test démarre le serveur en mode
+production.

@@ -3,7 +3,7 @@
 > Application mobile (iOS/Android/tablettes), projection web et back-office éditorial
 > du recueil de cantiques « Louanges à Dieu ».
 >
-> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phases 2, 3 et 4 terminées. Phase 5 terminée (sauf 5.10 sur appareil, 5.12 bloquée). Phase 6 terminée côté code (6.2 : configuration Auth à faire par le propriétaire). Phase 7 terminée côté code (restent : durée d'expiration dans l'app, lien « ouvrir dans l'app », déploiement Vercel, E2E Playwright). Prochaine : Phase 8 (projection).**
+> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phases 2, 3 et 4 terminées. Phase 5 terminée (sauf 5.10 sur appareil, 5.12 bloquée). Phase 6 terminée côté code (6.2 : configuration Auth à faire par le propriétaire). Phase 7 terminée côté code (restent : durée d'expiration dans l'app, lien « ouvrir dans l'app », déploiement Vercel, E2E en CI). Phase 8 terminée côté code (reste : essais sur appareils réels). Prochaine : Phase 9 (back-office éditorial).**
 > Les arbitrages du propriétaire sont consignés en §6.0 et priment sur les propositions par défaut.
 >
 > Version du plan : 0.2 — 2026-10-17
@@ -852,10 +852,15 @@ est accompagné d'un test de non-régression.
 - [x] 8.1 Contrat de diapositives en Dart **et** TypeScript, mêmes 7 fixtures : titre, une section par diapositive (découpe équilibrée au-delà de 6 vers), refrain répété après chaque couplet (Q-07, désactivable), notes non projetées, moments libres d'un programme ; écran noir dans l'état de projection
 - [x] 8.2 Écran projeté (`apps/mobile/assets/projection`, servi par l'app) : plein écran au clic, texte ajusté automatiquement, thème projection (tokens générés), polices locales, reconnexion automatique, dernière diapositive conservée (même après rechargement), fin de session. Wake Lock quand le navigateur le permet (pas en `http://` local : la page invite à désactiver la mise en veille)
 - [~] 8.3 Pilote : depuis une fiche ou un programme (« Projeter ») ; aperçu fidèle, diapositive suivante, précédente/suivante, liste complète avec saut direct, écran noir, connexion par adresse et **code QR**, compteur d'écrans, écran maintenu allumé, confirmation avant d'arrêter, option « répéter le refrain ». **Reste** : essai sur appareil (avec 8.0)
-- [ ] 8.4 Mode « ordinateur seul » : app web installable (PWA) avec catalogue hors ligne et programmes synchronisés au préalable ; fenêtre de contrôle + fenêtre projetée (`BroadcastChannel`)
-- [~] 8.5 Tests : séquencement (Dart et TS, mêmes fixtures) ; serveur réel (jeton, 404 identiques, lecture seule, reconnexion, latence) ; **navigateur réel** (T-008, coupure et reprise, aucune requête hors du réseau local, latence) ; 6 tests du pilote. **Reste** : mode ordinateur seul (8.4) et essais sur appareils
+- [x] 8.4 Mode « ordinateur seul » : `/projection` installable (PWA : manifeste, service worker), recueil complet gardé dans le navigateur (mis à jour quand Internet revient ; une réponse invalide ne remplace jamais la copie), recherche (numéro, titre, premier vers ; normalisation TS vérifiée sur la fixture partagée avec Dart), **programmes préparés depuis leur lien de partage** (aucun compte requis sur l'ordinateur), fenêtre de contrôle + fenêtre projetée (`BroadcastChannel`, **même écran** que celui du téléphone), clavier et télécommandes de présentation. Icône **provisoire** (monogramme) en attendant l'épi
+- [~] 8.5 Tests : séquencement (Dart et TS, mêmes fixtures) ; serveur réel ; **navigateur réel** côté téléphone (T-008, coupure et reprise, aucune requête externe) ; 6 tests du pilote ; **ordinateur seul de bout en bout dans Chrome avec serveur web arrêté et réseau coupé** (rechargement, écran projeté, recherche, T-008 en 5–7 ms, écran noir, programme préparé) ; 9 tests de la console. Défauts corrigés grâce à ces tests : erreur serveur brute si la configuration manque sur la page de programme, console restée sur l'ancien cantique au changement de programme, écran projeté non signalé. **Reste** : essais sur appareils réels (8.0) ; exécution de `pnpm e2e` en CI (Phase 10)
 
 **Critères d'acceptation** : T-008 vert (changement sans rechargement complet) ; tout le scénario fonctionne **sans Internet** ; l'écran reprend la diapositive courante après une coupure ; contrôleur et écran sont des interfaces distinctes ; latence < 300 ms en réseau local.
+
+- [x] T-008 : vert (téléphone → navigateur et ordinateur seul).
+- [x] Sans Internet : vérifié automatiquement (aucune requête externe ; ordinateur seul avec serveur arrêté et réseau coupé). Sur appareils réels : liste de contrôle à passer.
+- [x] Reprise de la diapositive courante après coupure : vérifiée dans un vrai navigateur.
+- [x] Contrôleur et écran distincts ; latence mesurée 5–7 ms (boucle locale), à confirmer sur Wi-Fi réel.
 
 ---
 
@@ -932,6 +937,7 @@ est accompagné d'un test de non-régression.
 | 2026-10-17 | 0.1 | Audit initial et plan (Phase 0). En attente de validation. |
 | 2026-10-18 | 0.8 | Phase 6 : compte sans mot de passe, suppression de compte, listes, synchronisation branchée ; test réel à deux appareils. |
 | 2026-10-18 | 0.9 | Phase 7 : programmes de culte (onglet Culte, archivage), partage par lien réutilisé (0014), page publique `apps/web` ; tests avec le vrai serveur. |
+| 2026-10-18 | 1.0 | Phase 8 : projection sans Internet — diapositives Dart/TS, serveur local et pilote dans l'app, écran projeté partagé, mode ordinateur seul (PWA) ; tests en navigateur réel hors ligne. |
 | 2026-10-18 | 0.7 | Phase 5 : écrans Flutter (accueil, recueil, recherche, fiche, lecture, favoris, réglages, à propos), aperçu web de développement (option B), polices OFL. |
 | 2026-10-17 | 0.6 | Phase 4 : base locale Drift + FTS5, recherche, synchronisation catalogue et données utilisateur ; option B (publication technique sur la base de développement). |
 | 2026-10-17 | 0.5 | Phase 3 terminée : import v8 (1 143 cantiques, fidélité 100 %) chargé en brouillon ; correction du constat A-02 (n° 596). |

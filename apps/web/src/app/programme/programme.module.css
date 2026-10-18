@@ -96,3 +96,23 @@
     margin-left: calc(3.5rem + var(--lad-space-md));
   }
 }
+
+.projection {
+  max-width: 40rem;
+  margin: var(--lad-space-xxl) auto 0;
+}
+
+.projection .notes {
+  margin-left: 0;
+}
+
+.projectionButton {
+  min-height: var(--lad-touch-target-min);
+  padding: 0 var(--lad-space-lg);
+  border: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+  border-radius: var(--lad-radius-pill);
+  background: var(--lad-color-surface);
+  color: var(--lad-color-text);
+  font: inherit;
+  cursor: pointer;
+}

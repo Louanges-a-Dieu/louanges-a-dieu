@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // Service worker du mode « ordinateur seul » : toujours la dernière version.
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache' },
+          { key: 'Service-Worker-Allowed', value: '/' },
+        ],
+      },
+      {
         // Programmes partagés (ADR-012) : jamais indexés, jamais mis en cache,
         // et le jeton contenu dans l'adresse n'est transmis à aucun autre site.
         source: '/programme/:token*',

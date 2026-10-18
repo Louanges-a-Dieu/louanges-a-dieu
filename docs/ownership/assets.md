@@ -27,3 +27,4 @@ propriétaire et **ne sont pas embarquées**.
 | Asset | Source | Remarques |
 |---|---|---|
 | Épi de blé | à vectoriser depuis la couverture (Affinity) | à fournir par le propriétaire |
+| Icône **provisoire** de la PWA de projection (`apps/web/public/icons/icon-192.png`, `icon-512.png`) | monogramme « L » en Cormorant Garamond (OFL), créé pour le projet le 2026-10-18 | à remplacer par l'épi dès qu'il est fourni |

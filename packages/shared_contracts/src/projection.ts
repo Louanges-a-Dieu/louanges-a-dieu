@@ -107,3 +107,54 @@ export function programSlides(
     return entry.hymn ? hymnSlides(entry.hymn, options) : [];
   });
 }
+
+/** État d'une projection (équivalent de `ProjectionState` côté Dart). */
+export interface ProjectionState {
+  slides: Slide[];
+  index: number;
+  /** Écran noir : le contenu reste en place mais n'est plus affiché. */
+  blank: boolean;
+}
+
+export function goTo(state: ProjectionState, index: number): ProjectionState {
+  const max = Math.max(0, state.slides.length - 1);
+  return { ...state, index: Math.min(Math.max(0, index), max) };
+}
+
+/** Message envoyé aux écrans (même contrat que le téléphone, docs/architecture/projection.md). */
+export function stateMessage(state: ProjectionState) {
+  return {
+    type: 'state' as const,
+    v: 1,
+    index: state.index,
+    count: state.slides.length,
+    blank: state.blank,
+    slide: state.slides[state.index] ?? null,
+  };
+}
+
+const SECTION_NAMES: Record<ProjectedSectionType, string> = {
+  verse: 'Couplet',
+  refrain: 'Refrain',
+  bridge: 'Pont',
+  intro: 'Introduction',
+  outro: 'Conclusion',
+};
+
+/** Libellé court d'une diapositive (« Couplet 2 (1/2) »), comme dans l'app. */
+export function slideLabel(slide: Slide): string {
+  switch (slide.kind) {
+    case 'title':
+      return `${slide.numberLabel} — ${slide.title}`;
+    case 'section':
+      return slide.label;
+    case 'lyrics':
+      return [
+        SECTION_NAMES[slide.sectionType],
+        slide.sectionNumber ?? undefined,
+        slide.parts > 1 ? `(${slide.part}/${slide.parts})` : undefined,
+      ]
+        .filter((part) => part !== undefined)
+        .join(' ');
+  }
+}

@@ -43,7 +43,9 @@ export function isPlausibleToken(token: string): boolean {
   return /^[A-Za-z0-9_-]{32,128}$/.test(token);
 }
 
-export function configFromEnv(env: NodeJS.ProcessEnv = process.env): SupabaseConfig {
+export function configFromEnv(
+  env: Record<string, string | undefined> = process.env,
+): SupabaseConfig {
   const url = env.SUPABASE_URL ?? '';
   const publishableKey = env.SUPABASE_PUBLISHABLE_KEY ?? '';
   if (!url || !publishableKey) {
@@ -131,4 +133,22 @@ export function formatServiceDate(isoDate: string): string | null {
   if (!match) return null;
   const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
   return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone: 'UTC' }).format(date);
+}
+
+/**
+ * Programme d'un lien pour la page publique : le programme, `null` (lien
+ * indisponible) ou `'service-error'` (configuration absente, réseau, serveur).
+ * Aucune erreur ne s'échappe : la page affiche toujours un message clair.
+ */
+export async function loadSharedProgram(
+  token: string,
+  env: Record<string, string | undefined> = process.env,
+  fetchImpl: typeof fetch = fetch,
+): Promise<SharedProgram | null | 'service-error'> {
+  try {
+    return await fetchSharedProgram(token, configFromEnv(env), fetchImpl);
+  } catch (error) {
+    if (error instanceof SharedProgramServiceError) return 'service-error';
+    throw error;
+  }
 }

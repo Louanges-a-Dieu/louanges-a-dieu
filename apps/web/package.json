@@ -8,13 +8,18 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "predev": "node scripts/sync-projection-screen.mts",
+    "prebuild": "node scripts/sync-projection-screen.mts",
+    "e2e": "vitest run --config vitest.e2e.config.mts"
   },
   "dependencies": {
     "@lad/design-tokens": "workspace:*",
+    "@lad/shared-contracts": "workspace:*",
     "next": "16.4.2",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^24",

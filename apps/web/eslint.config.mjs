@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
+    // Copie de l'écran projeté (source : apps/mobile/assets/projection).
+    'public/projection-ecran/**',
   ]),
 ]);
 

@@ -22,6 +22,10 @@
     },
     "@lad/admin#typecheck": {
       "dependsOn": ["^build", "build"]
+    },
+    "e2e": {
+      "dependsOn": ["build"],
+      "cache": false
     }
   }
 }

@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Copie de l’écran projeté (scripts/sync-projection-screen.mts)
+/public/projection-ecran/

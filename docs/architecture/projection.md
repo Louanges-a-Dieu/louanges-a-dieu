@@ -28,6 +28,32 @@ Téléphone pilote (app)                         Ordinateur du projecteur
   liste de toutes les diapositives (saut direct), écran noir, connexion par adresse et code QR,
   écran du téléphone maintenu allumé, confirmation avant d'arrêter si un écran est connecté.
 
+## Mode « ordinateur seul » (8.4)
+
+Pour une église sans téléphone pilote : `https://<site>/projection` (application web
+installable, PWA).
+
+1. **Avec Internet, une première fois** : ouvrir `/projection`. Le recueil complet (environ
+   450 Ko compressés) est gardé dans le navigateur (IndexedDB), la page et l'écran projeté
+   sont mis en cache par le service worker (`apps/web/public/sw.js`). Le badge indique
+   « Prêt sans Internet ». Pour un programme : ouvrir son lien de partage et toucher
+   « Préparer pour la projection hors ligne ».
+2. **Pendant le culte, sans Internet** : ouvrir `/projection`, choisir un cantique (numéro,
+   titre ou premier vers) ou un programme préparé, puis « Ouvrir l'écran projeté ». Glisser
+   cette fenêtre sur le projecteur et cliquer dedans (plein écran).
+3. Commandes : boutons, liste des diapositives, ou clavier et télécommandes de présentation
+   (→ / Page suivante, ← / Page précédente, B ou « . » pour l'écran noir, Début / Fin).
+
+La fenêtre projetée est **la même page** que celle servie par le téléphone
+(`apps/mobile/assets/projection`, copiée dans `apps/web/public/projection-ecran/` à chaque
+`dev`/`build`), reliée à la console par `BroadcastChannel` (`?canal=local`). Le recueil se met
+à jour dès qu'Internet revient et qu'une nouvelle release existe ; une réponse invalide ne
+remplace jamais la copie locale.
+
+Test de bout en bout (`pnpm --filter @lad/web e2e`, après `build`) : vrai Chrome, programme
+préparé depuis son lien, console ouverte une fois, puis **serveur web arrêté et réseau coupé** ;
+rechargement, écran projeté, recherche, T-008, écran noir, programme.
+
 ## Protocole (serveur → écran)
 
 ```json

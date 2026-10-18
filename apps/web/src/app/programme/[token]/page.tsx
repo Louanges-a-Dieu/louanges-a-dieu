@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 
-import { configFromEnv, fetchSharedProgram, SharedProgramServiceError } from '@/lib/shared-program';
+import { loadSharedProgram } from '@/lib/shared-program';
 
 import { ProgramView, ServiceErrorView, UnavailableView } from '../program-view';
+import { SaveForProjection } from '../save-for-projection';
 import styles from '../programme.module.css';
 
 export const metadata: Metadata = {
@@ -15,12 +16,15 @@ export const metadata: Metadata = {
 /** Lu à chaque requête : un lien désactivé cesse de fonctionner aussitôt. */
 async function SharedProgramContent({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const program = await fetchSharedProgram(token, configFromEnv()).catch((error: unknown) => {
-    if (error instanceof SharedProgramServiceError) return 'service-error' as const;
-    throw error;
-  });
+  const program = await loadSharedProgram(token);
   if (program === 'service-error') return <ServiceErrorView />;
-  return program ? <ProgramView program={program} /> : <UnavailableView />;
+  if (!program) return <UnavailableView />;
+  return (
+    <>
+      <ProgramView program={program} />
+      <SaveForProjection program={program} />
+    </>
+  );
 }
 
 export default function SharedProgramPage({ params }: { params: Promise<{ token: string }> }) {

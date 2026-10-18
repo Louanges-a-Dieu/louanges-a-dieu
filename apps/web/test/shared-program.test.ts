@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   fetchSharedProgram,
+  loadSharedProgram,
   formatServiceDate,
   isPlausibleToken,
   parseSharedProgram,
@@ -113,5 +114,28 @@ describe('formatServiceDate', () => {
 
   it('ignore une date mal formée', () => {
     expect(formatServiceDate('05/04/2026')).toBeNull();
+  });
+});
+
+describe('loadSharedProgram', () => {
+  const env = { SUPABASE_URL: config.url, SUPABASE_PUBLISHABLE_KEY: config.publishableKey };
+
+  it('configuration absente : message de service, jamais d’erreur brute', async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+    expect(await loadSharedProgram(token, {}, fetchImpl)).toBe('service-error');
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('panne réseau : message de service ; lien inconnu : null', async () => {
+    expect(
+      await loadSharedProgram(
+        token,
+        env,
+        vi.fn<typeof fetch>().mockRejectedValue(new TypeError('x')),
+      ),
+    ).toBe('service-error');
+    expect(
+      await loadSharedProgram(token, env, vi.fn<typeof fetch>().mockResolvedValue(json(null))),
+    ).toBeNull();
   });
 });

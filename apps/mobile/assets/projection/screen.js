@@ -99,6 +99,17 @@
     /* rien à restaurer */
   }
 
+  function handle(message) {
+    if (message && message.type === 'state') {
+      render(message);
+      save(message);
+    } else if (message && message.type === 'end') {
+      render({ blank: false, slide: null });
+      save({ blank: false, slide: null });
+    }
+  }
+
+  // Téléphone pilote : WebSocket vers le serveur local de l'app.
   var delay = 500;
   function connect() {
     var url = new URL('ws', window.location.href);
@@ -121,14 +132,8 @@
       } catch (e) {
         return;
       }
-      if (message && message.type === 'state') {
-        render(message);
-        save(message);
-      } else if (message && message.type === 'end') {
-        socket.onclose = null;
-        render({ blank: false, slide: null });
-        status.hidden = true;
-      }
+      if (message && message.type === 'end') socket.onclose = null;
+      handle(message);
     };
     socket.onclose = function () {
       status.hidden = false;
@@ -139,6 +144,26 @@
   function retry() {
     setTimeout(connect, delay);
     delay = Math.min(5000, delay * 2);
+  }
+
+  // Ordinateur seul : fenêtre de contrôle du même navigateur (BroadcastChannel).
+  // L'écran signale sa présence toutes les 2 s (« hello », aucune commande) et
+  // la console lui renvoie l'état ; au-delà de 5 s sans nouvelles, on le signale.
+  function connectLocal() {
+    var channel = new BroadcastChannel('lad-projection');
+    var lastSeen = 0;
+    status.textContent = 'En attente de la fenêtre de contrôle…';
+    channel.onmessage = function (event) {
+      if (event.data && event.data.type === 'hello') return;
+      lastSeen = Date.now();
+      status.hidden = true;
+      handle(typeof event.data === 'string' ? JSON.parse(event.data) : event.data);
+    };
+    channel.postMessage({ type: 'hello' });
+    setInterval(function () {
+      channel.postMessage({ type: 'hello' });
+      status.hidden = Date.now() - lastSeen <= 5000;
+    }, 2000);
   }
 
   window.addEventListener('resize', function () {
@@ -188,5 +213,9 @@
     hint.textContent += ' — pensez à désactiver la mise en veille de l’ordinateur';
   }
 
-  connect();
+  if (new URLSearchParams(window.location.search).get('canal') === 'local' && 'BroadcastChannel' in window) {
+    connectLocal();
+  } else {
+    connect();
+  }
 })();

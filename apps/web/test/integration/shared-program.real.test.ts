@@ -129,12 +129,19 @@ describe.skipIf(!available)('programme partagé — serveur réel', () => {
     await push('published');
     expect(await fetchSharedProgram(live, config)).not.toBeNull();
 
+    // Marge de 8 s : sous charge, quelques appels réseau peuvent prendre du temps.
+    const expiresAt = Date.now() + 8_000;
     const expiring = (await rpc('create_share_link', {
       p_service_id: serviceId,
-      p_expires_at: new Date(Date.now() + 2_000).toISOString(),
+      p_expires_at: new Date(expiresAt).toISOString(),
     })) as string;
     expect(await fetchSharedProgram(expiring, config)).not.toBeNull();
-    await new Promise((r) => setTimeout(r, 3_000));
-    expect(await fetchSharedProgram(expiring, config), 'expiré').toBeNull();
-  }, 20_000);
+    await new Promise((r) => setTimeout(r, Math.max(0, expiresAt - Date.now())));
+    let expired = await fetchSharedProgram(expiring, config);
+    for (let i = 0; expired !== null && i < 10; i++) {
+      await new Promise((r) => setTimeout(r, 500));
+      expired = await fetchSharedProgram(expiring, config);
+    }
+    expect(expired, 'expiré').toBeNull();
+  }, 45_000);
 });

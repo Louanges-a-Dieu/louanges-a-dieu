@@ -13,7 +13,8 @@
     "test": "turbo run test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "tokens": "pnpm --filter @lad/design-tokens run generate"
+    "tokens": "pnpm --filter @lad/design-tokens run generate",
+    "e2e": "turbo run e2e"
   },
   "packageManager": "pnpm@10.34.7+sha512.ba98abc585539933375b5971f4bc6d6c73a1b4b7edc4a879e7d102fe5423d1e02309d67c60a11f04955093a96e521ad9c3b138cdd654ca5be563f378b3ae48bd",
   "devDependencies": {
