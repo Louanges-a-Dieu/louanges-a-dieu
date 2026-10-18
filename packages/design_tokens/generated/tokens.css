@@ -75,6 +75,10 @@
   --lad-type-title-size: 26px;
   --lad-type-title-line-height: 1.2;
   --lad-type-title-weight: 600;
+  --lad-type-list-number-family: var(--lad-font-display);
+  --lad-type-list-number-size: 20px;
+  --lad-type-list-number-line-height: 1.2;
+  --lad-type-list-number-weight: 600;
   --lad-type-headline-family: var(--lad-font-ui);
   --lad-type-headline-size: 20px;
   --lad-type-headline-line-height: 1.3;

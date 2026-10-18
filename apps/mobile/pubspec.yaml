@@ -19,6 +19,7 @@ dependencies:
   path: ^1.9.1
   path_provider: ^2.1.6
   supabase_flutter: ^2.18.3
+  wakelock_plus: ^1.8.1
 
 dev_dependencies:
   flutter_test:
@@ -31,4 +32,22 @@ flutter:
   generate: true
   assets:
     - assets/catalog/
+    - assets/content/
+    - assets/fonts/CormorantGaramond/OFL.txt
+    - assets/fonts/Literata/OFL.txt
+    - assets/fonts/Inter/OFL.txt
+  # Polices sous licence SIL OFL 1.1 (registre : docs/ownership/assets.md).
+  # Polices variables : graisse et taille optique appliquées par le thème.
+  fonts:
+    - family: Cormorant Garamond
+      fonts:
+        - asset: assets/fonts/CormorantGaramond/CormorantGaramond-VF.ttf
+    - family: Literata
+      fonts:
+        - asset: assets/fonts/Literata/Literata-VF.ttf
+        - asset: assets/fonts/Literata/Literata-Italic-VF.ttf
+          style: italic
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter/Inter-VF.ttf
   uses-material-design: true

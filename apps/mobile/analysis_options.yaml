@@ -15,6 +15,7 @@ analyzer:
     - lib/l10n/generated/**
     - test/drift/**/generated/**
     - lib/**/*.g.dart
+    - web/**
 
 linter:
   rules:

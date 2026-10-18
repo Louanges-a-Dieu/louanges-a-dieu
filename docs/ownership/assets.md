@@ -6,9 +6,12 @@ Chaque asset embarqué dans une application doit figurer ici avec sa source et s
 
 | Police | Usage | Source |
 |---|---|---|
-| Cormorant Garamond | numéros, titres, mot-symbole | Google Fonts |
-| Literata | paroles | Google Fonts |
-| Inter | interface | Google Fonts |
+| Cormorant Garamond (variable, romain) | numéros, titres, mot-symbole | github.com/google/fonts `ofl/cormorantgaramond` |
+| Literata (variable, romain + italique) | paroles, refrains en italique | github.com/google/fonts `ofl/literata` |
+| Inter (variable, romain) | interface | github.com/google/fonts `ofl/inter` |
+
+Fichiers dans `apps/mobile/assets/fonts/`, chacun accompagné de son `OFL.txt` ; empreintes Git
+vérifiées au téléchargement (2026-10-17). Licences affichées dans l'écran « Licences » de l'app.
 
 Les polices de la couverture imprimée (Baskerville, Brush Script MT) sont sous licence
 propriétaire et **ne sont pas embarquées**.

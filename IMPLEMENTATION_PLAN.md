@@ -3,7 +3,7 @@
 > Application mobile (iOS/Android/tablettes), projection web et back-office éditorial
 > du recueil de cantiques « Louanges à Dieu ».
 >
-> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phases 2, 3 et 4 terminées (4.6 : reste l'essai avec une vraie session, Phase 6). Prochaine : Phase 5 (écrans Flutter).**
+> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phases 2, 3 et 4 terminées (4.6 : reste l'essai avec une vraie session, Phase 6). Phase 5 terminée (sauf 5.10 sur appareil, 5.12 bloquée). Prochaine : Phase 6 (compte, favoris synchronisés, listes).**
 > Les arbitrages du propriétaire sont consignés en §6.0 et priment sur les propositions par défaut.
 >
 > Version du plan : 0.2 — 2026-10-17
@@ -774,26 +774,39 @@ est accompagné d'un test de non-régression.
 
 ### PHASE 5 — Application Flutter : accueil, recueil, recherche, fiche, lecture
 
-- [ ] 5.1 Implémentation du design system (tokens, typographies OFL, composants §15) + catalogue de composants (golden)
-- [ ] 5.2 Splash natif + écran de démarrage (import du snapshot au 1ᵉʳ lancement, avec progression)
-- [ ] 5.3 Accueil : identité, recherche, cantique du jour (Q-10), raccourcis recueil/favoris/culte
-- [ ] 5.4 Recueil : liste par numéro avec `bis` en place, pavé « aller au n° », index A-Z (titres et premières lignes), défilement rapide
-- [ ] 5.5 Recherche : champ unique, résultats groupés (numéro / titre / paroles avec extrait), aucun résultat, correspondance partielle
-- [ ] 5.6 Fiche cantique : numéro, titre, strophes, refrain distinct, marqueurs bis/ter, références si présentes, lien « même mélodie que n° X », **aucun champ vide affiché** (T-010)
-- [ ] 5.7 Mode lecture : taille du texte persistée, navigation précédent/suivant, écran maintenu allumé, option d'ordre chanté (Q-07)
-- [ ] 5.8 Page « À propos du recueil » (Q-14) ; écran « Hors connexion / Téléchargements » (état du catalogue, release, dernière synchro)
-- [ ] 5.9 Paramètres : taille de police, thème, à propos, licences open source
-- [ ] 5.10 Accessibilité : texte dynamique, sémantique, contrastes, cibles tactiles
-- [ ] 5.11 Tests widget + golden ; intégration du parcours Fidèle ; test mode avion
-- [ ] 5.12 Distribution interne (TestFlight / Play test interne) si les comptes D-04/D-05 sont prêts
+> Décision du propriétaire (option B, 2026-10-18) : sans simulateur sur le poste, une **cible web
+> Flutter réservée à la prévisualisation** (non livrée) permet de contrôler les écrans ; captures
+> automatisées par Chrome sans interface (CDP), au format téléphone, thèmes clair et sombre.
 
-**Critères d'acceptation** : T-001, T-002, T-003, T-004, T-010 verts (automatisés et manuels) ; recherche < 1 s sur l'appareil de référence ; aucune mention « Inconnu » ni valeur fictive.
+- [x] 5.1 Design system : polices OFL embarquées (Cormorant Garamond, Literata romain + italique, Inter — 3,8 Mo, polices variables pilotées par `FontVariation`, chiffres alignés pour les numéros), composants (épi, séparateur, en-tête de cantique, strophe, refrain à filet doré, marqueurs de répétition discrets, ligne de liste, états vide/erreur). **Épi provisoire** dessiné par le code, en attendant le tracé de la couverture
+- [x] 5.2 Écran de démarrage (installation du recueil, message et nouvel essai sans catalogue ni réseau). Écran de lancement natif (icône, splash) : Phase 10 avec les icônes
+- [x] 5.3 Accueil : identité, recherche, **cantique du jour** déterministe (Q-10), raccourcis recueil et favoris (le raccourci « culte » arrive en Phase 7)
+- [x] 5.4 Recueil : par numéro (« bis » après leur numéro), A–Z avec intertitres, « aller au numéro » (`37 bis` accepté, numéro absent signalé), défilement rapide
+- [x] 5.5 Recherche : résultats groupés (numéro, titres et premiers vers, paroles avec vers trouvé), invite, aucun résultat
+- [x] 5.6 Fiche : numéro, titre, strophes, refrain, références si présentes, lien « même mélodie » pour les « bis », auteurs/thèmes **affichés seulement s'ils existent** (T-010), favori
+- [x] 5.7 Mode lecture : taille du texte enregistrée, précédent/suivant (glissement et boutons), écran maintenu allumé, option ordre chanté (Q-07, ADR-009)
+- [x] 5.8 « À propos du recueil » (note liminaire **extraite verbatim** du .docx v8, sans la puce sur la page 245 — Q-14) ; écran « Hors connexion » (version, nombre de cantiques, dernière vérification, vérification manuelle)
+- [x] 5.9 Réglages : apparence (automatique/clair/sombre), taille du texte, licences (dont les polices)
+- [~] 5.10 Accessibilité : libellés de lecture d'écran (numéros « 37 bis », refrain, « deux fois » pour `(bis)`), cibles tactiles ≥ 48, taille système respectée, commandes équivalentes au glissement. **Reste** : essai avec VoiceOver/TalkBack sur appareil (Phase 10)
+- [x] 5.11 Tests : 9 tests du **parcours fidèle** sur l'application complète (accueil, recherche 37bis → fiche → favori → favoris, refrain et T-010, paroles T-003, aucun résultat, recueil et « aller au numéro », mode lecture, à propos) ; contrôle visuel par captures (aperçu web). Les tests « golden » ont été écartés : leur rendu dépend du système (macOS/Linux) et casserait la CI
+- [!] 5.12 Distribution interne (TestFlight / Play) — **bloquée** : comptes stores (Q-17, R-16)
+
+**Critères d'acceptation**
+- [x] T-001 (app sans compte), T-002 (numéro, dont `37bis`), T-003 (paroles avec extrait), T-010 (aucun champ inconnu) : tests automatisés verts.
+- [x] T-004 (mode avion) : couvert par les tests de synchronisation (Phase 4) et l'instantané embarqué. Vérification en mode avion réel sur appareil : Phase 10.
+- [x] Recherche < 1 s (≤ 14 ms mesurés sur le catalogue réel, Phase 4).
+
+**Rapport Phase 5 (2026-10-18)** — 106 tests Flutter, analyse sans remarque.
+
+- Vérifié visuellement sur le **vrai recueil** (téléchargé par l'aperçu web) : accueil, recueil, fiche n° 991, fiche n° 6 (refrain et `(bis)`), thèmes clair et sombre.
+- Corrections issues du contrôle visuel : chiffres elzéviriens de Cormorant (« 991 » lu « 99I ») remplacés par des chiffres alignés ; épi redessiné (grains en amande, barbes).
+- Problème rencontré : tests d'écran bloqués ou en échec avec Drift. Causes établies : (1) minuteur de fermeture des flux Drift encore actif à la fin du test → démontage dans le test ; (2) mélange temps simulé / temps réel (`runAsync`) qui interbloque Drift → tout reste dans le temps simulé, attente pilotée par `settle()` (`test/support/app_harness.dart`, documenté dans `apps/mobile/README.md`).
 
 ---
 
 ### PHASE 6 — Favoris et listes
 
-- [ ] 6.1 Favoris locaux (visiteur), écran Favoris, bouton sur la fiche et en lecture ; pour un visiteur, l'entrée « Listes » invite à se connecter (Q-05)
+- [~] 6.1 Favoris locaux (visiteur), écran Favoris, bouton sur la fiche : **faits en Phase 5** (testés). Reste : favori depuis le mode lecture ; entrée « Listes » invitant le visiteur à se connecter (Q-05)
 - [ ] 6.2 Authentification par code e-mail (Q-13), profil minimal, déconnexion (conserver/effacer), **suppression de compte**
 - [ ] 6.3 Listes : créer, renommer, supprimer, ajouter depuis la fiche, réordonner (glisser-déposer **et** monter/descendre, pour l'accessibilité)
 - [ ] 6.4 Branchement sur la sync ; fusion visiteur → compte
@@ -903,6 +916,7 @@ est accompagné d'un test de non-régression.
 | Date | Version | Changement |
 |---|---|---|
 | 2026-10-17 | 0.1 | Audit initial et plan (Phase 0). En attente de validation. |
+| 2026-10-18 | 0.7 | Phase 5 : écrans Flutter (accueil, recueil, recherche, fiche, lecture, favoris, réglages, à propos), aperçu web de développement (option B), polices OFL. |
 | 2026-10-17 | 0.6 | Phase 4 : base locale Drift + FTS5, recherche, synchronisation catalogue et données utilisateur ; option B (publication technique sur la base de développement). |
 | 2026-10-17 | 0.5 | Phase 3 terminée : import v8 (1 143 cantiques, fidélité 100 %) chargé en brouillon ; correction du constat A-02 (n° 596). |
 | 2026-10-17 | 0.4 | Phase 2 terminée (12 migrations, 124 tests pgTAP, base reconstruite depuis zéro). En attente : certificat CA, première exécution CI. |

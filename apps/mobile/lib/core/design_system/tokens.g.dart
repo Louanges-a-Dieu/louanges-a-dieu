@@ -152,6 +152,13 @@ abstract final class LadTypeScale {
     weight: FontWeight.w600,
   );
 
+  static const listNumber = LadTextSpec(
+    role: LadFontRole.display,
+    size: 20,
+    height: 1.2,
+    weight: FontWeight.w600,
+  );
+
   static const headline = LadTextSpec(
     role: LadFontRole.ui,
     size: 20,

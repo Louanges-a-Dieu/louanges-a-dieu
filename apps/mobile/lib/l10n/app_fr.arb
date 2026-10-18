@@ -1,7 +1,83 @@
 {
   "@@locale": "fr",
   "appTitle": "Louanges à Dieu",
-  "@appTitle": { "description": "Nom de l'application" },
+  "@appTitle": {
+    "description": "Nom de l'application"
+  },
   "homeSubtitle": "Recueil de cantiques",
-  "@homeSubtitle": { "description": "Sous-titre affiché sur l'accueil" }
+  "@homeSubtitle": {
+    "description": "Sous-titre de l'accueil"
+  },
+  "navHome": "Accueil",
+  "navHymnal": "Recueil",
+  "navFavorites": "Favoris",
+  "navMore": "Plus",
+  "searchHint": "Numéro, titre ou paroles",
+  "searchAction": "Rechercher",
+  "hymnOfTheDay": "Cantique du jour",
+  "openHymnal": "Parcourir le recueil",
+  "openFavorites": "Mes favoris",
+  "byNumber": "Par numéro",
+  "alphabetical": "A – Z",
+  "goToNumber": "Aller au numéro",
+  "goToNumberHint": "Ex. 37 ou 37bis",
+  "go": "Ouvrir",
+  "cancel": "Annuler",
+  "numberNotFound": "Le numéro {label} n’existe pas dans le recueil.",
+  "@numberNotFound": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "resultsNumber": "Numéro",
+  "resultsTitles": "Titres et premiers vers",
+  "resultsLyrics": "Paroles",
+  "searchEmptyTitle": "Que cherchez-vous ?",
+  "searchEmptyMessage": "Saisissez un numéro (37, 37bis), un mot du titre ou des paroles. Les accents ne sont pas nécessaires.",
+  "noResultTitle": "Aucun cantique trouvé",
+  "noResultMessage": "Vérifiez l’orthographe ou essayez un autre mot.",
+  "addFavorite": "Ajouter aux favoris",
+  "removeFavorite": "Retirer des favoris",
+  "readingMode": "Mode lecture",
+  "sameMelody": "Se chante sur la mélodie du n° {label}",
+  "@sameMelody": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "hymnRemovedTitle": "Cantique indisponible",
+  "hymnRemovedMessage": "Ce cantique n’est plus dans le recueil publié.",
+  "previousHymn": "Cantique précédent",
+  "nextHymn": "Cantique suivant",
+  "textSize": "Taille du texte",
+  "sungOrderOption": "Répéter le refrain après chaque couplet",
+  "favoritesEmptyTitle": "Aucun favori",
+  "favoritesEmptyMessage": "Touchez l’étoile d’un cantique pour le retrouver ici, même hors connexion.",
+  "settings": "Réglages",
+  "theme": "Apparence",
+  "themeSystem": "Automatique",
+  "themeLight": "Clair",
+  "themeDark": "Sombre",
+  "offlineTitle": "Hors connexion",
+  "aboutHymnal": "À propos du recueil",
+  "licenses": "Licences",
+  "offlineStatus": "Le recueil est disponible sur cet appareil, avec ou sans connexion.",
+  "catalogRelease": "Version du recueil",
+  "catalogCount": "Cantiques",
+  "lastCheck": "Dernière vérification",
+  "never": "Jamais",
+  "checkNow": "Rechercher une mise à jour",
+  "syncUpToDate": "Le recueil est à jour.",
+  "syncUpdated": "Recueil mis à jour.",
+  "syncOffline": "Pas de connexion : le recueil local reste disponible.",
+  "syncRejected": "La mise à jour reçue était invalide ; le recueil local est conservé.",
+  "syncSkipped": "Aucune mise à jour disponible.",
+  "startupLoading": "Préparation du recueil…",
+  "startupNoCatalogTitle": "Recueil non disponible",
+  "startupNoCatalogMessage": "Connectez cet appareil à Internet une première fois pour télécharger le recueil. Il restera ensuite disponible hors connexion.",
+  "retry": "Réessayer"
 }

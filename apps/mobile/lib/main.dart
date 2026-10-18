@@ -4,9 +4,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/app.dart';
 import 'app/env.dart';
+import 'app/licenses.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  registerFontLicenses();
   final env = Env.fromDefines();
   if (env.hasBackend) {
     // Seule la clé publishable est fournie à l'app (ADR-011).

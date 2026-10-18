@@ -37,8 +37,26 @@ abstract final class LadTheme {
     fontSize: spec.size,
     height: spec.height,
     fontWeight: spec.weight,
+    fontVariations: variations(spec.role, spec.weight, spec.size),
+    // Chiffres alignés : les chiffres elzéviriens par défaut de Cormorant
+    // rendent les numéros de cantique ambigus (« 991 » lu « 99I »).
+    fontFeatures: spec.role == LadFontRole.display
+        ? const [FontFeature.liningFigures()]
+        : null,
     color: color,
   );
+
+  /// Polices variables : la graisse (et, pour Literata et Inter, la taille
+  /// optique) doit être transmise explicitement au moteur de rendu.
+  static List<FontVariation> variations(
+    LadFontRole role,
+    FontWeight weight,
+    double size,
+  ) => [
+    FontVariation.weight(weight.value.toDouble()),
+    if (role != LadFontRole.display)
+      FontVariation('opsz', size.clamp(12, 72).toDouble()),
+  ];
 
   static ThemeData _build(LadPalette p, Brightness brightness) {
     final scheme = ColorScheme(

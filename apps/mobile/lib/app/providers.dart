@@ -14,7 +14,16 @@ import 'env.dart';
 
 /// Base locale de l'appareil.
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
-  final db = AppDatabase(driftDatabase(name: 'louanges_a_dieu'));
+  final db = AppDatabase(
+    driftDatabase(
+      name: 'louanges_a_dieu',
+      // Aperçu web (développement uniquement) : SQLite en WebAssembly.
+      web: DriftWebOptions(
+        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+        driftWorker: Uri.parse('drift_worker.js'),
+      ),
+    ),
+  );
   ref.onDispose(db.close);
   return db;
 });

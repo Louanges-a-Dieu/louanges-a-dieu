@@ -1,11 +1,11 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../sync/catalog_sync.dart';
 import 'catalog_models.dart';
+import 'gunzip.dart';
 
 /// Instantané du catalogue embarqué dans l'application (ADR-005), généré au
 /// build par `content-tools export-snapshot`. Absent des builds de développement
@@ -21,6 +21,7 @@ class AssetBundledCatalogSource implements BundledCatalogSource {
 
   @override
   Future<CatalogSnapshot?> load() async {
+    if (!gunzipSupported) return null;
     final ByteData data;
     try {
       data = await _bundle.load(path);
@@ -37,7 +38,7 @@ class AssetBundledCatalogSource implements BundledCatalogSource {
 
 /// gzip → JSON → instantané validé par le contrat.
 CatalogSnapshot decodeSnapshot(Uint8List gzipped) {
-  final json = jsonDecode(utf8.decode(gzip.decode(gzipped)));
+  final json = jsonDecode(utf8.decode(gunzip(gzipped)));
   if (json is! Map<String, Object?>) {
     throw const FormatException('Instantané embarqué invalide');
   }
