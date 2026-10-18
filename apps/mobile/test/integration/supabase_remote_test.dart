@@ -1,3 +1,6 @@
+@Tags(['reseau'])
+library;
+
 import 'dart:convert';
 import 'dart:io';
 

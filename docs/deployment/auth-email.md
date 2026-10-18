@@ -98,7 +98,11 @@ depuis l'aperçu web avec l'adresse du projet.
 
 ## Tests sans e-mail
 
-`node tools/pgtap/create-test-user.ts` crée, sur la base de **développement uniquement**, un
-utilisateur de test à e-mail confirmé et mot de passe aléatoire (fichier non versionné
-`apps/mobile/config/dev-test-user.json`). Le test `test/integration/supabase_user_sync_test.dart`
-s'en sert pour une synchronisation réelle à deux appareils, puis supprime ce compte.
+`node tools/pgtap/create-test-user.ts` crée, sur la base de **développement uniquement**, deux
+comptes à e-mail confirmé et mot de passe aléatoire (fichiers non versionnés dans
+`apps/mobile/config/`) :
+
+- `dev-test-user.json` : compte **durable**, sans rôle, utilisé par les tests web et admin ;
+- `dev-test-user-disposable.json` : compte **jetable**, utilisé par
+  `test/integration/supabase_user_sync_test.dart` (synchronisation réelle à deux appareils),
+  qui le **supprime** à la fin : relancer le script avant un nouveau passage complet.

@@ -1,3 +1,6 @@
+@Tags(['reseau'])
+library;
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -12,12 +15,12 @@ import '../support/catalog_fixtures.dart';
 
 /// Synchronisation et suppression de compte avec une VRAIE session Supabase,
 /// sur la base de DÉVELOPPEMENT. Prérequis (non versionnés) : config/dev.json
-/// et config/dev-test-user.json, créé par
+/// et config/dev-test-user-disposable.json, créé par
 /// `node tools/pgtap/create-test-user.ts`. Le test supprime ce compte à la
 /// fin : relancer le script avant chaque exécution. Sauté sans ces fichiers.
 void main() {
   final config = File('config/dev.json');
-  final user = File('config/dev-test-user.json');
+  final user = File('config/dev-test-user-disposable.json');
   final skip = config.existsSync() && user.existsSync()
       ? false
       : 'compte de test absent (node tools/pgtap/create-test-user.ts)';

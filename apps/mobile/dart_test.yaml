@@ -1,0 +1,9 @@
+# Tests dépendant du réseau (vrai serveur Supabase de développement) ou d'un
+# navigateur réel : une nouvelle tentative en cas d'aléa extérieur. Les tests
+# unitaires et d'écran n'ont aucune tolérance.
+tags:
+  reseau:
+    retry: 1
+    timeout: 2x
+  browser:
+    retry: 1
