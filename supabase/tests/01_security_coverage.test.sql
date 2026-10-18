@@ -36,7 +36,7 @@ select set_eq(
   $$ select p.proname::text
        from pg_proc p join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public' and p.prosecdef $$,
-  array['publish_release', 'get_shared_program']::text[],
+  array['publish_release', 'get_shared_program', 'delete_my_account']::text[],
   'seules les fonctions SECURITY DEFINER attendues existent dans public'
 );
 

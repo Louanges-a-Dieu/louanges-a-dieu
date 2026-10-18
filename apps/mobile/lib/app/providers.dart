@@ -1,7 +1,9 @@
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../core/auth/auth_service.dart';
 import '../core/catalog/bundled_catalog.dart';
 import '../core/catalog/catalog_repository.dart';
 import '../core/database/app_database.dart';
@@ -10,6 +12,7 @@ import '../core/search/search_service.dart';
 import '../core/sync/catalog_sync.dart';
 import '../core/sync/user_sync.dart';
 import '../core/user_data/user_data_repository.dart';
+import 'account.dart';
 import 'env.dart';
 
 /// Base locale de l'appareil.
@@ -42,8 +45,25 @@ final searchServiceProvider = Provider<SearchService>(
 );
 
 final userDataRepositoryProvider = Provider<UserDataRepository>(
-  (ref) => UserDataRepository(ref.watch(appDatabaseProvider)),
+  (ref) => UserDataRepository(
+    ref.watch(appDatabaseProvider),
+    onChanged: () => ref.read(syncRunnerProvider.notifier).requestSync(),
+  ),
 );
+
+/// Adresse de retour du lien de connexion : schéma de l'app sur mobile,
+/// origine de la page pour l'aperçu web. À autoriser dans Supabase
+/// (Authentication → URL Configuration).
+const mobileAuthRedirect = 'org.louangesadieu.app://login-callback/';
+
+final authServiceProvider = Provider<AuthService>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  if (client == null) return const NoBackendAuthService();
+  return SupabaseAuthService(
+    client,
+    redirectTo: kIsWeb ? Uri.base.origin : mobileAuthRedirect,
+  );
+});
 
 final catalogSyncProvider = Provider<CatalogSync>((ref) {
   final client = ref.watch(supabaseClientProvider);
@@ -62,7 +82,7 @@ final userSyncProvider = Provider<UserSync?>((ref) {
   return UserSync(
     db: ref.watch(appDatabaseProvider),
     remote: SupabaseUserDataRemote(client),
-    isSignedIn: () => client.auth.currentSession != null,
+    isSignedIn: () => ref.read(authServiceProvider).currentUser != null,
   );
 });
 

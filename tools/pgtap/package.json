@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test:db": "node run.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "dev:test-user": "node create-test-user.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

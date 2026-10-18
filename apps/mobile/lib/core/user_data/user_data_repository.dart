@@ -13,10 +13,14 @@ class UserDataRepository {
     this._db, {
     DateTime Function()? now,
     String Function()? newId,
+    this.onChanged,
   }) : _now = now ?? DateTime.now,
        _newId = newId ?? _uuidV4;
 
   final AppDatabase _db;
+
+  /// Appelé après chaque modification locale (déclenche une synchronisation différée).
+  final void Function()? onChanged;
   final DateTime Function() _now;
   final String Function() _newId;
 
@@ -88,6 +92,14 @@ class UserDataRepository {
     );
     await _enqueue(playlist, id);
   });
+
+  /// Contenu ordonné d'une liste, mis à jour en continu.
+  Stream<List<String>> watchPlaylistHymnIds(String playlistId) =>
+      (_db.select(_db.playlistItems)
+            ..where((i) => i.playlistId.equals(playlistId))
+            ..orderBy([(i) => OrderingTerm.asc(i.position)]))
+          .watch()
+          .map((rows) => [for (final r in rows) r.hymnId]);
 
   Future<List<String>> playlistHymnIds(String playlistId) async {
     final rows =
@@ -294,13 +306,45 @@ class UserDataRepository {
         0;
   }
 
-  Future<void> _enqueue(String entity, String entityId) => _db.customStatement(
-    'INSERT INTO outbox (entity, entity_id, version, attempts, updated_at) '
-    'VALUES (?, ?, 1, 0, ?) '
-    'ON CONFLICT (entity, entity_id) DO UPDATE SET '
-    'version = version + 1, attempts = 0, last_error = NULL, updated_at = excluded.updated_at',
-    [entity, entityId, _now().toUtc().toIso8601String()],
-  );
+  Future<void> _enqueue(String entity, String entityId) async {
+    await _db.customStatement(
+      'INSERT INTO outbox (entity, entity_id, version, attempts, updated_at) '
+      'VALUES (?, ?, 1, 0, ?) '
+      'ON CONFLICT (entity, entity_id) DO UPDATE SET '
+      'version = version + 1, attempts = 0, last_error = NULL, updated_at = excluded.updated_at',
+      [entity, entityId, _now().toUtc().toIso8601String()],
+    );
+    onChanged?.call();
+  }
+
+  /// Après déconnexion : retire de l'appareil les listes et programmes (liés au
+  /// compte) et, au choix, les favoris. La révision est remise à zéro pour que
+  /// le prochain compte reçoive tout son contenu.
+  Future<void> clearAccountData({required bool keepFavorites}) =>
+      _db.transaction(() async {
+        await _db.delete(_db.playlists).go();
+        await _db.delete(_db.worshipServices).go();
+        await (_db.delete(
+          _db.outbox,
+        )..where((o) => o.entity.isIn([playlist, worshipService]))).go();
+        if (!keepFavorites) {
+          await _db.delete(_db.favorites).go();
+          await (_db.delete(
+            _db.outbox,
+          )..where((o) => o.entity.equals(favorite))).go();
+        }
+        await (_db.delete(
+          _db.syncState,
+        )..where((s) => s.key.equals('user.revision'))).go();
+      });
+
+  /// Nombre de modifications de listes et programmes non encore envoyées.
+  Future<int> pendingAccountChanges() async {
+    final rows = await (_db.select(
+      _db.outbox,
+    )..where((o) => o.entity.isIn([playlist, worshipService]))).get();
+    return rows.length;
+  }
 
   static String _required(String value, String what) {
     final trimmed = value.trim();

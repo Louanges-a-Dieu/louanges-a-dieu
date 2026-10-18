@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/catalog/catalog_models.dart';
 import '../core/catalog/hymn_of_the_day.dart';
 import '../core/catalog/published_hymn.dart';
+import '../core/database/app_database.dart';
 import '../core/preferences/preferences.dart';
 import '../core/search/search_service.dart';
 import '../core/sync/catalog_sync.dart';
@@ -93,3 +94,13 @@ Future<CatalogSyncOutcome> refreshCatalog(WidgetRef ref) async {
   ref.invalidate(catalogStatusProvider);
   return outcome;
 }
+
+final playlistsProvider = StreamProvider<List<PlaylistRow>>(
+  (ref) => ref.watch(userDataRepositoryProvider).watchPlaylists(),
+);
+
+final playlistHymnIdsProvider = StreamProvider.autoDispose
+    .family<List<String>, String>(
+      (ref, id) =>
+          ref.watch(userDataRepositoryProvider).watchPlaylistHymnIds(id),
+    );

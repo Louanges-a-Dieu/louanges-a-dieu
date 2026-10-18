@@ -27,6 +27,12 @@ class MoreScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.navMore)),
       body: ListView(
         children: [
+          ListTile(
+            leading: const Icon(Icons.account_circle_outlined),
+            title: Text(l10n.account),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/compte'),
+          ),
           ListSectionHeader(l10n.settings),
           ListTile(
             title: Text(l10n.theme),

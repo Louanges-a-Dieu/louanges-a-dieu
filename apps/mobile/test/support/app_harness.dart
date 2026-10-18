@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:louanges_a_dieu/app/app.dart';
 import 'package:louanges_a_dieu/app/env.dart';
@@ -24,6 +25,7 @@ void testApp(
   Future<void> Function(WidgetTester tester, AppDatabase db) body, {
   List<Map<String, Object?>>? hymns,
   DateTime? today,
+  List<Override> overrides = const [],
 }) {
   testWidgets(description, (tester) async {
     final db = memoryDatabase();
@@ -38,6 +40,7 @@ void testApp(
           appDatabaseProvider.overrideWithValue(db),
           catalogBootstrapProvider.overrideWith((ref) async => true),
           todayProvider.overrideWithValue(today ?? DateTime(2026, 10, 18)),
+          ...overrides,
         ],
         child: const LouangesApp(),
       ),

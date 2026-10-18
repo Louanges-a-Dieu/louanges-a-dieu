@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../app/providers.dart';
 import '../../app/state.dart';
 import '../../core/catalog/catalog_models.dart';
 import '../../core/design_system/components.dart';
@@ -23,6 +24,7 @@ class ReaderScreen extends ConsumerStatefulWidget {
 
 class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   PageController? _pages;
+  int? _index;
 
   @override
   void initState() {
@@ -44,15 +46,27 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final prefs =
         ref.watch(preferencesProvider).value ?? const ReadingPreferences();
     if (hymns == null) return const Scaffold();
-    _pages ??= PageController(
-      initialPage: hymns
-          .indexWhere((h) => h.id == widget.hymnId)
-          .clamp(0, hymns.length - 1),
-    );
+    _index ??= hymns
+        .indexWhere((h) => h.id == widget.hymnId)
+        .clamp(0, hymns.length - 1);
+    _pages ??= PageController(initialPage: _index!);
+    final current = hymns[_index!];
+    final isFavorite =
+        ref.watch(favoriteIdsProvider).value?.contains(current.id) ?? false;
 
     return Scaffold(
       appBar: AppBar(
         actions: [
+          IconButton(
+            tooltip: isFavorite ? l10n.removeFavorite : l10n.addFavorite,
+            icon: Icon(
+              isFavorite ? Icons.star : Icons.star_outline,
+              color: context.lad.gold,
+            ),
+            onPressed: () => ref
+                .read(userDataRepositoryProvider)
+                .setFavorite(current.id, isFavorite: !isFavorite),
+          ),
           IconButton(
             tooltip: l10n.textSize,
             icon: const Icon(Icons.format_size),
@@ -65,6 +79,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           PageView.builder(
             controller: _pages,
             itemCount: hymns.length,
+            onPageChanged: (i) => setState(() => _index = i),
             itemBuilder: (context, i) =>
                 _ReaderPage(summary: hymns[i], prefs: prefs),
           ),

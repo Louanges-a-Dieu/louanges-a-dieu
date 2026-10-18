@@ -140,6 +140,29 @@ void main() {
     expect(find.text('Le jour se lève.'), findsOneWidget);
   });
 
+  testApp('mode lecture : le favori porte sur le cantique affiché', (
+    tester,
+    _,
+  ) async {
+    await search(tester, '37');
+    await tester.tap(find.text('Au matin').first);
+    await idle(tester);
+    await tester.tap(find.byTooltip('Mode lecture'));
+    await idle(tester);
+    await tester.tap(find.byTooltip('Cantique suivant'));
+    await idle(tester);
+    await tester.tap(find.byTooltip('Ajouter aux favoris'));
+    await idle(tester);
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(find.byType(BackButton));
+      await idle(tester);
+    }
+    await tester.tap(find.text('Favoris').last);
+    await idle(tester);
+    expect(find.text('Autre texte sur la même mélodie'), findsOneWidget);
+    expect(find.text('Au matin'), findsNothing);
+  });
+
   testApp(
     'à propos : note liminaire verbatim, sans la mention de la page 245',
     (tester, _) async {

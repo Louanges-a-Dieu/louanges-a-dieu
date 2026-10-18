@@ -11,6 +11,7 @@ import '../../core/design_system/theme.dart';
 import '../../core/design_system/tokens.g.dart';
 import '../../core/preferences/preferences.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../lists/lists.dart';
 
 /// Fiche cantique (F-HYM-001/002, T-010). Aucune information absente n'est
 /// affichée : pas d'auteur « inconnu », pas de référence vide.
@@ -41,6 +42,11 @@ class HymnScreen extends ConsumerWidget {
               onPressed: () => ref
                   .read(userDataRepositoryProvider)
                   .setFavorite(hymnId, isFavorite: !isFavorite),
+            ),
+            IconButton(
+              tooltip: l10n.addToList,
+              icon: const Icon(Icons.playlist_add),
+              onPressed: () => showAddToList(context, ref, hymnId),
             ),
             IconButton(
               tooltip: l10n.readingMode,

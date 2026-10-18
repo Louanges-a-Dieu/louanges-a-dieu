@@ -25,5 +25,6 @@ pour toute table ou fonction ajoutée plus tard.
 |---|---|---|
 | `anon_security_definer_function_executable`, `authenticated_security_definer_function_executable` | `get_shared_program` | Seul point d'entrée public d'un programme partagé : `anon` n'a aucun accès aux tables de programmes. Ne renvoie que titre, date et éléments ; jeton ≥ 192 bits ; réponses indistinguables. Testé (06_sharing). |
 | `authenticated_security_definer_function_executable` | `publish_release` | Doit lire toute la copie de travail et écrire le catalogue publié, interdit en écriture directe. Contrôle `has_role('editor')` en tête de fonction. Testé (04_catalog_releases). |
+| `authenticated_security_definer_function_executable` | `delete_my_account` | Suppression de compte exigée par les stores : seul le propriétaire de la base peut supprimer une ligne de `auth.users`. Aucun paramètre : l'utilisateur ne supprime que son propre compte (`auth.uid()`). Testé (07_account_deletion). |
 
 Toute autre alerte de sécurité doit être corrigée avant fusion.

@@ -79,5 +79,106 @@
   "startupLoading": "Préparation du recueil…",
   "startupNoCatalogTitle": "Recueil non disponible",
   "startupNoCatalogMessage": "Connectez cet appareil à Internet une première fois pour télécharger le recueil. Il restera ensuite disponible hors connexion.",
-  "retry": "Réessayer"
+  "retry": "Réessayer",
+  "account": "Mon compte",
+  "accountIntro": "Un compte permet de retrouver vos favoris, listes et programmes sur tous vos appareils. Le recueil reste utilisable sans compte.",
+  "emailLabel": "Adresse e-mail",
+  "sendSignInEmail": "Recevoir le lien de connexion",
+  "emailSentTitle": "Vérifiez votre messagerie",
+  "emailSent": "Un e-mail a été envoyé à {email}. Ouvrez le lien qu’il contient depuis cet appareil.",
+  "@emailSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "codeLabel": "Ou saisissez le code reçu",
+  "verifyCode": "Valider le code",
+  "changeEmail": "Changer d’adresse",
+  "signedInAs": "Connecté avec {email}",
+  "@signedInAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "syncNow": "Synchroniser maintenant",
+  "syncing": "Synchronisation…",
+  "pendingChanges": "{count, plural, =0{Tout est synchronisé} =1{1 modification en attente} other{{count} modifications en attente}}",
+  "@pendingChanges": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncFailed": "La dernière synchronisation a échoué ; vos modifications sont conservées sur l’appareil.",
+  "signOut": "Se déconnecter",
+  "signOutTitle": "Se déconnecter ?",
+  "signOutMessage": "Vos listes et programmes restent dans votre compte et quittent cet appareil.",
+  "signOutUnsynced": "{count, plural, =1{1 modification n’a pas encore été envoyée et sera perdue.} other{{count} modifications n’ont pas encore été envoyées et seront perdues.}}",
+  "@signOutUnsynced": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "keepFavorites": "Garder mes favoris sur cet appareil",
+  "deleteAccount": "Supprimer mon compte",
+  "deleteAccountTitle": "Supprimer définitivement votre compte ?",
+  "deleteAccountMessage": "Vos favoris, listes et programmes enregistrés dans le compte seront supprimés. Cette action est irréversible.",
+  "delete": "Supprimer",
+  "confirm": "Confirmer",
+  "authInvalidEmail": "Adresse e-mail invalide.",
+  "authRateLimited": "Trop de demandes d’e-mail. Réessayez dans un moment.",
+  "authInvalidCode": "Code invalide ou expiré.",
+  "authNetwork": "Pas de connexion Internet.",
+  "authUnavailable": "La connexion n’est pas disponible dans cette version.",
+  "authUnknown": "Une erreur est survenue. Réessayez.",
+  "myFavorites": "Favoris",
+  "myLists": "Listes",
+  "listsNeedAccountTitle": "Les listes sont liées à votre compte",
+  "listsNeedAccountMessage": "Connectez-vous pour créer des listes et les retrouver sur tous vos appareils.",
+  "signIn": "Se connecter",
+  "listsEmptyTitle": "Aucune liste",
+  "listsEmptyMessage": "Créez une liste pour regrouper des cantiques.",
+  "newList": "Nouvelle liste",
+  "listName": "Nom de la liste",
+  "create": "Créer",
+  "rename": "Renommer",
+  "save": "Enregistrer",
+  "deleteListTitle": "Supprimer cette liste ?",
+  "listEmptyTitle": "Liste vide",
+  "listEmptyMessage": "Ajoutez des cantiques depuis leur fiche.",
+  "addToList": "Ajouter à une liste",
+  "addedToList": "Ajouté à « {name} »",
+  "@addedToList": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadyInList": "Déjà dans « {name} »",
+  "@alreadyInList": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "moveUp": "Monter",
+  "moveDown": "Descendre",
+  "removeFromList": "Retirer de la liste",
+  "hymnCount": "{count, plural, =0{Aucun cantique} =1{1 cantique} other{{count} cantiques}}",
+  "@hymnCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

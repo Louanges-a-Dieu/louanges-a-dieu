@@ -30,6 +30,7 @@ secrets du propriétaire.
 | 7 | Nom de domaine / DNS | Propriétaire | ☐ | Sous-domaines prévus : admin, web/projection |
 | 8 | Apple Developer Program (individuel) | Titulaire désigné | ☐ | Vendeur affiché = nom légal du titulaire |
 | 9 | Google Play Console (personnel) | Titulaire désigné | ☐ | Test fermé obligatoire (≥ 12 testeurs, 14 jours) avant la production |
+| 9b | Service d'envoi d'e-mails (SMTP : Resend, Brevo, Postmark…) + domaine d'expédition vérifié | Propriétaire | ☐ | Indispensable avant la production (connexion par e-mail) — voir docs/deployment/auth-email.md |
 | 10 | Sentry (crash reporting) | Propriétaire | ☐ | Phase 10 |
 | 11 | Clé d'upload Android + App Store Connect API key | Propriétaire | ☐ | Générées en Phase 10, déposées dans le coffre |
 

@@ -3,7 +3,7 @@
 > Application mobile (iOS/Android/tablettes), projection web et back-office éditorial
 > du recueil de cantiques « Louanges à Dieu ».
 >
-> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phases 2, 3 et 4 terminées (4.6 : reste l'essai avec une vraie session, Phase 6). Phase 5 terminée (sauf 5.10 sur appareil, 5.12 bloquée). Prochaine : Phase 6 (compte, favoris synchronisés, listes).**
+> **Statut : plan validé le 2026-10-17. Phase 1 : restent 1.2 (organisation GitHub) et les compléments de 1.6, 1.11, 1.12. Phases 2, 3 et 4 terminées. Phase 5 terminée (sauf 5.10 sur appareil, 5.12 bloquée). Phase 6 terminée côté code (6.2 : configuration Auth à faire par le propriétaire). Prochaine : Phase 7 (programme de culte et partage).**
 > Les arbitrages du propriétaire sont consignés en §6.0 et priment sur les propositions par défaut.
 >
 > Version du plan : 0.2 — 2026-10-17
@@ -752,7 +752,7 @@ est accompagné d'un test de non-régression.
 - [x] 4.3 Service de recherche : numéro exact puis préfixe (`37`, `37bis`, `37 BIS`), titre/premier vers puis paroles avec vers verbatim, début de mot, accents et `œ` ignorés, saisie avec guillemets sans risque
 - [x] 4.4 `content-tools export-snapshot` (RPC publique, **chaque cantique validé par le contrat Zod**) → `assets/catalog/catalog_snapshot.json.gz` (375 Ko, non versionné) ; import au premier lancement en une transaction. Génération dans les builds de release : Phase 10
 - [x] 4.5 Moteur de sync catalogue : manifeste, delta ou instantané, intervalle d'une heure, atomicité, vérification du nombre de cantiques, rejet d'un contenu invalide, aucune exception en cas de panne réseau
-- [~] 4.6 Moteur de sync utilisateur : outbox versionnée, envoi puis réception, LWW, pierres tombales, modifications en attente jamais écrasées, favoris de visiteur fusionnés à la connexion — testé avec un serveur simulé fidèle aux RPC (deux appareils). **Reste** : exécution de l'adaptateur Supabase avec une vraie session (dépend de l'authentification, Phase 6) ; les RPC serveur sont déjà couvertes par pgTAP
+- [x] 4.6 Moteur de sync utilisateur : outbox versionnée, envoi puis réception, LWW, pierres tombales, modifications en attente jamais écrasées, favoris de visiteur fusionnés à la connexion — testé avec un serveur simulé (deux appareils) **et avec le vrai serveur et une vraie session** (Phase 6)
 - [x] 4.7 Schéma local versionné et figé (`drift_schemas/`) ; test qui échoue si le code s'écarte du schéma sans migration (vérifié par mutation) ; tests de migration générés dès la v2
 - [x] 4.8 Tests : contrat Dart sur les fixtures partagées, dépôt, recherche, sync catalogue (**mode avion T-004**), sync utilisateur (**favori hors ligne T-005**), intégration sur le catalogue réel et contre le serveur de développement (sautés et signalés sans données)
 - [x] 4.9 Mesures sur le catalogue réel (poste de développement) : décodage + validation 79 ms, import 471 ms, **recherches ≤ 14 ms** (objectif < 100 ms). Mesure sur Android d'entrée de gamme : Phase 10
@@ -806,14 +806,24 @@ est accompagné d'un test de non-régression.
 
 ### PHASE 6 — Favoris et listes
 
-- [~] 6.1 Favoris locaux (visiteur), écran Favoris, bouton sur la fiche : **faits en Phase 5** (testés). Reste : favori depuis le mode lecture ; entrée « Listes » invitant le visiteur à se connecter (Q-05)
-- [ ] 6.2 Authentification par code e-mail (Q-13), profil minimal, déconnexion (conserver/effacer), **suppression de compte**
-- [ ] 6.3 Listes : créer, renommer, supprimer, ajouter depuis la fiche, réordonner (glisser-déposer **et** monter/descendre, pour l'accessibilité)
-- [ ] 6.4 Branchement sur la sync ; fusion visiteur → compte
-- [ ] 6.5 États : sync en attente, erreur, liste vide
-- [ ] 6.6 Tests : T-005, deux appareils sur le même compte, conflit de réordonnancement, suppression concurrente
+- [x] 6.1 Favoris locaux (visiteur, hors connexion) : bouton sur la fiche **et en mode lecture** (cantique affiché), onglet Favoris ; pour un visiteur, l'onglet « Listes » invite à se connecter (Q-05)
+- [~] 6.2 Compte : connexion **sans mot de passe** par e-mail (lien qui rouvre l'app — schéma `org.louangesadieu.app://login-callback/` déclaré sur Android et iOS — ou code), déconnexion (listes et programmes retirés de l'appareil, favoris gardés au choix, avertissement s'il reste des modifications non envoyées), **suppression de compte** (migration 0013, fonction `delete_my_account`). **Reste (propriétaire)** : autoriser les adresses de retour et brancher un service d'envoi d'e-mails (voir `docs/deployment/auth-email.md`) — sans cela, la connexion par e-mail ne peut pas aboutir
+- [x] 6.3 Listes : créer, renommer, supprimer, ajouter depuis la fiche (nouvelle liste à la volée, doublon signalé), réordonner par glisser-déposer **et** par « Monter / Descendre » (accessibilité), retirer
+- [x] 6.4 Synchronisation branchée : à la connexion, quelques secondes après chaque modification, et à la demande ; fusion des favoris de visiteur à la première connexion
+- [x] 6.5 États : modifications en attente, synchronisation en cours, échec (données conservées sur l'appareil), liste vide, aucune liste
+- [x] 6.6 Tests : 5 tests d'écran (invitation visiteur, connexion avec e-mail et code invalides, listes de bout en bout, déconnexion, suppression) avec un service de connexion simulé ; **test de bout en bout avec une vraie session Supabase** (deux appareils, favoris, liste ordonnée, programme, retrait propagé, puis suppression réelle du compte) ; pgTAP 07_account_deletion
 
-**Critères d'acceptation** : T-005 vert ; aucune perte de données hors connexion ; politique de conflit conforme à §12.2 et testée.
+**Critères d'acceptation**
+- [x] T-005 : favori ajouté hors ligne, conservé, puis envoyé (Phase 4) ; fusion à la connexion.
+- [x] Deux appareils sur le même compte voient les mêmes listes après synchronisation — **vérifié avec le vrai serveur**.
+- [x] Aucune perte de données hors connexion ; conflits selon §12.2 (tests Phase 4).
+- [!] Connexion d'un utilisateur réel par e-mail : dépend de la configuration Auth (6.2).
+
+**Rapport Phase 6 (2026-10-18)**
+
+- Contrainte découverte : le projet Supabase (créé après juin 2026, offre gratuite, envoi par défaut) **ne peut pas personnaliser ses e-mails** (lien seulement, pas de code) et n'envoie que **2 e-mails par heure**. L'app gère le lien et le code ; un service SMTP dédié est nécessaire avant la production.
+- Test réel sans e-mail : `tools/pgtap/create-test-user.ts` crée un utilisateur de test sur la base de **développement uniquement** (mot de passe aléatoire, fichier non versionné).
+- Défauts trouvés par les tests et corrigés : contrôleur de texte détruit avant la fin de l'animation de fermeture du dialogue « Nouvelle liste » ; message « Ajouté à… » envoyé avec un contexte déjà démonté ; relecture inutile de la base après création d'une liste.
 
 ---
 
@@ -916,6 +926,7 @@ est accompagné d'un test de non-régression.
 | Date | Version | Changement |
 |---|---|---|
 | 2026-10-17 | 0.1 | Audit initial et plan (Phase 0). En attente de validation. |
+| 2026-10-18 | 0.8 | Phase 6 : compte sans mot de passe, suppression de compte, listes, synchronisation branchée ; test réel à deux appareils. |
 | 2026-10-18 | 0.7 | Phase 5 : écrans Flutter (accueil, recueil, recherche, fiche, lecture, favoris, réglages, à propos), aperçu web de développement (option B), polices OFL. |
 | 2026-10-17 | 0.6 | Phase 4 : base locale Drift + FTS5, recherche, synchronisation catalogue et données utilisateur ; option B (publication technique sur la base de développement). |
 | 2026-10-17 | 0.5 | Phase 3 terminée : import v8 (1 143 cantiques, fidélité 100 %) chargé en brouillon ; correction du constat A-02 (n° 596). |
