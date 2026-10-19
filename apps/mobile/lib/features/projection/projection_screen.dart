@@ -425,8 +425,8 @@ class SlidePreview extends StatelessWidget {
               ? Center(
                   child: Text(
                     l10n.blankScreenOn,
-                    style: LadTheme.textStyle(
-                      LadTypeScale.label,
+                    style: _style(
+                      LadProjectionTypeScale.label,
                       p.textSecondary,
                     ),
                   ),
@@ -440,38 +440,42 @@ class SlidePreview extends StatelessWidget {
     );
   }
 
+  /// Polices et échelle de l'écran projeté : l'aperçu doit lui rester fidèle.
+  static TextStyle _style(LadTextSpec spec, Color color) =>
+      LadTheme.textStyle(spec, color, projection: true);
+
   Widget _slideContent(Slide? slide, LadPalette p) => switch (slide) {
     null => const SizedBox.shrink(),
     TitleSlide(:final numberLabel, :final title) => Column(
       children: [
         Text(
           numberLabel,
-          style: LadTheme.textStyle(LadTypeScale.hymnNumber, p.goldText),
+          style: _style(LadProjectionTypeScale.hymnNumber, p.goldText),
         ),
         Text(
           title,
           textAlign: TextAlign.center,
-          style: LadTheme.textStyle(LadTypeScale.title, p.text),
+          style: _style(LadProjectionTypeScale.title, p.text),
         ),
       ],
     ),
     SectionSlide(:final label) => Text(
       label,
       textAlign: TextAlign.center,
-      style: LadTheme.textStyle(LadTypeScale.title, p.text),
+      style: _style(LadProjectionTypeScale.title, p.text),
     ),
     final LyricsSlide s => Column(
       children: [
         Text(
           '${s.numberLabel} · ${slideLabel(s)}'.toUpperCase(),
-          style: LadTheme.textStyle(LadTypeScale.caption, p.goldText),
+          style: _style(LadProjectionTypeScale.caption, p.goldText),
         ),
         const SizedBox(height: LadSpace.xs),
         for (final line in s.lines)
           Text(
             line,
             textAlign: TextAlign.center,
-            style: LadTheme.textStyle(LadTypeScale.lyrics, p.text).copyWith(
+            style: _style(LadProjectionTypeScale.lyrics, p.text).copyWith(
               fontStyle: s.sectionType == SectionType.refrain
                   ? FontStyle.italic
                   : null,

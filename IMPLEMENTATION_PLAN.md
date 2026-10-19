@@ -232,7 +232,7 @@ Conventions éditoriales (note liminaire du recueil) :
 | Q-05 | **Non** : pas de listes ni de programmes pour les visiteurs | Visiteur = lecture, recherche, favoris locaux. Listes et programmes exigent un compte (ils restent utilisables hors connexion une fois connecté) |
 | Q-07 | **Oui** : le refrain est répété automatiquement en projection | Séquenceur de diapositives : refrain inséré après chaque couplet (désactivable par programme) |
 | Q-08 | **Non** : Internet n'est pas fiable pendant les cultes | **La projection doit fonctionner sans Internet** : ADR-013 révisé (projection sur réseau local, sans dépendance au cloud) |
-| Q-11 | Style **pur et épuré, basé sur le blanc** | Tokens : fond blanc, texte brun-noir, or réservé à l'épi et aux accents (§15 révisé) |
+| Q-11 | Style **pur et épuré, basé sur le blanc**. **Révisé le 2026-10-19 pour l'app mobile** : « moderne, futuriste mais minimal », direction « clair net », tout en polices modernes (paroles comprises) | Tokens de base inchangés (site, back-office, écran projeté) ; bloc `app` de `tokens.json` pour l'app mobile (§15) |
 | Q-12 | Proposer une typographie. Photos issues de **Pexels** | Proposition typographique en §15 (polices OFL). Photos Pexels utilisables (licence Pexels), source de chaque photo consignée dans un registre d'assets |
 | Q-15 | **Vercel** en premier lieu | `apps/admin` et `apps/web` déployés sur Vercel. Vérifier l'offre : l'offre gratuite « Hobby » est réservée à un usage personnel non commercial |
 | Q-17 | Organisation : **« Louanges à Dieu »**. E-mail du projet : **`louangesaDieu04@gmail.com`** (confirmé). Publication sur les stores via un **compte individuel**. Identifiant d'application : **`org.louangesadieu.app`** (validé, définitif après la 1ʳᵉ publication). Projet Supabase **`ssvhoqpvxvfkhwxkewwl`** = base de **développement** du backend | Voir R-06 révisé et R-16. Les projets Supabase `staging` et `prod` seront créés séparément avant la Phase 10 |
@@ -558,6 +558,21 @@ Mesures :
 ## 15. Design System
 
 - Source unique : `packages/design_tokens/tokens.json` → `tokens.g.dart` + `tokens.css`.
+- **Direction de l'app mobile « clair net » (2026-10-19, révision de Q-11 par le propriétaire)** :
+  moderne, futuriste mais minimal. Bloc `app` de `tokens.json`, appliqué **à l'app seulement**
+  (le site, le back-office et l'écran projeté gardent les valeurs de base ci-dessous ; l'aperçu
+  du pilote de projection garde les polices de l'écran projeté) :
+  - blanc pur, noir profond `#0A0A0B`, gris froids, filets de 1 px `#E4E4E7`, aucune ombre ;
+    angles nets (rayons 2 / 4 / 6) ; or `#A9853F` (graphismes) et `#7D6127` (texte) comme seul
+    accent ; thème sombre `#0A0A0B` dérivé ; contrastes vérifiés en CI (paroles AAA) ;
+  - **Space Grotesk** (interface, titres), **Manrope** (paroles), **IBM Plex Mono** (numéros
+    affichés sur trois chiffres, « 037bis », intitulés techniques en capitales espacées,
+    marqueurs « (bis) ») — toutes sous licence OFL ;
+  - Manrope n'a pas d'italique : le refrain est signalé par le filet doré, le retrait et une
+    graisse plus appuyée (plus d'italique synthétique) ;
+  - numéro affiché sur trois chiffres : purement visuel ; lecture vocale (« 37 bis »),
+    recherche et partage utilisent le numéro imprimé.
+- Valeurs de base (site, back-office, écran projeté) :
 - **Direction (Q-11)** : pur et épuré, **basé sur le blanc**. Beaucoup d'espace, filets fins,
   aucune ombre marquée, aucun dégradé ; l'épi doré est la seule touche identitaire.
 - **Couleurs** (contrastes vérifiés automatiquement en CI) :
@@ -720,7 +735,7 @@ est accompagné d'un test de non-régression.
 - [x] 3.8 Tests : 37 tests unitaires sur .docx **synthétiques** générés à la volée (deux régimes, `w:br`, refrain, bis, référence, index « 1, 4 », italique désactivé, texte supprimé) + 4 tests d'intégration en base (sautés et signalés sans accès base) ; contrôle par mutation (les tests détectent une règle cassée)
 - [x] 3.9 CLI `content-tools import` / `load` documentée (`docs/editorial/import.md`)
 - [x] 3.10 Exécution sur la v8 réelle et chargement en brouillon dans la base de développement ; rapport d'anomalies remis au propriétaire (`content/out/report.html`, hors Git)
-- [ ] 3.11 (Optionnel, Q-04) Import des tableurs de corrections comme suggestions — **non fait** (proposition par défaut : après le MVP)
+- [~] 3.11 (Optionnel, Q-04) Import des tableurs de corrections comme suggestions — **en cours, mis de côté le 2026-10-19** au profit du restyle de l'app : lecteur .xlsx et rapprochement par le texte écrits et essayés sur les vrais tableurs (446 propositions : 417 déjà dans la v8, 15 à appliquer, 6 passages modifiés depuis, 3 introuvables, 5 refusées « Non » dans le tableur), non commités (`packages/content_tools/src/xlsx.ts`, `corrections.ts`). **Reste** : chargement en base (A-13), fonction d'application, back-office, tests
 
 **Critères d'acceptation**
 - [x] Sur v8 : 1 143 cantiques, 6 relations `bis_of`, 9 références, **0** auteur/thème/tonalité, **100 % en `draft`**, 0 release (rien de public sans validation humaine) — vérifié en base.
@@ -943,6 +958,7 @@ est accompagné d'un test de non-régression.
 | 2026-10-18 | 0.9 | Phase 7 : programmes de culte (onglet Culte, archivage), partage par lien réutilisé (0014), page publique `apps/web` ; tests avec le vrai serveur. |
 | 2026-10-18 | 1.0 | Phase 8 : projection sans Internet — diapositives Dart/TS, serveur local et pilote dans l'app, écran projeté partagé, mode ordinateur seul (PWA) ; tests en navigateur réel hors ligne. |
 | 2026-10-18 | 1.1 | Phase 9 : back-office éditorial — MFA appliquée par la base, import SQL partagé, diff et retour arrière de release, éditeur avec aperçu mobile, anomalies, journal, équipe ; parcours de bout en bout. |
+| 2026-10-19 | 1.3 | App mobile restylée « clair net » (révision de Q-11) : bloc `app` des tokens, Space Grotesk / Manrope / IBM Plex Mono, thème Material entièrement dérivé des tokens, aperçu de projection fidèle à l'écran projeté. 3.11 commencée puis mise de côté. |
 | 2026-10-18 | 1.2 | Phase 10 : revue de sécurité (CSP site, test des fonctions privilégiées), observabilité sans données personnelles, sauvegarde avec restauration vérifiée, confidentialité et stores, signature, déploiement, documentation et transfert. |
 | 2026-10-18 | 0.7 | Phase 5 : écrans Flutter (accueil, recueil, recherche, fiche, lecture, favoris, réglages, à propos), aperçu web de développement (option B), polices OFL. |
 | 2026-10-17 | 0.6 | Phase 4 : base locale Drift + FTS5, recherche, synchronisation catalogue et données utilisateur ; option B (publication technique sur la base de développement). |

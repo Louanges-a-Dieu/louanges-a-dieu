@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:louanges_a_dieu/core/design_system/components.dart';
 import 'package:louanges_a_dieu/core/design_system/theme.dart';
 import 'package:louanges_a_dieu/core/design_system/tokens.g.dart';
 
@@ -37,4 +38,49 @@ void main() {
       inInclusiveRange(LadLyricsSize.min, LadLyricsSize.max),
     );
   });
+
+  test(
+    'direction « clair net » : polices géométriques, numéros techniques',
+    () {
+      expect(LadFonts.ui, 'Space Grotesk');
+      expect(LadFonts.lyrics, 'Manrope');
+      expect(LadFonts.numeric, 'IBM Plex Mono');
+      expect(LadTypeScale.hymnNumber.role, LadFontRole.numeric);
+      expect(LadRadius.sm, lessThanOrEqualTo(2));
+    },
+  );
+
+  test("l'aperçu de projection garde les polices de l'écran projeté", () {
+    final style = LadTheme.textStyle(
+      LadProjectionTypeScale.lyrics,
+      LadPalette.projection.text,
+      projection: true,
+    );
+    expect(style.fontFamily, LadProjectionFonts.lyrics);
+    expect(LadProjectionFonts.lyrics, isNot(LadFonts.lyrics));
+  });
+
+  test('numéro affiché sur trois chiffres, sans toucher au suffixe', () {
+    expect(displayNumber('7'), '007');
+    expect(displayNumber('37bis'), '037bis');
+    expect(displayNumber('1138'), '1138');
+    expect(spokenNumber('37bis'), '37 bis');
+  });
+
+  test(
+    "l'interlettrage des tokens est appliqué en proportion de la taille",
+    () {
+      final style = LadTheme.textStyle(
+        LadTypeScale.overline,
+        LadPalette.light.text,
+      );
+      expect(
+        style.letterSpacing,
+        closeTo(
+          LadTypeScale.overline.letterSpacing * LadTypeScale.overline.size,
+          1e-9,
+        ),
+      );
+    },
+  );
 }

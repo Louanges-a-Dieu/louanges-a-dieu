@@ -1,5 +1,5 @@
-import type { Palette, Tokens } from './tokens.ts';
-import { FONT_ROLES, PALETTE_KEYS, THEMES } from './tokens.ts';
+import type { Palette, TextSpec, Tokens } from './tokens.ts';
+import { appTokens, FONT_ROLES, PALETTE_KEYS, THEMES } from './tokens.ts';
 
 const HEADER = 'GÉNÉRÉ par packages/design_tokens à partir de tokens.json — NE PAS MODIFIER.';
 
@@ -24,7 +24,36 @@ function dartConstants(className: string, doc: string, values: Record<string, nu
   return `/// ${doc}\nabstract final class ${className} {\n${lines}\n}`;
 }
 
-export function generateDart(tokens: Tokens): string {
+function dartTypeScale(className: string, doc: string, tokens: Tokens): string {
+  const spec = ([name, t]: [string, TextSpec]) =>
+    [
+      `  static const ${name} = LadTextSpec(`,
+      `    role: LadFontRole.${t.family},`,
+      `    size: ${dartNumber(t.size)},`,
+      `    height: ${dartNumber(t.lineHeight)},`,
+      `    weight: FontWeight.w${tokens.font.weight[t.weight]},`,
+      ...(t.letterSpacing ? [`    letterSpacing: ${dartNumber(t.letterSpacing)},`] : []),
+      `  );`,
+    ].join('\n');
+  return `/// ${doc}\nabstract final class ${className} {\n${Object.entries(tokens.typeScale)
+    .map(spec)
+    .join('\n\n')}\n}`;
+}
+
+function dartFonts(className: string, doc: string, tokens: Tokens): string {
+  const families = FONT_ROLES.map(
+    (role) => `  static const String ${role} = '${tokens.font.family[role]}';`,
+  ).join('\n');
+  return `/// ${doc}\nabstract final class ${className} {\n${families}\n}`;
+}
+
+/**
+ * Tokens Dart de l'application mobile : direction « app », sauf le thème
+ * projection et ses polices, repris des valeurs de base (aperçu fidèle de
+ * l'écran projeté).
+ */
+export function generateDart(base: Tokens): string {
+  const tokens = appTokens(base);
   const fields = PALETTE_KEYS.map((key) => `  final Color ${key};`).join('\n');
   const ctorArgs = PALETTE_KEYS.map((key) => `    required this.${key},`).join('\n');
   const palettes = THEMES.map((theme) => dartPalette(theme, tokens.color[theme])).join('\n\n');
@@ -32,23 +61,6 @@ export function generateDart(tokens: Tokens): string {
   const durations = Object.entries(tokens.duration)
     .map(([name, ms]) => `  static const Duration ${name} = Duration(milliseconds: ${ms});`)
     .join('\n');
-
-  const families = FONT_ROLES.map(
-    (role) => `  static const String ${role} = '${tokens.font.family[role]}';`,
-  ).join('\n');
-
-  const typeScale = Object.entries(tokens.typeScale)
-    .map(([name, spec]) =>
-      [
-        `  static const ${name} = LadTextSpec(`,
-        `    role: LadFontRole.${spec.family},`,
-        `    size: ${dartNumber(spec.size)},`,
-        `    height: ${dartNumber(spec.lineHeight)},`,
-        `    weight: FontWeight.w${tokens.font.weight[spec.weight]},`,
-        `  );`,
-      ].join('\n'),
-    )
-    .join('\n\n');
 
   const ls = tokens.lyricsSize;
 
@@ -79,10 +91,9 @@ abstract final class LadDurations {
 ${durations}
 }
 
-/// Familles de polices.
-abstract final class LadFonts {
-${families}
-}
+${dartFonts('LadFonts', "Familles de polices de l'application.", tokens)}
+
+${dartFonts('LadProjectionFonts', "Familles de polices de l'écran projeté.", base)}
 
 /// Rôle typographique.
 enum LadFontRole { ${FONT_ROLES.join(', ')} }
@@ -94,18 +105,21 @@ final class LadTextSpec {
     required this.size,
     required this.height,
     required this.weight,
+    this.letterSpacing = 0,
   });
 
   final LadFontRole role;
   final double size;
   final double height;
   final FontWeight weight;
+
+  /// Interlettrage en em (multiplié par la taille du texte).
+  final double letterSpacing;
 }
 
-/// Échelle typographique.
-abstract final class LadTypeScale {
-${typeScale}
-}
+${dartTypeScale('LadTypeScale', "Échelle typographique de l'application.", tokens)}
+
+${dartTypeScale('LadProjectionTypeScale', "Échelle typographique de l'écran projeté.", base)}
 
 /// Taille de lecture des paroles réglable par l'utilisateur (pt).
 abstract final class LadLyricsSize {

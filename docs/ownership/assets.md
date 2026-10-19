@@ -6,12 +6,18 @@ Chaque asset embarqué dans une application doit figurer ici avec sa source et s
 
 | Police | Usage | Source |
 |---|---|---|
-| Cormorant Garamond (variable, romain) | numéros, titres, mot-symbole | github.com/google/fonts `ofl/cormorantgaramond` |
-| Literata (variable, romain + italique) | paroles, refrains en italique | github.com/google/fonts `ofl/literata` |
-| Inter (variable, romain) | interface | github.com/google/fonts `ofl/inter` |
+| Space Grotesk (variable, romain) | app : interface, titres | github.com/google/fonts `ofl/spacegrotesk` |
+| Manrope (variable, romain) | app : paroles | github.com/google/fonts `ofl/manrope` |
+| IBM Plex Mono (Regular, Medium, SemiBold) | app : numéros, intitulés techniques | github.com/google/fonts `ofl/ibmplexmono` |
+| Cormorant Garamond (variable, romain) | site, back-office, écran projeté : numéros, titres | github.com/google/fonts `ofl/cormorantgaramond` |
+| Literata (variable, romain + italique) | site, back-office, écran projeté : paroles | github.com/google/fonts `ofl/literata` |
+| Inter (variable, romain) | site, back-office, écran projeté : interface | github.com/google/fonts `ofl/inter` |
 
-Fichiers dans `apps/mobile/assets/fonts/`, chacun accompagné de son `OFL.txt` ; empreintes Git
-vérifiées au téléchargement (2026-10-17). Licences affichées dans l'écran « Licences » de l'app.
+Fichiers dans `apps/mobile/assets/fonts/`, chacun accompagné de son `OFL.txt` (Cormorant,
+Literata, Inter téléchargées le 2026-10-17 ; Space Grotesk, Manrope, IBM Plex Mono le
+2026-10-19, branche `main` du dépôt google/fonts). Licences affichées dans l'écran « Licences »
+de l'app. Aucune des polices de l'app n'a le caractère U+202F (espace fine insécable, avant
+« ! ? ; : ») : le système le dessine avec sa police de repli, sans effet visible.
 
 Les polices de la couverture imprimée (Baskerville, Brush Script MT) sont sous licence
 propriétaire et **ne sont pas embarquées**.

@@ -27,11 +27,15 @@ export interface ContrastViolation {
   min: number;
 }
 
-/** Vérifie toutes les règles de contraste sur tous les thèmes. */
+/** Vérifie toutes les règles de contraste sur tous les thèmes, base et application. */
 export function checkContrast(tokens: Tokens): ContrastViolation[] {
   const violations: ContrastViolation[] = [];
-  for (const theme of THEMES) {
-    const palette = tokens.color[theme];
+  const palettes = [
+    ...THEMES.map((theme) => [theme, tokens.color[theme]] as const),
+    ['app.light', tokens.app.color.light] as const,
+    ['app.dark', tokens.app.color.dark] as const,
+  ];
+  for (const [theme, palette] of palettes) {
     for (const rule of tokens.contrast.rules) {
       const ratio = contrastRatio(palette[rule.foreground], palette[rule.background]);
       if (ratio < rule.min) {

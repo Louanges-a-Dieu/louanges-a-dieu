@@ -31,28 +31,28 @@ final class LadPalette {
 
   static const light = LadPalette(
     background: Color(0xFFFFFFFF),
-    surface: Color(0xFFFAFAF8),
-    hairline: Color(0xFFECE8E2),
-    text: Color(0xFF1F1A17),
-    textSecondary: Color(0xFF6B625B),
-    gold: Color(0xFFB08D57),
-    goldText: Color(0xFF8A6A35),
-    error: Color(0xFF9B2C2C),
-    success: Color(0xFF3F6B4A),
-    info: Color(0xFF4F5F68),
+    surface: Color(0xFFF6F6F7),
+    hairline: Color(0xFFE4E4E7),
+    text: Color(0xFF0A0A0B),
+    textSecondary: Color(0xFF5B5B66),
+    gold: Color(0xFFA9853F),
+    goldText: Color(0xFF7D6127),
+    error: Color(0xFFB42318),
+    success: Color(0xFF067647),
+    info: Color(0xFF475467),
   );
 
   static const dark = LadPalette(
-    background: Color(0xFF121110),
-    surface: Color(0xFF1B1A18),
-    hairline: Color(0xFF2C2925),
-    text: Color(0xFFF2EEE8),
-    textSecondary: Color(0xFFA89F96),
-    gold: Color(0xFFC9A46B),
-    goldText: Color(0xFFD4B27A),
-    error: Color(0xFFE38B8B),
-    success: Color(0xFF8FC39C),
-    info: Color(0xFF9FB2BC),
+    background: Color(0xFF0A0A0B),
+    surface: Color(0xFF131316),
+    hairline: Color(0xFF27272A),
+    text: Color(0xFFF4F4F5),
+    textSecondary: Color(0xFFA1A1AA),
+    gold: Color(0xFFD4AE62),
+    goldText: Color(0xFFE0BE7A),
+    error: Color(0xFFF97066),
+    success: Color(0xFF47CD89),
+    info: Color(0xFF98A2B3),
   );
 
   static const projection = LadPalette(
@@ -85,9 +85,9 @@ abstract final class LadSpace {
 /// Rayons (dp).
 abstract final class LadRadius {
   static const double none = 0;
-  static const double sm = 4;
-  static const double md = 8;
-  static const double lg = 12;
+  static const double sm = 2;
+  static const double md = 4;
+  static const double lg = 6;
   static const double pill = 999;
 }
 
@@ -95,6 +95,7 @@ abstract final class LadRadius {
 abstract final class LadStroke {
   static const double hairline = 1;
   static const double refrainRule = 2;
+  static const double accent = 2;
 }
 
 /// Durées d'animation.
@@ -104,15 +105,24 @@ abstract final class LadDurations {
   static const Duration slow = Duration(milliseconds: 320);
 }
 
-/// Familles de polices.
+/// Familles de polices de l'application.
 abstract final class LadFonts {
+  static const String display = 'Space Grotesk';
+  static const String lyrics = 'Manrope';
+  static const String ui = 'Space Grotesk';
+  static const String numeric = 'IBM Plex Mono';
+}
+
+/// Familles de polices de l'écran projeté.
+abstract final class LadProjectionFonts {
   static const String display = 'Cormorant Garamond';
   static const String lyrics = 'Literata';
   static const String ui = 'Inter';
+  static const String numeric = 'Cormorant Garamond';
 }
 
 /// Rôle typographique.
-enum LadFontRole { display, lyrics, ui }
+enum LadFontRole { display, lyrics, ui, numeric }
 
 /// Spécification d'un style de texte.
 final class LadTextSpec {
@@ -121,16 +131,104 @@ final class LadTextSpec {
     required this.size,
     required this.height,
     required this.weight,
+    this.letterSpacing = 0,
   });
 
   final LadFontRole role;
   final double size;
   final double height;
   final FontWeight weight;
+
+  /// Interlettrage en em (multiplié par la taille du texte).
+  final double letterSpacing;
 }
 
-/// Échelle typographique.
+/// Échelle typographique de l'application.
 abstract final class LadTypeScale {
+  static const display = LadTextSpec(
+    role: LadFontRole.display,
+    size: 34,
+    height: 1.1,
+    weight: FontWeight.w500,
+    letterSpacing: -0.02,
+  );
+
+  static const hymnNumber = LadTextSpec(
+    role: LadFontRole.numeric,
+    size: 28,
+    height: 1.1,
+    weight: FontWeight.w500,
+  );
+
+  static const title = LadTextSpec(
+    role: LadFontRole.display,
+    size: 24,
+    height: 1.2,
+    weight: FontWeight.w500,
+    letterSpacing: -0.01,
+  );
+
+  static const listNumber = LadTextSpec(
+    role: LadFontRole.numeric,
+    size: 15,
+    height: 1.3,
+    weight: FontWeight.w500,
+  );
+
+  static const headline = LadTextSpec(
+    role: LadFontRole.ui,
+    size: 20,
+    height: 1.3,
+    weight: FontWeight.w500,
+    letterSpacing: -0.01,
+  );
+
+  static const lyrics = LadTextSpec(
+    role: LadFontRole.lyrics,
+    size: 20,
+    height: 1.6,
+    weight: FontWeight.w400,
+  );
+
+  static const body = LadTextSpec(
+    role: LadFontRole.ui,
+    size: 16,
+    height: 1.5,
+    weight: FontWeight.w400,
+  );
+
+  static const label = LadTextSpec(
+    role: LadFontRole.ui,
+    size: 14,
+    height: 1.4,
+    weight: FontWeight.w500,
+  );
+
+  static const caption = LadTextSpec(
+    role: LadFontRole.ui,
+    size: 12,
+    height: 1.4,
+    weight: FontWeight.w400,
+  );
+
+  static const overline = LadTextSpec(
+    role: LadFontRole.numeric,
+    size: 11,
+    height: 1.3,
+    weight: FontWeight.w500,
+    letterSpacing: 0.12,
+  );
+
+  static const marker = LadTextSpec(
+    role: LadFontRole.numeric,
+    size: 13,
+    height: 1.3,
+    weight: FontWeight.w400,
+  );
+}
+
+/// Échelle typographique de l'écran projeté.
+abstract final class LadProjectionTypeScale {
   static const display = LadTextSpec(
     role: LadFontRole.display,
     size: 40,

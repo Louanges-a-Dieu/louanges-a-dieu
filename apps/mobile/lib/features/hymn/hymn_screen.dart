@@ -112,7 +112,7 @@ class HymnContent extends ConsumerWidget {
         ),
         children: [
           HymnHeader(hymn: hymn),
-          const WheatDivider(),
+          const SizedBox(height: LadSpace.xxl),
           for (var i = 0; i < sections.length; i++) ...[
             if (i > 0) const SizedBox(height: LadSpace.xl),
             SectionBlock(section: sections[i], fontSize: fontSize),
@@ -121,12 +121,9 @@ class HymnContent extends ConsumerWidget {
             const SizedBox(height: LadSpace.xl),
             for (final r in hymn.bibleReferences)
               Text(
-                '— ${r.displayText} —',
+                '— ${r.displayText}',
                 textAlign: TextAlign.right,
-                style: LadTheme.textStyle(
-                  LadTypeScale.label,
-                  p.textSecondary,
-                ).copyWith(fontStyle: FontStyle.italic),
+                style: LadTheme.textStyle(LadTypeScale.marker, p.textSecondary),
               ),
           ],
           for (final relation in bisOf)

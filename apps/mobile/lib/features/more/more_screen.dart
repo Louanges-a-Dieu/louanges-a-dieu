@@ -246,7 +246,7 @@ class AboutScreen extends ConsumerWidget {
                     : TextAlign.start,
                 style: switch (para.style) {
                   'heading' => LadTheme.textStyle(LadTypeScale.title, p.text),
-                  'italic' => lyrics.copyWith(fontStyle: FontStyle.italic),
+                  'italic' => lyrics.copyWith(color: p.textSecondary),
                   _ => lyrics,
                 },
               ),

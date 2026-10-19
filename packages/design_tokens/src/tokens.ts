@@ -18,7 +18,7 @@ export type Palette = Record<PaletteKey, string>;
 export const THEMES = ['light', 'dark', 'projection'] as const;
 export type ThemeName = (typeof THEMES)[number];
 
-export const FONT_ROLES = ['display', 'lyrics', 'ui'] as const;
+export const FONT_ROLES = ['display', 'lyrics', 'ui', 'numeric'] as const;
 export type FontRole = (typeof FONT_ROLES)[number];
 export type FontWeightName = 'regular' | 'medium' | 'semibold';
 
@@ -27,6 +27,8 @@ export interface TextSpec {
   size: number;
   lineHeight: number;
   weight: FontWeightName;
+  /** Interlettrage en em (0 par défaut). */
+  letterSpacing?: number;
 }
 
 export interface ContrastRule {
@@ -50,33 +52,90 @@ export interface Tokens {
   stroke: Record<string, number>;
   duration: Record<string, number>;
   touchTarget: { min: number };
+  /** Direction propre à l'application mobile (remplace les valeurs de base de même nom). */
+  app: {
+    color: Record<'light' | 'dark', Palette>;
+    font: { family: Record<FontRole, string>; fallback: Record<FontRole, string> };
+    typeScale: Record<string, TextSpec>;
+    radius: Record<string, number>;
+    stroke: Record<string, number>;
+  };
+}
+
+/**
+ * Tokens tels que les voit l'application mobile : bloc « app » appliqué sur
+ * les valeurs de base. Le thème projection reste celui de base (l'écran
+ * projeté est servi avec les tokens CSS de base).
+ */
+export function appTokens(t: Tokens): Tokens {
+  return {
+    ...t,
+    color: { ...t.color, light: t.app.color.light, dark: t.app.color.dark },
+    font: { ...t.font, family: t.app.font.family, fallback: t.app.font.fallback },
+    typeScale: t.app.typeScale,
+    radius: { ...t.radius, ...t.app.radius },
+    stroke: { ...t.stroke, ...t.app.stroke },
+  };
 }
 
 const HEX = /^#[0-9A-F]{6}$/;
 const NAME = /^[a-z][A-Za-z0-9]*$/;
 
+function checkPalette(errors: string[], path: string, palette: Palette | undefined) {
+  if (!palette) {
+    errors.push(`${path} manquant`);
+    return;
+  }
+  for (const key of PALETTE_KEYS) {
+    const value = palette[key];
+    if (typeof value !== 'string' || !HEX.test(value)) {
+      errors.push(`${path}.${key} doit être une couleur #RRGGBB en majuscules`);
+    }
+  }
+  for (const key of Object.keys(palette)) {
+    if (!(PALETTE_KEYS as readonly string[]).includes(key)) {
+      errors.push(`${path}.${key} : clé inconnue`);
+    }
+  }
+}
+
+function checkFonts(
+  errors: string[],
+  path: string,
+  font: Partial<Pick<Tokens['font'], 'family' | 'fallback'>> | undefined,
+) {
+  for (const role of FONT_ROLES) {
+    if (typeof font?.family?.[role] !== 'string') errors.push(`${path}.family.${role} manquant`);
+    if (typeof font?.fallback?.[role] !== 'string')
+      errors.push(`${path}.fallback.${role} manquant`);
+  }
+}
+
+function checkTypeScale(
+  errors: string[],
+  path: string,
+  scale: Record<string, TextSpec> | undefined,
+  weights: Record<string, number>,
+) {
+  for (const [name, spec] of Object.entries(scale ?? {})) {
+    if (!(FONT_ROLES as readonly string[]).includes(spec.family)) {
+      errors.push(`${path}.${name}.family inconnue : ${spec.family}`);
+    }
+    if (!(spec.weight in weights)) {
+      errors.push(`${path}.${name}.weight inconnu : ${spec.weight}`);
+    }
+    if (spec.letterSpacing !== undefined && Math.abs(spec.letterSpacing) > 0.5) {
+      errors.push(`${path}.${name}.letterSpacing : valeur en em attendue (entre -0,5 et 0,5)`);
+    }
+    if (!NAME.test(name)) errors.push(`${path}.${name} : nom invalide (camelCase attendu)`);
+  }
+}
+
 /** Valide la structure et renvoie la liste des erreurs (vide si valide). */
 export function validateTokens(raw: unknown): string[] {
   const errors: string[] = [];
   const t = raw as Partial<Tokens>;
-  for (const theme of THEMES) {
-    const palette = t.color?.[theme];
-    if (!palette) {
-      errors.push(`color.${theme} manquant`);
-      continue;
-    }
-    for (const key of PALETTE_KEYS) {
-      const value = palette[key];
-      if (typeof value !== 'string' || !HEX.test(value)) {
-        errors.push(`color.${theme}.${key} doit être une couleur #RRGGBB en majuscules`);
-      }
-    }
-    for (const key of Object.keys(palette)) {
-      if (!(PALETTE_KEYS as readonly string[]).includes(key)) {
-        errors.push(`color.${theme}.${key} : clé inconnue`);
-      }
-    }
-  }
+  for (const theme of THEMES) checkPalette(errors, `color.${theme}`, t.color?.[theme]);
   for (const rule of t.contrast?.rules ?? []) {
     for (const key of [rule.foreground, rule.background]) {
       if (!(PALETTE_KEYS as readonly string[]).includes(key)) {
@@ -84,30 +143,40 @@ export function validateTokens(raw: unknown): string[] {
       }
     }
   }
-  for (const role of FONT_ROLES) {
-    if (typeof t.font?.family?.[role] !== 'string') errors.push(`font.family.${role} manquant`);
-    if (typeof t.font?.fallback?.[role] !== 'string') errors.push(`font.fallback.${role} manquant`);
-  }
+  checkFonts(errors, 'font', t.font);
   for (const [name, weight] of Object.entries(t.font?.weight ?? {})) {
     if (![100, 200, 300, 400, 500, 600, 700, 800, 900].includes(weight)) {
       errors.push(`font.weight.${name} doit être un multiple de 100 entre 100 et 900`);
     }
   }
-  for (const [name, spec] of Object.entries(t.typeScale ?? {})) {
-    if (!(FONT_ROLES as readonly string[]).includes(spec.family)) {
-      errors.push(`typeScale.${name}.family inconnue : ${spec.family}`);
-    }
-    if (!(spec.weight in (t.font?.weight ?? {}))) {
-      errors.push(`typeScale.${name}.weight inconnu : ${spec.weight}`);
-    }
-  }
+  const weights = t.font?.weight ?? {};
+  checkTypeScale(errors, 'typeScale', t.typeScale, weights);
   const ls = t.lyricsSize;
   if (!ls || !(ls.min <= ls.default && ls.default <= ls.max) || ls.step <= 0) {
     errors.push('lyricsSize : il faut min ≤ default ≤ max et step > 0');
   }
-  for (const group of ['space', 'radius', 'stroke', 'duration', 'typeScale'] as const) {
+  for (const group of ['space', 'radius', 'stroke', 'duration'] as const) {
     for (const name of Object.keys(t[group] ?? {})) {
       if (!NAME.test(name)) errors.push(`${group}.${name} : nom invalide (camelCase attendu)`);
+    }
+  }
+
+  const app = t.app;
+  if (!app) {
+    errors.push('app manquant');
+    return errors;
+  }
+  checkPalette(errors, 'app.color.light', app.color?.light);
+  checkPalette(errors, 'app.color.dark', app.color?.dark);
+  checkFonts(errors, 'app.font', app.font);
+  checkTypeScale(errors, 'app.typeScale', app.typeScale, weights);
+  // Les composants de l'app utilisent les styles de base : aucun ne doit manquer.
+  for (const name of Object.keys(t.typeScale ?? {})) {
+    if (!app.typeScale?.[name]) errors.push(`app.typeScale.${name} manquant`);
+  }
+  for (const group of ['radius', 'stroke'] as const) {
+    for (const name of Object.keys(app[group] ?? {})) {
+      if (!NAME.test(name)) errors.push(`app.${group}.${name} : nom invalide (camelCase attendu)`);
     }
   }
   return errors;

@@ -399,7 +399,7 @@ class _ItemRow extends StatelessWidget {
         child: hymn == null
             ? Icon(Icons.notes, color: p.textSecondary)
             : Text(
-                hymn!.numberLabel,
+                displayNumber(hymn!.numberLabel),
                 style: LadTheme.textStyle(LadTypeScale.listNumber, p.goldText),
               ),
       ),

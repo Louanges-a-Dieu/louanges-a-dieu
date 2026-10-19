@@ -18,6 +18,12 @@ String spokenNumber(String label) => label.replaceFirstMapped(
   (m) => '${m[1]} ${m[2]}',
 );
 
+/// Affichage d'un numéro en chiffres techniques, sur trois chiffres au moins :
+/// « 37bis » → « 037bis ». Purement visuel : la lecture vocale, la recherche
+/// et le partage utilisent le numéro imprimé.
+String displayNumber(String label) =>
+    label.replaceFirstMapped(RegExp(r'^\d+'), (m) => m[0]!.padLeft(3, '0'));
+
 // ----------------------------------------------------------------- l'épi
 
 /// Épi de blé stylisé, élément identitaire (provisoire, en attendant le
@@ -101,29 +107,55 @@ class _WheatPainter extends CustomPainter {
   bool shouldRepaint(_WheatPainter old) => old.color != color;
 }
 
-/// Séparateur : filet — épi — filet (écho du « ✤ » du livre).
+/// Séparateur : petit épi puis filet de 1 px (écho du « ✤ » du livre).
 class WheatDivider extends StatelessWidget {
   const WheatDivider({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final line = Expanded(
-      child: Container(height: LadStroke.hairline, color: context.lad.hairline),
-    );
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: LadSpace.xl),
-      child: Row(
-        children: [
-          line,
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: LadSpace.md),
-            child: WheatEar(size: 22),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: LadSpace.xl),
+    child: Row(
+      children: [
+        const WheatEar(size: 16),
+        const SizedBox(width: LadSpace.md),
+        Expanded(
+          child: Container(
+            height: LadStroke.hairline,
+            color: context.lad.hairline,
           ),
-          line,
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
+
+/// Trait d'accent doré, court, sous un titre.
+class AccentRule extends StatelessWidget {
+  const AccentRule({super.key});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: LadSpace.xxl,
+    height: LadStroke.accent,
+    color: context.lad.gold,
+  );
+}
+
+/// Petit intitulé technique en capitales espacées (« CANTIQUE DU JOUR »).
+class Overline extends StatelessWidget {
+  const Overline(this.text, {super.key, this.color});
+
+  final String text;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    text.toUpperCase(),
+    style: LadTheme.textStyle(
+      LadTypeScale.overline,
+      color ?? context.lad.textSecondary,
+    ),
+  );
 }
 
 // ------------------------------------------------------------- en-tête
@@ -142,17 +174,19 @@ class HymnHeader extends StatelessWidget {
       label: 'Cantique ${spokenNumber(hymn.numberLabel)}, ${hymn.title}',
       excludeSemantics: true,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            hymn.numberLabel,
+            displayNumber(hymn.numberLabel),
             style: LadTheme.textStyle(LadTypeScale.hymnNumber, p.goldText),
           ),
-          const SizedBox(height: LadSpace.xs),
+          const SizedBox(height: LadSpace.sm),
           Text(
             hymn.title,
-            textAlign: TextAlign.center,
             style: LadTheme.textStyle(LadTypeScale.title, p.text),
           ),
+          const SizedBox(height: LadSpace.lg),
+          const AccentRule(),
         ],
       ),
     );
@@ -162,8 +196,9 @@ class HymnHeader extends StatelessWidget {
 // -------------------------------------------------------------- paroles
 
 /// Une section (strophe ou refrain) avec la taille de lecture choisie.
-/// Le refrain est en italique, en retrait, souligné d'un filet doré — comme
-/// dans le livre. Les marqueurs « (bis) » restent visibles, plus discrets.
+/// Le refrain est en retrait, plus appuyé, souligné d'un filet doré (la police
+/// des paroles n'a pas d'italique). Les marqueurs « (bis) » restent visibles,
+/// plus discrets, en chiffres techniques.
 class SectionBlock extends StatelessWidget {
   const SectionBlock({
     super.key,
@@ -179,19 +214,19 @@ class SectionBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.lad;
+    final weight = _isRefrain ? FontWeight.w500 : LadTypeScale.lyrics.weight;
     final base = LadTheme.textStyle(LadTypeScale.lyrics, p.text).copyWith(
       fontSize: fontSize,
-      fontStyle: _isRefrain ? FontStyle.italic : FontStyle.normal,
-      fontVariations: LadTheme.variations(
-        LadFontRole.lyrics,
-        LadTypeScale.lyrics.weight,
-        fontSize,
-      ),
+      fontWeight: weight,
+      fontVariations: LadTheme.variations(LadFonts.lyrics, weight, fontSize),
     );
-    final marker = base.copyWith(
-      color: p.textSecondary,
-      fontSize: fontSize * 0.8,
-    );
+    final markerSize =
+        fontSize * LadTypeScale.marker.size / LadTypeScale.lyrics.size;
+    final marker = LadTheme.textStyle(LadTypeScale.marker, p.textSecondary)
+        .copyWith(
+          fontSize: markerSize,
+          height: base.height! * fontSize / markerSize,
+        );
 
     final lines = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,7 +322,7 @@ class HymnListTile extends StatelessWidget {
                 SizedBox(
                   width: LadSpace.huge,
                   child: Text(
-                    hymn.numberLabel,
+                    displayNumber(hymn.numberLabel),
                     style: LadTheme.textStyle(
                       LadTypeScale.listNumber,
                       p.goldText,
@@ -308,15 +343,10 @@ class HymnListTile extends StatelessWidget {
                           subtitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style:
-                              LadTheme.textStyle(
-                                LadTypeScale.label,
-                                p.textSecondary,
-                              ).copyWith(
-                                fontFamily: LadFonts.lyrics,
-                                fontStyle: FontStyle.italic,
-                                fontWeight: FontWeight.w400,
-                              ),
+                          style: LadTheme.textStyle(
+                            LadTypeScale.label,
+                            p.textSecondary,
+                          ).copyWith(fontFamily: LadFonts.lyrics),
                         ),
                     ],
                   ),
@@ -346,13 +376,7 @@ class ListSectionHeader extends StatelessWidget {
         LadSpace.lg,
         LadSpace.xs,
       ),
-      child: Text(
-        text.toUpperCase(),
-        style: LadTheme.textStyle(
-          LadTypeScale.caption,
-          context.lad.textSecondary,
-        ).copyWith(letterSpacing: 1.2),
-      ),
+      child: Overline(text),
     ),
   );
 }

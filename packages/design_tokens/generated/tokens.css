@@ -63,6 +63,7 @@
   --lad-font-display: 'Cormorant Garamond', Georgia, serif;
   --lad-font-lyrics: 'Literata', Georgia, serif;
   --lad-font-ui: 'Inter', system-ui, sans-serif;
+  --lad-font-numeric: 'Cormorant Garamond', Georgia, serif;
   --lad-type-display-family: var(--lad-font-display);
   --lad-type-display-size: 40px;
   --lad-type-display-line-height: 1.1;

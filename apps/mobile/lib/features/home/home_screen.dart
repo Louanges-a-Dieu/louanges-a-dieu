@@ -27,17 +27,18 @@ class HomeScreen extends ConsumerWidget {
             vertical: LadSpace.xxl,
           ),
           children: [
-            const Center(child: WheatEar(size: 44)),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: WheatEar(size: 32),
+            ),
             const SizedBox(height: LadSpace.lg),
             Text(
               l10n.appTitle,
-              textAlign: TextAlign.center,
               style: LadTheme.textStyle(LadTypeScale.display, p.text),
             ),
             const SizedBox(height: LadSpace.xs),
             Text(
               l10n.homeSubtitle,
-              textAlign: TextAlign.center,
               style: LadTheme.textStyle(LadTypeScale.body, p.textSecondary),
             ),
             const SizedBox(height: LadSpace.xxl),
@@ -46,15 +47,8 @@ class HomeScreen extends ConsumerWidget {
               onTap: () => context.push('/recherche'),
             ),
             if (daily != null) ...[
-              const WheatDivider(),
-              Text(
-                l10n.hymnOfTheDay.toUpperCase(),
-                textAlign: TextAlign.center,
-                style: LadTheme.textStyle(
-                  LadTypeScale.caption,
-                  p.textSecondary,
-                ).copyWith(letterSpacing: 1.2),
-              ),
+              const SizedBox(height: LadSpace.xxl),
+              Overline(l10n.hymnOfTheDay),
               const SizedBox(height: LadSpace.sm),
               Semantics(
                 button: true,
@@ -64,23 +58,42 @@ class HomeScreen extends ConsumerWidget {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(LadRadius.md),
                   onTap: () => context.push('/cantique/${daily.id}'),
-                  child: Padding(
-                    padding: const EdgeInsets.all(LadSpace.md),
-                    child: Column(
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(LadSpace.lg),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(LadRadius.md),
+                      border: Border.all(
+                        color: p.hairline,
+                        width: LadStroke.hairline,
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          daily.numberLabel,
-                          style: LadTheme.textStyle(
-                            LadTypeScale.hymnNumber,
-                            p.goldText,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                displayNumber(daily.numberLabel),
+                                style: LadTheme.textStyle(
+                                  LadTypeScale.hymnNumber,
+                                  p.goldText,
+                                ),
+                              ),
+                              const SizedBox(height: LadSpace.sm),
+                              Text(
+                                daily.title,
+                                style: LadTheme.textStyle(
+                                  LadTypeScale.title,
+                                  p.text,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: LadSpace.xs),
-                        Text(
-                          daily.title,
-                          textAlign: TextAlign.center,
-                          style: LadTheme.textStyle(LadTypeScale.title, p.text),
-                        ),
+                        Icon(Icons.arrow_outward, color: p.textSecondary),
                       ],
                     ),
                   ),
@@ -125,7 +138,7 @@ class _SearchEntry extends StatelessWidget {
       excludeSemantics: true,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(LadRadius.pill),
+        borderRadius: BorderRadius.circular(LadRadius.sm),
         child: Container(
           constraints: const BoxConstraints(
             minHeight: LadTouchTarget.min + LadSpace.sm,
@@ -133,7 +146,7 @@ class _SearchEntry extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: LadSpace.lg),
           decoration: BoxDecoration(
             color: p.surface,
-            borderRadius: BorderRadius.circular(LadRadius.pill),
+            borderRadius: BorderRadius.circular(LadRadius.sm),
             border: Border.all(color: p.hairline, width: LadStroke.hairline),
           ),
           child: Row(
@@ -169,10 +182,11 @@ class _Shortcut extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.lad;
     return ListTile(
+      contentPadding: EdgeInsets.zero,
       minTileHeight: LadTouchTarget.min + LadSpace.sm,
       leading: Icon(icon, color: p.gold),
       title: Text(label, style: LadTheme.textStyle(LadTypeScale.body, p.text)),
-      trailing: Icon(Icons.chevron_right, color: p.textSecondary),
+      trailing: Icon(Icons.arrow_forward, color: p.textSecondary),
       onTap: onTap,
     );
   }

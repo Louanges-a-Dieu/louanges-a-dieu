@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { checkContrast, contrastRatio } from '../src/contrast.ts';
 import { generateCss, generateDart } from '../src/generate.ts';
-import { loadTokens, validateTokens } from '../src/tokens.ts';
+import { appTokens, loadTokens, validateTokens } from '../src/tokens.ts';
 
 const tokens = loadTokens(resolve(import.meta.dirname, '../tokens.json'));
 
@@ -39,6 +39,48 @@ describe('tokens.json', () => {
 
   it('a un fond blanc pur en thème clair (décision Q-11)', () => {
     expect(tokens.color.light.background).toBe('#FFFFFF');
+  });
+});
+
+describe('direction de l’application (bloc « app »)', () => {
+  const app = appTokens(tokens);
+
+  it('remplace les palettes claire et sombre, garde la projection de base', () => {
+    expect(app.color.light).toEqual(tokens.app.color.light);
+    expect(app.color.dark).toEqual(tokens.app.color.dark);
+    expect(app.color.projection).toEqual(tokens.color.projection);
+    expect(app.color.light.background).toBe('#FFFFFF');
+  });
+
+  it('définit tous les styles typographiques de base (les composants en dépendent)', () => {
+    for (const name of Object.keys(tokens.typeScale)) expect(app.typeScale[name]).toBeDefined();
+  });
+
+  it('signale un style de base absent du bloc « app »', () => {
+    const broken = structuredClone(tokens);
+    delete broken.app.typeScale.lyrics;
+    expect(validateTokens(broken)).toContain('app.typeScale.lyrics manquant');
+  });
+
+  it('vérifie aussi les contrastes des palettes de l’application', () => {
+    const broken = structuredClone(tokens);
+    broken.app.color.light.textSecondary = '#BBBBBB';
+    expect(checkContrast(broken).map((v) => v.theme)).toContain('app.light');
+  });
+
+  it('Dart : polices de l’app, polices et échelle de base pour l’aperçu de projection', () => {
+    const dart = generateDart(tokens);
+    expect(dart).toContain("static const String lyrics = 'Manrope';");
+    expect(dart).toContain('abstract final class LadProjectionFonts');
+    expect(dart).toContain("static const String lyrics = 'Literata';");
+    expect(dart).toContain('abstract final class LadProjectionTypeScale');
+    expect(dart).toContain('letterSpacing: 0.12,');
+  });
+
+  it('CSS (site, back-office, écran projeté) : inchangé, polices de base', () => {
+    const css = generateCss(tokens);
+    expect(css).toContain("--lad-font-lyrics: 'Literata', Georgia, serif;");
+    expect(css).not.toContain('Manrope');
   });
 });
 
