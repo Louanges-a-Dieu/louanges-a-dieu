@@ -109,6 +109,31 @@ void main() {
   );
 
   testApp(
+    'ajout par numéro imprimé, message si le numéro n’existe pas',
+    (tester, _) async {
+      await signIn(tester);
+      await newProgram(tester, 'Culte du matin');
+      final field = find.widgetWithText(TextField, 'N° (ex. 37bis)');
+
+      await tester.enterText(field, '37 BIS');
+      await tester.tap(find.byTooltip('Ajouter ce numéro'));
+      await idle(tester);
+      expect(find.text('Autre texte sur la même mélodie'), findsOneWidget);
+      expect(find.text('Cantique 37bis ajouté au programme.'), findsOneWidget);
+
+      await tester.enterText(field, '999');
+      await tester.tap(find.byTooltip('Ajouter ce numéro'));
+      await idle(tester);
+      expect(
+        find.text('Le numéro 999 n’existe pas dans le recueil.'),
+        findsOneWidget,
+      );
+    },
+    overrides: services(),
+    env: env,
+  );
+
+  testApp(
     'T-006 : créer un programme, ajouter, ordonner, annoter, retrouver',
     (tester, _) async {
       await signIn(tester);
@@ -117,7 +142,8 @@ void main() {
 
       await addHymn(tester, '37', 'Au matin');
       await tapText(tester, 'Ajouter un moment');
-      await tester.enterText(find.byType(TextField), 'Accueil');
+      // Boîte de dialogue : le champ « N° » de l'éditeur est aussi présent.
+      await tester.enterText(find.byType(TextField).last, 'Accueil');
       await tapText(tester, 'Créer');
       expect(rows(tester, ['Au matin', 'Accueil']), ['Au matin', 'Accueil']);
 
@@ -129,7 +155,8 @@ void main() {
       // Note sur le cantique.
       await openRowMenu(tester, 'Au matin');
       await tapText(tester, 'Modifier la note');
-      await tester.enterText(find.byType(TextField), 'Couplets 1 et 3');
+      // Boîte de dialogue : le champ « N° » de l'éditeur est aussi présent.
+      await tester.enterText(find.byType(TextField).last, 'Couplets 1 et 3');
       await tapText(tester, 'Enregistrer');
       expect(find.text('Couplets 1 et 3'), findsOneWidget);
 

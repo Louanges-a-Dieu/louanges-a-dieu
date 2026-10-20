@@ -42,27 +42,49 @@
 }
 
 .items {
+  display: grid;
+  gap: var(--lad-space-sm);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .item {
-  padding: var(--lad-space-md) 0;
-  border-bottom: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+  padding: var(--lad-space-md);
+  border: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+  border-radius: var(--lad-radius-md);
+  background: var(--lad-color-surface);
+}
+
+/* Moment libre : intercalaire du conducteur, sans carte. */
+.item:has(> .section) {
+  padding: var(--lad-space-md) 0 0;
+  border: 0;
+  background: none;
 }
 
 .hymn,
 .section {
   display: flex;
   gap: var(--lad-space-md);
-  align-items: baseline;
+  align-items: center;
   margin: 0;
   overflow-wrap: anywhere;
 }
 
+.hymn {
+  font-family: var(--lad-type-list-title-family);
+  font-size: var(--lad-type-list-title-size);
+  font-weight: var(--lad-type-list-title-weight);
+  line-height: var(--lad-type-list-title-line-height);
+}
+
 .number {
   flex: 0 0 4.5rem;
+  padding: var(--lad-space-xs) 0;
+  border-radius: var(--lad-radius-sm);
+  background: var(--lad-color-surface-warm);
+  text-align: center;
   color: var(--lad-color-gold-text);
   font-family: var(--lad-type-list-number-family);
   font-size: var(--lad-type-list-number-size);
@@ -71,8 +93,10 @@
 }
 
 .section {
-  font-style: italic;
-  color: var(--lad-color-text-secondary);
+  color: var(--lad-color-gold-text);
+  font-family: var(--lad-type-card-title-family);
+  font-size: var(--lad-type-card-title-size);
+  font-weight: var(--lad-type-card-title-weight);
 }
 
 .notes {
@@ -110,7 +134,7 @@
   min-height: var(--lad-touch-target-min);
   padding: 0 var(--lad-space-lg);
   border: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
-  border-radius: var(--lad-radius-pill);
+  border-radius: var(--lad-radius-md);
   background: var(--lad-color-surface);
   color: var(--lad-color-text);
   font: inherit;

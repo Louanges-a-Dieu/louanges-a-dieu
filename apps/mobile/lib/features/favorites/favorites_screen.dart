@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/state.dart';
 import '../../core/design_system/components.dart';
+import '../../core/design_system/theme.dart';
+import '../../core/design_system/tokens.g.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../lists/lists.dart';
+import 'favorite_button.dart';
 
 /// Onglet « Favoris » : favoris (sans compte, hors connexion) et listes (compte).
 class FavoritesScreen extends ConsumerWidget {
@@ -14,17 +17,27 @@ class FavoritesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final count = ref.watch(favoriteIdsProvider).value?.length;
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(l10n.navFavorites),
-          bottom: TabBar(
-            tabs: [
-              Tab(text: l10n.myFavorites),
-              Tab(text: l10n.myLists),
+          toolbarHeight: kToolbarHeight + LadSpace.md,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.favoritesTitle),
+              if (count != null && count > 0)
+                Text(
+                  l10n.favoriteCount(count),
+                  style: LadTheme.textStyle(
+                    LadTypeScale.caption,
+                    context.lad.textSecondary,
+                  ),
+                ),
             ],
           ),
+          bottom: PillTabBar(tabs: [l10n.myFavorites, l10n.myLists]),
         ),
         body: const TabBarView(children: [_FavoriteList(), ListsTab()]),
       ),
@@ -45,13 +58,19 @@ class _FavoriteList extends ConsumerWidget {
       return MessageState(
         title: l10n.favoritesEmptyTitle,
         message: l10n.favoritesEmptyMessage,
+        actionLabel: l10n.openHymnal,
+        onAction: () => context.go('/recueil'),
       );
     }
     return ListView.builder(
+      padding: const EdgeInsets.only(bottom: LadSpace.xl),
       itemCount: favorites.length,
-      itemBuilder: (context, i) => HymnListTile(
-        hymn: favorites[i],
-        onTap: () => context.push('/cantique/${favorites[i].id}'),
+      itemBuilder: (context, i) => ReadableWidth(
+        child: HymnListTile(
+          hymn: favorites[i],
+          onTap: () => context.push('/cantique/${favorites[i].id}'),
+          trailing: FavoriteButton(hymnId: favorites[i].id),
+        ),
       ),
     );
   }

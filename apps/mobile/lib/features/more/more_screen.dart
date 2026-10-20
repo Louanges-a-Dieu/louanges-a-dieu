@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/env.dart';
@@ -123,11 +124,41 @@ class MoreScreen extends ConsumerWidget {
 }
 
 /// État du recueil sur l'appareil et vérification manuelle d'une mise à jour.
-class OfflineScreen extends ConsumerWidget {
+/// Aucune barre de progression : la vérification n'a pas d'avancement
+/// mesurable ; seuls l'état réel et le résultat sont affichés.
+class OfflineScreen extends ConsumerStatefulWidget {
   const OfflineScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OfflineScreen> createState() => _OfflineScreenState();
+}
+
+class _OfflineScreenState extends ConsumerState<OfflineScreen> {
+  bool _checking = false;
+  String? _result;
+
+  Future<void> _check() async {
+    final l10n = AppLocalizations.of(context);
+    setState(() {
+      _checking = true;
+      _result = null;
+    });
+    final outcome = await refreshCatalog(ref);
+    if (!mounted) return;
+    setState(() {
+      _checking = false;
+      _result = switch (outcome) {
+        CatalogUpToDate() => l10n.syncUpToDate,
+        CatalogUpdated() => l10n.syncUpdated,
+        CatalogOffline() => l10n.syncOffline,
+        CatalogUpdateRejected() => l10n.syncRejected,
+        CatalogCheckSkipped() => l10n.syncSkipped,
+      };
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final p = context.lad;
     final status = ref.watch(catalogStatusProvider).value;
@@ -137,36 +168,91 @@ class OfflineScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.offlineTitle)),
       body: ListView(
-        padding: const EdgeInsets.all(LadSpace.xl),
+        padding: const EdgeInsets.all(LadSpace.lg),
         children: [
-          Text(
-            l10n.offlineStatus,
-            style: LadTheme.textStyle(LadTypeScale.body, p.text),
-          ),
-          const SizedBox(height: LadSpace.xl),
-          _Row(l10n.catalogCount, '${status?.count ?? '—'}'),
-          _Row(
-            l10n.catalogRelease,
-            status?.releaseId == null ? '—' : '${status!.releaseId}',
-          ),
-          _Row(l10n.lastCheck, date(status?.lastCheck)),
-          const SizedBox(height: LadSpace.xl),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.refresh),
-            label: Text(l10n.checkNow),
-            onPressed: () async {
-              final outcome = await refreshCatalog(ref);
-              if (!context.mounted) return;
-              final message = switch (outcome) {
-                CatalogUpToDate() => l10n.syncUpToDate,
-                CatalogUpdated() => l10n.syncUpdated,
-                CatalogOffline() => l10n.syncOffline,
-                CatalogUpdateRejected() => l10n.syncRejected,
-                CatalogCheckSkipped() => l10n.syncSkipped,
-              };
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text(message)));
-            },
+          ReadableWidth(
+            maxWidth: 680,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                PageHeader(
+                  title: l10n.offlineLead,
+                  subtitle: l10n.offlineStatus,
+                ),
+                const SizedBox(height: LadSpace.xl),
+                Container(
+                  padding: const EdgeInsets.all(LadSpace.lg + 4),
+                  decoration: BoxDecoration(
+                    color: p.surface,
+                    borderRadius: BorderRadius.circular(LadRadius.lg),
+                    border: Border.all(
+                      color: p.hairline,
+                      width: LadStroke.hairline,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.menu_book_outlined, color: p.gold),
+                          const SizedBox(width: LadSpace.sm),
+                          Text(
+                            l10n.offlinePanelTitle,
+                            style: LadTheme.textStyle(
+                              LadTypeScale.cardTitle,
+                              p.text,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: LadSpace.md),
+                      _Row(
+                        l10n.catalogCount,
+                        status == null
+                            ? '—'
+                            : NumberFormat.decimalPattern('fr')
+                                  .format(status.count),
+                      ),
+                      _Row(
+                        l10n.catalogRelease,
+                        status?.releaseId == null
+                            ? '—'
+                            : '${status!.releaseId}',
+                      ),
+                      _Row(l10n.lastCheck, date(status?.lastCheck)),
+                      const SizedBox(height: LadSpace.lg),
+                      FilledButton.icon(
+                        icon: _checking
+                            ? SizedBox.square(
+                                dimension: LadSpace.lg,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: LadStroke.accent,
+                                  color: p.surface,
+                                ),
+                              )
+                            : const Icon(Icons.refresh),
+                        label: Text(_checking ? l10n.checking : l10n.checkNow),
+                        onPressed: _checking ? null : _check,
+                      ),
+                      if (_result != null) ...[
+                        const SizedBox(height: LadSpace.md),
+                        Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            _result!,
+                            style: LadTheme.textStyle(
+                              LadTypeScale.label,
+                              p.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

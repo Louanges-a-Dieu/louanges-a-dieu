@@ -7,6 +7,7 @@ import '../core/database/app_database.dart';
 import '../core/preferences/preferences.dart';
 import '../core/search/search_service.dart';
 import '../core/sync/catalog_sync.dart';
+import '../core/user_data/reading_history.dart';
 import 'providers.dart';
 
 /// Recueil trié par numéro (mis à jour automatiquement après une synchronisation).
@@ -35,6 +36,24 @@ final searchResultsProvider = FutureProvider.autoDispose
 final favoriteIdsProvider = StreamProvider<Set<String>>(
   (ref) => ref.watch(userDataRepositoryProvider).watchFavoriteIds(),
 );
+
+final readingHistoryRepositoryProvider = Provider<ReadingHistoryRepository>(
+  (ref) => ReadingHistoryRepository(ref.watch(appDatabaseProvider)),
+);
+
+/// Derniers cantiques ouverts encore présents dans le recueil, du plus récent
+/// au plus ancien.
+final recentHymnsProvider = StreamProvider<List<HymnSummary>>((ref) {
+  final hymns = {
+    for (final h
+        in ref.watch(hymnsByNumberProvider).value ?? const <HymnSummary>[])
+      h.id: h,
+  };
+  return ref
+      .watch(readingHistoryRepositoryProvider)
+      .watch()
+      .map((ids) => [for (final id in ids) ?hymns[id]]);
+});
 
 /// Date du jour (surchargée dans les tests).
 final todayProvider = Provider<DateTime>((ref) => DateTime.now());

@@ -1,6 +1,6 @@
 # Plan d'alignement UI — « Le recueil vivant »
 
-Version 0.2 · 2026-10-20 · Phase 1 validée (« recommandations OK »), **phase 2 (fondations) faite**.
+Version 0.3 · 2026-10-20 · Phases 1 à 4 faites (audit, fondations, écrans, recette). Reste : audio (bloqué), essais sur appareils réels.
 Demandes du propriétaire du 2026-10-20 : photos Pexels là où le prototype montre une image ;
 créer simplement les fonctions que le prototype montre et que l'app n'a pas (§3 bis).
 
@@ -167,7 +167,7 @@ Toutes les recommandations ci-dessous sont retenues. D-8 est modifiée : photos 
 | Filtres « Titres / Paroles / Références » | La recherche **groupe** les résultats (Numéro, Titres, Paroles) ; pas de filtre | Groupes conservés ; aucun filtre ajouté. |
 | États recherche | Vide initial ✔, aucun résultat ✔, erreur (texte brut `$e`) ✔ ; **chargement = rien** | Ajouter un état de chargement sobre ; message d'erreur lisible. |
 | Compteur de favoris | Calculable exactement | Affiché. |
-| Programme : nom, date, statut | Titre, date, statut brouillon/publié/archivé ✔ ; **pas d'heure** | Pas d'heure affichée. |
+| Programme : nom, date, statut | Titre, date, statut brouillon/publié/archivé ✔ ; pas d'heure | Pas d'heure (décision du propriétaire, 2026-10-20). |
 | Programme : sections « Ouverture, Louange… » | Les « moments » libres existent (`label`) | Affichés comme intercalaires, uniquement ceux saisis. |
 | Programme : réordonner / supprimer / note | Existe (glisser, menu ↑ ↓, note, retirer) | Conservé. |
 | Programme : ajout par n° dans un champ | Ajout via écran de choix (`/choisir-cantique`, avec recherche) | Conservé (plus sûr que la saisie libre). |
@@ -176,6 +176,9 @@ Toutes les recommandations ci-dessous sont retenues. D-8 est modifiée : photos 
 | Bandeau « Prototype interactif » | — | Non repris. |
 
 ### 3 bis. Fonctions à créer (demande du propriétaire, 2026-10-20)
+
+**État (2026-10-20) : ☑ toutes réalisées et testées**, sauf l'audio (bloqué) et l'heure du culte
+(abandonnée).
 
 « Pour les fonctions que le prototype montre sans que l'app ne le fasse, crée-les simplement. »
 Chaque fonction est réelle (données réelles, aucun contenu fictif) et livrée avec son écran en
@@ -188,7 +191,7 @@ phase 3.
 | Lecture strophe par strophe | Option du mode lecture : une section à la fois, Précédent / Suivant passent de section en section puis au cantique voisin ; « Strophe 2 / 4 » | E | Préférence locale (clé `pref.readerByStanza`) ; structure réelle des sections (refrain inclus, ordre chanté respecté). |
 | Raccourci « Projeter les paroles » | Ouvre le choix d'un cantique (`/choisir-cantique`) puis la projection | A | Aucune. |
 | Ajout au programme par numéro | Champ « N° (ex. 37bis) » + « Ajouter » dans l'éditeur, à côté du choix existant ; message si le numéro n'existe pas | G | Même enregistrement que l'ajout actuel. |
-| Heure du culte | Champ heure facultatif à côté de la date ; affiché dans la liste, l'éditeur et la page publique | G | **Changement de données** : colonne `service_time` facultative (migration Supabase versionnée + RLS inchangée), contrat partagé, synchronisation, schéma Drift v2 avec migration testée. Aucune valeur inventée pour les programmes existants. |
+| ~~Heure du culte~~ | **Abandonnée** (propriétaire, 2026-10-20 : « pas une donnée importante ») : aucune modification de la base | — | — |
 | Hors connexion : progression | État réel pendant la vérification (« Vérification… », indicateur sans pourcentage), puis résultat (à jour / mis à jour / hors ligne) avec l'heure | I | La synchronisation ne connaît pas d'avancement en octets : **pas de barre à pourcentage**. |
 | Écouter (audio) | **Bloqué** : aucun enregistrement n'existe ; l'hébergement des médias (R2, ADR-016) n'est pas ouvert (D-03). Tables `audio_tracks` présentes mais vides. | D | Décision du propriétaire nécessaire (enregistrements, hébergement). Bouton masqué tant qu'un cantique n'a pas d'audio. |
 
@@ -231,136 +234,44 @@ mobile (390 px) et tablette/desktop (≥ 1024 px), mise à jour de ce fichier.
   imprimés), `tokens.test.ts` ; nouveaux : `shell_test.dart` (barre / rail / rail étendu),
   bouton principal, ombre invalide, bloc `app` facultatif.
 
-### A. Accueil — `features/home/home_screen.dart`
+### Phase 3 — Écrans — ☑ faite le 2026-10-20
 
-- ☐ `PageHeader` (surtitre « Le recueil vivant » si D-5 validé, titre serif).
-- ☐ `HeroCard` : dégradé brun-or, message éditorial (D-5), épi en filigrane ; hauteur ≤ 40 %
-  de l'écran sur mobile.
-- ☐ `SearchField` **juste sous le héro** (ouvre `/recherche`, comportement inchangé).
-- ☐ Carte « Cantique du jour » `goldPale` : numéro serif, titre, premier vers réel, bouton rond.
-- ☐ Raccourcis (3 réels) : Recueil, Favoris, Préparer un culte. Pas de raccourci
-  « Projection » : la projection se lance depuis une fiche ou un programme (pas de route sans
-  contenu). Grille 2 colonnes mobile, 3 desktop.
-- ☐ Pas de « Reprendre votre lecture ».
-- **Risques** : recherche repoussée sous la ligne de flottaison sur petit écran / grands caractères.
-- **Validation** : sur 360×640 avec texte système à 130 %, le champ de recherche est visible
-  sans défiler ; `app_test.dart`, `faithful_journey_test.dart` verts.
+| Écran | Fait | Écarts / remarques |
+| ----- | ---- | ------------------ |
+| A. Accueil (`home_screen.dart`) | ☑ héro photo (blé au couchant) avec message éditorial, recherche juste dessous, cantique du jour (carte or pâle, premier vers réel), 4 raccourcis réels, « Reprendre votre lecture » (5 derniers, effaçable) | Sur téléphone (< 600 px) : pas d'en-tête séparé ni de texte d'accompagnement dans le héro, pour garder la recherche visible (vérifié à 360×640, texte à 130 %, vraies polices). Raccourci « Projeter les paroles » ajouté (demande du 2026-10-20) : choix d'un cantique puis projection. |
+| B. Recueil (`hymnal_screen.dart`, `HymnListTile`) | ☑ titre « Le recueil » + nombre exact, onglets en pilules, lignes en cartes fines (badge, titre serif, premier vers, cœur), largeur limitée sur tablette | `ListView.builder` conservé (1 143 lignes) ; cœur reconstruit seul (`select`). |
+| C. Recherche (`search_screen.dart`) | ☑ titre « La bonne parole, retrouvée. », champ commun, groupes Numéro/Titres/Paroles, états vide / chargement / aucun résultat / erreur | Pendant le calcul, les résultats précédents restent affichés (pas de clignotement). Pas de filtres (non implémentés). |
+| D. Fiche cantique (`hymn_screen.dart`) | ☑ bandeau photo brun-or (numéro, titre, premier vers, cœur), actions Lire / Projeter / Partager / À une liste, paroles sur surface ivoire, refrain en italique avec filet or | Libellés « Refrain », « Couplet n » (mot déjà utilisé par la projection et le back-office, plutôt que « Strophe ») ; un couplet sans numéro imprimé n'est pas étiqueté. Partage : texte verbatim + source. Pas d'« Écouter ». Accessibilité : un nœud par section (régression détectée par les tests, corrigée). |
+| E. Mode lecture (`reader_screen.dart`) | ☑ largeur 680, en-tête discret, A− / A+, Précédent / Suivant libellés en bas, option « Couplet par couplet » | Thème sombre de l'app = vert-noir immersif (D-9). |
+| F. Favoris (`favorites_screen.dart`) | ☑ « Vos chants précieux » + compteur exact, même liste, cœur, état vide avec « Parcourir le recueil » | Onglet « Listes » conservé. |
+| G. Programme (`worship.dart`) | ☑ liste en cartes avec statut écrit, éditeur en conducteur (en-tête date/statut, cantiques en cartes avec badge, moments en intercalaires or), ajout par numéro | Pas d'heure (décision du propriétaire). Déplacement : appui long (téléphone) ou poignée (grand écran), comme avant. |
+| H. Projection (`screen.css`, `projection_screen.dart`, console web) | ☑ fond vert-noir + lumière discrète, « Écran noir » noir pur (écran, aperçu du pilote, aperçu de la console), sources de la console en panneau | Lisibilité en salle à confirmer sur vidéoprojecteur (propriétaire). |
+| I. Hors connexion (`more_screen.dart`) | ☑ panneau d'état réel (nombre, version, dernière vérification), « Vérification en cours… » sans pourcentage, résultat affiché sur place | — |
+| J. Back-office et secondaires | ☑ aperçu « comme sur mobile » (rayon, filet du refrain), programme partagé public (cartes, badges, intercalaires), console de projection | Écrans compte, à propos, connexion : thème appliqué, mise en page inchangée. |
 
-### B. Recueil — `features/hymnal/hymnal_screen.dart`, `HymnListTile`
+### Phase 4 — Recette — ☑ faite le 2026-10-20
 
-- ☐ `PageHeader` « Le recueil » ; onglets N° / A–Z en pilules ; « Aller au numéro » et
-  recherche conservés.
-- ☐ `HymnListTile` : carte fine `surface`, bordure `border`, `HymnNumberBadge`, titre serif,
-  premier vers en secondaire, favori (si D-6), survol/focus doré.
-- ☐ En-têtes de lettres (A–Z) restylés ; barre de défilement interactive conservée.
-- **Risques** : performance de la liste (≈ 1 000 lignes, `ListView.builder` conservé, pas
-  d'ombre par ligne) ; numéros « 37bis »/« 1138 » dans le badge (largeur min. fixe).
-- **Validation** : défilement fluide (profil `docs/qa/performance.md`), ordre éditorial
-  inchangé, `faithful_journey_test.dart` (ordre des numéros).
-
-### C. Recherche — `features/search/search_screen.dart`
-
-- ☐ Titre éditorial (D-5), `SearchField` proéminent avec exemple (« 37, 37bis, un mot… »).
-- ☐ Groupes Numéro / Titres / Paroles conservés, en `ListSectionHeader` restylés.
-- ☐ Extraits de paroles dans le même `HymnListTile`.
-- ☐ États : vide initial, **chargement (nouveau, sobre)**, aucun résultat, erreur lisible.
-  Hors ligne : la recherche est locale, aucun état particulier à inventer.
-- **Risques** : debounce et `autofocus` inchangés ; ne pas toucher `search_service.dart`.
-- **Validation** : `search_service_test.dart`, `normalize_test.dart` inchangés et verts.
-
-### D. Fiche cantique — `features/hymn/hymn_screen.dart`, `HymnHeader`, `SectionBlock`
-
-- ☐ Bandeau brun-or (hauteur raisonnable sur mobile) : numéro, titre, premier vers ; favori
-  en haut à droite.
-- ☐ Actions réelles : **Lire** (principal), **Projeter**, **Ajouter à une liste**. Pas
-  d'Écouter, pas de Partager (§3).
-- ☐ Paroles sur surface ivoire distincte ; libellés sobres « Strophe n » / « Refrain »
-  dérivés du type réel ; refrain : filet `goldLight`, retrait, italique Literata.
-- ☐ Références bibliques, auteurs, thèmes, « même mélodie » : uniquement si présents (déjà le cas).
-- ☐ `SelectionArea` et taille de lecture conservées.
-- **Risques** : sémantique d'accessibilité (`Semantics` « Refrain », « deux fois ») ;
-  ordre chanté (`sungOrder`) ; ne jamais numéroter une section absente.
-- **Validation** : `faithful_journey_test.dart`, `sung_order_test.dart` ; cantique long,
-  cantique sans refrain, « (bis) », « 37bis » ; taille 34 pt sans débordement horizontal.
-
-### E. Mode lecture — `features/reader/reader_screen.dart`
-
-- ☐ Largeur de lecture limitée (≈ 680 px) et centrée sur tablette ; numéro discret, titre serif.
-- ☐ Précédent / Suivant (cantique) en boutons espacés et libellés, en bas, zone de sécurité.
-- ☐ Raccourcis A− / A+ branchés sur le réglage existant (même préférence) ; feuille de
-  réglages conservée.
-- ☐ Thème sombre `#171F1F` quand l'app est en sombre (D-9).
-- **Risques** : `PageView` + `wakelock` inchangés ; contrôles masquant la dernière ligne.
-- **Validation** : glissement + boutons ; taille max ; paysage tablette.
-
-### F. Favoris — `features/favorites/favorites_screen.dart`, `features/lists/lists.dart`
-
-- ☐ `PageHeader` (« Vos chants précieux » si D-5), compteur exact.
-- ☐ Même `HymnListTile` que le recueil ; onglet Listes conservé et restylé.
-- ☐ État vide chaleureux + bouton « Parcourir le recueil » (va sur `/recueil`).
-- ☐ Retrait immédiat d'un favori (si D-6) avec SnackBar courte.
-- **Validation** : `account_and_lists_test.dart` ; ajout/retrait sans compte et hors connexion.
-
-### G. Programme du culte — `features/worship/worship.dart`
-
-- ☐ Liste des programmes : cartes (titre serif, date, statut en pastille texte + couleur, pas
-  couleur seule).
-- ☐ Éditeur en « conducteur » : en-tête (titre, date, statut), items numérotés avec
-  `HymnNumberBadge`, moments libres en intercalaires, notes en secondaire, poignée de
-  réordonnancement visible.
-- ☐ Actions réelles conservées : Projeter, Partager (lien), renommer, dupliquer, archiver,
-  supprimer, ajouter cantique / moment.
-- ☐ États : sans compte (invitation à se connecter), vide, archivé ; erreurs de partage hors
-  réseau déjà gérées (SnackBar).
-- **Risques** : `ReorderableListView` (clés, glisser) ; FAB et barre d'actions sur petit écran.
-- **Validation** : `worship_test.dart`, `user_sync_test.dart`.
-
-### H. Projection — `projection_screen.dart` (pilote), `assets/projection/screen.css` (écran), `apps/web/src/app/projection/*` (console)
-
-- ☐ Thème `projection` (D-4) : fond `#171F1F`, halo discret, paroles grandes centrées,
-  numéro/titre en `goldText` discret ; « Écran noir » = noir pur.
-- ☐ `SlidePreview` : même rendu que l'écran (polices/couleurs du thème projection).
-- ☐ Pilote : statut des écrans connectés, aperçu, « à suivre », liste des diapositives,
-  Précédent / Écran noir / Suivant — restylés, comportement identique.
-- ☐ Console web : mêmes tokens (sidebar `surfaceWarm`, cartes, pilules).
-- **Risques** : contraste et lisibilité à distance ; l'écran projeté est servi hors ligne
-  (pas de police web distante) ; fidélité aperçu ↔ écran.
-- **Validation** : `projection_test.dart`, `projection_browser_test.dart`, `projection_server_test.dart` ;
-  `pnpm e2e` (projection hors ligne, capture `PROJECTION_SHOT`) ; essai en salle (propriétaire).
-
-### I. Hors connexion — `features/more/more_screen.dart` (`OfflineScreen`)
-
-- ☐ Panneau « Recueil sur cet appareil » : nombre de cantiques, édition, dernière
-  vérification (valeurs réelles) ; bouton « Vérifier maintenant » ; résultats existants en SnackBar.
-- ☐ Aucune barre de progression, aucun « Disponible » non mesuré.
-- ☐ Écran « Plus » restylé (réglages, compte, à propos, licences).
-- **Validation** : `catalog_sync_test.dart` ; mode avion (recette appareil).
-
-### J. Back-office et écrans secondaires
-
-- ☐ `apps/admin` : tokens via `globals.css` / `ui.module.css` ; nav latérale `surfaceWarm`,
-  actif `goldPale` ; tableaux denses (pas d'agrandissement décoratif), champs et boutons harmonisés.
-- ☐ Aperçu « comme sur mobile » (`hymn-preview.module.css`) aligné sur la nouvelle fiche
-  (suite notée le 2026-10-19).
-- ☐ `apps/web` : accueil, programme partagé, confidentialité, suppression de compte.
-- ☐ App : compte, à propos, démarrage.
-- **Risques** : lisibilité des statuts éditoriaux ; flux MFA ; densité des tableaux.
-- **Validation** : `pnpm test`, `pnpm build && pnpm e2e` (parcours administrateur complet).
-
-### Phase 4 — Recette
-
-- ☐ `pnpm lint && pnpm typecheck && pnpm test` (hors échec préexistant de `content-tools`, à signaler s'il persiste)
-- ☐ `flutter analyze`, `flutter test` (puis tests d'intégration, après recréation du compte jetable)
-- ☐ `pnpm build && pnpm e2e`
-- ☐ Parcours : rechercher → ouvrir → lire (taille, précédent/suivant) → favori ajouter/retirer
-  → programme (créer, ajouter, réordonner, partager) → projeter (cantique, programme, écran noir)
-- ☐ États vide / chargement / erreur / hors ligne
-- ☐ 360 px, grands caractères (130–200 %), titres longs, « 37bis », 4 chiffres
-- ☐ Captures avant/après comparées au prototype (mobile et ≥ 1024 px)
-- ☐ Contrôle : aucun contenu du prototype dans `content/`, `assets/catalog/`, la base
-  (`grep` des titres fictifs « Grand est ton nom », « Cantique associé — exemple »)
-
----
+- ☑ `flutter analyze` : aucun problème ; `dart format` : conforme.
+- ☑ `flutter test` (hors intégration) : **167 tests** ✅ — nouveaux : accueil (petit écran + grands
+  caractères avec vraies polices, reprise de lecture, historique, raccourci projection),
+  lecture (A+, couplet par couplet), hors connexion, ajout par numéro, partage, numéro saisi,
+  navigation (barre / rail).
+- ☑ `flutter test test/integration` : 5 ✅ (catalogue réel, Supabase, synchronisation à deux
+  appareils, écran projeté dans Chrome). Compte jetable recréé ensuite. Lors d'un passage, un
+  marqueur d'erreur est apparu dans le journal du test navigateur alors que le bilan était
+  « tout passe » ; deux passages suivants (seul et groupé) sans aucune erreur.
+- ☑ `turbo lint typecheck test --continue` : 19/21 ✅ ; 2 échecs **préexistants** dans
+  `content-tools` (fichiers non commités de la tâche 3.11).
+- ☑ `pnpm build` + `pnpm e2e` (Chrome réel) : projection « ordinateur seul » hors ligne ✅,
+  parcours administrateur complet avec second facteur ✅.
+- ☑ Tokens : valides, contrastes conformes.
+- ☑ Captures finales 360×640, 390×844, 1280×800 (accueil, recueil, recherche, fiches 37bis,
+  239bis, titre le plus long n° 564, lecture, favoris, culte, hors connexion) ; back-office et
+  écran projeté (captures e2e).
+- ☑ Aucun contenu du prototype dans `content/`, `assets/catalog/` ni le code (recherche des
+  titres fictifs).
+- ☐ Non vérifiable ici : appareils iOS/Android réels, mode avion réel, vidéoprojecteur en salle,
+  lecteur d'écran (VoiceOver/TalkBack) — à faire en recette appareil (`docs/qa/recette.md`).
 
 ## 5. Risques transverses
 
@@ -382,3 +293,4 @@ mobile (390 px) et tablette/desktop (≥ 1024 px), mise à jour de ce fichier.
 | ---------- | ------- | -------- | ----- | --------- |
 | 2026-10-20 | Phase 1 | `docs/design/UI_ALIGNMENT_PLAN.md` (créé), référence et prototype copiés dans `docs/design/` | lint ❌ / typecheck ❌ (préexistant, `content-tools`), `pnpm test` ✅, tokens ✅, `flutter analyze` ✅, `flutter test` (hors intégration) ✅ 152 | En attente des décisions D-1 à D-9 |
 | 2026-10-20 | Phase 2 | tokens (`tokens.json`, `tokens.ts`, `contrast.ts`, `generate.ts`, fichiers générés), `theme.dart`, `components.dart`, `app_shell.dart`, `favorite_button.dart`, `hymn_screen.dart`, `reader_screen.dart`, `home_screen.dart` (icône), `worship.dart` (numéro), `projection_screen.dart` + `screen.css` (écran noir), `licenses.dart`, `pubspec.yaml`, `app_fr.arb` (cœur), photos `assets/images/`, polices retirées ; web `globals.css`, `sync-projection-screen.mts` ; admin `ui.module.css`, `layout.module.css`, `layout.tsx`, `nav-link.tsx` ; docs (registre d'assets, plan d'implémentation, ADR-014) | tokens ✅ (19 tests, contrastes) ; `flutter analyze` ✅ ; `flutter test` hors intégration ✅ 156 ; `turbo lint typecheck --continue` ✅ 13/15 (2 échecs préexistants `content-tools`) ; `pnpm test` ✅ ; captures avant/après 390 px et 1280 px (10 écrans) | Écrans encore dans leur mise en page d'origine : la composition (héro photo, cartes, badges, bandeau) vient en phase 3. Champ de recherche de l'écran Recherche : contour doré du thème dans la barre (remplacé par `SearchField` en phase 3). Tests d'intégration et e2e non relancés (phase 4). |
+| 2026-10-20 | Phases 3-4 | Écrans A à J (voir tableau phase 3), `reading_history.dart`, `hymn_text.dart`, `parseNumberLabel`, préférence `readerByStanza`, `sectionName` partagé ; web (programme, console), admin (aperçu) | 167 tests Flutter ✅, intégration 5 ✅, e2e 2 ✅, lint/typecheck 19/21 (2 préexistants) | Heure du culte abandonnée (propriétaire). Audio bloqué (aucun enregistrement, hébergement non ouvert). |

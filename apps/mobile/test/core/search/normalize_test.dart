@@ -26,4 +26,13 @@ void main() {
       expect(fold(once), once);
     }
   });
+
+  test('numéro saisi → numéro imprimé', () {
+    expect(parseNumberLabel('37'), '37');
+    expect(parseNumberLabel(' 037 '), '37');
+    expect(parseNumberLabel('37 BIS'), '37bis');
+    expect(parseNumberLabel('239bis'), '239bis');
+    expect(parseNumberLabel('grâce'), isNull);
+    expect(parseNumberLabel('12345'), isNull);
+  });
 }

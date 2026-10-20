@@ -16,6 +16,7 @@ import '../../core/design_system/components.dart';
 import '../../core/design_system/dialogs.dart';
 import '../../core/design_system/theme.dart';
 import '../../core/design_system/tokens.g.dart';
+import '../../core/search/normalize.dart';
 import '../../core/sync/user_sync.dart';
 import '../../core/user_data/user_data_models.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -31,7 +32,22 @@ class WorshipTab extends ConsumerWidget {
     final services =
         ref.watch(worshipServicesProvider).value ?? const <WorshipServiceRow>[];
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.navWorship)),
+      appBar: AppBar(
+        toolbarHeight: kToolbarHeight + LadSpace.md,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.worshipTitle),
+            Text(
+              l10n.worshipLead,
+              style: LadTheme.textStyle(
+                LadTypeScale.caption,
+                context.lad.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: signedIn
           ? FloatingActionButton.extended(
               icon: const Icon(Icons.add),
@@ -64,14 +80,23 @@ class WorshipTab extends ConsumerWidget {
               message: l10n.worshipEmptyMessage,
             )
           : ListView(
+              padding: const EdgeInsets.only(
+                top: LadSpace.xs,
+                bottom: LadSpace.huge + LadSpace.xl,
+              ),
               children: [
-                for (final s in services.where((s) => s.status != 'archived'))
-                  _ServiceTile(service: s),
-                if (services.any((s) => s.status == 'archived')) ...[
-                  ListSectionHeader(l10n.archivedSection),
-                  for (final s in services.where((s) => s.status == 'archived'))
+                for (final row in [
+                  for (final s in services.where((s) => s.status != 'archived'))
                     _ServiceTile(service: s),
-                ],
+                  if (services.any((s) => s.status == 'archived')) ...[
+                    ListSectionHeader(l10n.archivedSection),
+                    for (final s in services.where(
+                      (s) => s.status == 'archived',
+                    ))
+                      _ServiceTile(service: s),
+                  ],
+                ])
+                  ReadableWidth(child: row),
               ],
             ),
     );
@@ -84,17 +109,32 @@ class _ServiceTile extends StatelessWidget {
   final WorshipServiceRow service;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    minTileHeight: LadTouchTarget.min + LadSpace.md,
-    leading: Icon(Icons.event_note_outlined, color: context.lad.gold),
-    title: Text(service.title),
-    subtitle: Text(
-      '${formatServiceDate(context, service.serviceDate)} · '
-      '${statusLabel(AppLocalizations.of(context), service.status)}',
-    ),
-    trailing: const Icon(Icons.chevron_right),
-    onTap: () => context.push('/culte/${service.id}'),
-  );
+  Widget build(BuildContext context) {
+    final p = context.lad;
+    return _Card(
+      child: ListTile(
+        minTileHeight: LadTouchTarget.min + LadSpace.lg,
+        leading: Icon(Icons.event_note_outlined, color: p.gold),
+        title: Text(
+          service.title,
+          style: LadTheme.textStyle(LadTypeScale.listTitle, p.text),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: LadSpace.xxs),
+          child: Wrap(
+            spacing: LadSpace.sm,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(formatServiceDate(context, service.serviceDate)),
+              StatusPill(status: service.status),
+            ],
+          ),
+        ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => context.push('/culte/${service.id}'),
+      ),
+    );
+  }
 }
 
 String statusLabel(AppLocalizations l10n, String status) => switch (status) {
@@ -108,6 +148,58 @@ String formatServiceDate(BuildContext context, String? isoDate) {
   return date == null
       ? AppLocalizations.of(context).noDate
       : MaterialLocalizations.of(context).formatFullDate(date);
+}
+
+/// Statut d'un programme : libellé toujours écrit (jamais la couleur seule).
+class StatusPill extends StatelessWidget {
+  const StatusPill({super.key, required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.lad;
+    final color = status == 'published' ? p.success : p.textSecondary;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: LadSpace.sm,
+        vertical: LadSpace.xxs,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(LadRadius.pill),
+        border: Border.all(color: color, width: LadStroke.hairline),
+      ),
+      child: Text(
+        statusLabel(AppLocalizations.of(context), status),
+        style: LadTheme.textStyle(LadTypeScale.caption, color),
+      ),
+    );
+  }
+}
+
+/// Carte fine (surface ivoire, filet) d'une ligne de programme.
+class _Card extends StatelessWidget {
+  const _Card({required this.child, this.color});
+
+  final Widget child;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: HymnListTile.margin,
+    child: Material(
+      color: color ?? context.lad.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(LadRadius.md),
+        side: BorderSide(
+          color: context.lad.hairline,
+          width: LadStroke.hairline,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: child,
+    ),
+  );
 }
 
 /// Éditeur d'un programme : date, statut, éléments ordonnés, partage.
@@ -215,44 +307,57 @@ class WorshipEditorScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          ListTile(
-            leading: Icon(Icons.calendar_today_outlined, color: p.gold),
-            title: Text(l10n.programDate),
-            subtitle: Text(formatServiceDate(context, service.serviceDate)),
-            onTap: () async {
-              final initial =
-                  DateTime.tryParse(service.serviceDate ?? '') ??
-                  DateTime.now();
-              final date = await showDatePicker(
-                context: context,
-                initialDate: initial,
-                firstDate: DateTime(2000),
-                lastDate: DateTime(2100),
-              );
-              if (date != null) {
-                await repo.updateWorshipService(
-                  serviceId,
-                  serviceDate: date.toIso8601String().substring(0, 10),
-                );
-              }
-            },
-          ),
-          if (service.status == 'archived')
-            ListTile(
-              leading: Icon(Icons.archive_outlined, color: p.textSecondary),
-              title: Text(l10n.archivedInfo),
-            )
-          else
-            SwitchListTile(
-              secondary: Icon(Icons.visibility_outlined, color: p.gold),
-              title: Text(l10n.published),
-              value: service.status == 'published',
-              onChanged: (v) => repo.updateWorshipService(
-                serviceId,
-                status: v ? 'published' : 'draft',
+          ReadableWidth(
+            child: _Card(
+              color: p.surfaceWarm,
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: Icon(Icons.calendar_today_outlined, color: p.gold),
+                    title: Text(l10n.programDate),
+                    subtitle: Text(
+                      formatServiceDate(context, service.serviceDate),
+                    ),
+                    onTap: () async {
+                      final initial =
+                          DateTime.tryParse(service.serviceDate ?? '') ??
+                          DateTime.now();
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: initial,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+                      if (date != null) {
+                        await repo.updateWorshipService(
+                          serviceId,
+                          serviceDate: date.toIso8601String().substring(0, 10),
+                        );
+                      }
+                    },
+                  ),
+                  if (service.status == 'archived')
+                    ListTile(
+                      leading: Icon(
+                        Icons.archive_outlined,
+                        color: p.textSecondary,
+                      ),
+                      title: Text(l10n.archivedInfo),
+                    )
+                  else
+                    SwitchListTile(
+                      secondary: Icon(Icons.visibility_outlined, color: p.gold),
+                      title: Text(l10n.published),
+                      value: service.status == 'published',
+                      onChanged: (v) => repo.updateWorshipService(
+                        serviceId,
+                        status: v ? 'published' : 'draft',
+                      ),
+                    ),
+                ],
               ),
             ),
-          const Divider(height: 1),
+          ),
           Expanded(
             child: items.isEmpty
                 ? MessageState(
@@ -260,6 +365,7 @@ class WorshipEditorScreen extends ConsumerWidget {
                     message: l10n.programEmptyMessage,
                   )
                 : ReorderableListView.builder(
+                    padding: const EdgeInsets.only(bottom: LadSpace.md),
                     itemCount: items.length,
                     onReorderItem: (from, to) {
                       final next = dtos();
@@ -309,22 +415,23 @@ class WorshipEditorScreen extends ConsumerWidget {
                     },
                   ),
           ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.all(LadSpace.md),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.music_note_outlined),
-                      label: Text(l10n.addHymn),
-                      onPressed: () async {
-                        final hymnId = await context.push<String>(
-                          '/choisir-cantique',
-                        );
-                        if (hymnId == null) return;
-                        await save([
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: p.surfaceWarm,
+              border: Border(
+                top: BorderSide(color: p.hairline, width: LadStroke.hairline),
+              ),
+            ),
+            child: SafeArea(
+              top: false,
+              child: ReadableWidth(
+                child: Padding(
+                  padding: const EdgeInsets.all(LadSpace.md),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _AddByNumber(
+                        onAdd: (hymnId) => save([
                           ...dtos(),
                           WorshipItemDto(
                             id: repo.newItemId(),
@@ -332,36 +439,62 @@ class WorshipEditorScreen extends ConsumerWidget {
                             label: null,
                             notes: null,
                           ),
-                        ]);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: LadSpace.sm),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.notes),
-                      label: Text(l10n.addSection),
-                      onPressed: () async {
-                        final label = await textInputDialog(
-                          context,
-                          title: l10n.addSection,
-                          label: l10n.sectionLabel,
-                          action: l10n.create,
-                        );
-                        if (label == null) return;
-                        await save([
-                          ...dtos(),
-                          WorshipItemDto(
-                            id: repo.newItemId(),
-                            hymnId: null,
-                            label: label,
-                            notes: null,
+                        ]),
+                      ),
+                      const SizedBox(height: LadSpace.sm),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.music_note_outlined),
+                              label: Text(l10n.addHymn),
+                              onPressed: () async {
+                                final hymnId = await context.push<String>(
+                                  '/choisir-cantique',
+                                );
+                                if (hymnId == null) return;
+                                await save([
+                                  ...dtos(),
+                                  WorshipItemDto(
+                                    id: repo.newItemId(),
+                                    hymnId: hymnId,
+                                    label: null,
+                                    notes: null,
+                                  ),
+                                ]);
+                              },
+                            ),
                           ),
-                        ]);
-                      },
-                    ),
+                          const SizedBox(width: LadSpace.sm),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.notes),
+                              label: Text(l10n.addSection),
+                              onPressed: () async {
+                                final label = await textInputDialog(
+                                  context,
+                                  title: l10n.addSection,
+                                  label: l10n.sectionLabel,
+                                  action: l10n.create,
+                                );
+                                if (label == null) return;
+                                await save([
+                                  ...dtos(),
+                                  WorshipItemDto(
+                                    id: repo.newItemId(),
+                                    hymnId: null,
+                                    label: label,
+                                    notes: null,
+                                  ),
+                                ]);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -392,30 +525,127 @@ class _ItemRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final p = context.lad;
     final title = hymn?.title ?? item.label ?? l10n.hymnRemovedTitle;
-    return ListTile(
-      minTileHeight: LadTouchTarget.min + LadSpace.md,
-      leading: SizedBox(
-        width: LadSpace.huge,
-        child: hymn == null
-            ? Icon(Icons.notes, color: p.textSecondary)
-            : Text(
-                hymn!.numberLabel,
-                style: LadTheme.textStyle(LadTypeScale.listNumber, p.goldText),
-              ),
+    final menu = PopupMenuButton<String>(
+      onSelected: onAction,
+      itemBuilder: (_) => [
+        if (index > 0) PopupMenuItem(value: 'up', child: Text(l10n.moveUp)),
+        if (index < count - 1)
+          PopupMenuItem(value: 'down', child: Text(l10n.moveDown)),
+        PopupMenuItem(value: 'note', child: Text(l10n.editNote)),
+        PopupMenuItem(value: 'remove', child: Text(l10n.removeFromList)),
+      ],
+    );
+    final notes = item.notes == null ? null : Text(item.notes!);
+
+    // Moment libre (« Accueil », « Offrande ») : intercalaire du conducteur.
+    if (item.hymnId == null) {
+      return ReadableWidth(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            LadSpace.sm,
+            LadSpace.md,
+            LadSpace.sm,
+            0,
+          ),
+          child: ListTile(
+            leading: Icon(Icons.notes, color: p.gold),
+            title: Text(
+              title,
+              style: LadTheme.textStyle(LadTypeScale.cardTitle, p.goldText),
+            ),
+            subtitle: notes,
+            trailing: menu,
+          ),
+        ),
+      );
+    }
+    return ReadableWidth(
+      child: _Card(
+        child: ListTile(
+          minTileHeight: LadTouchTarget.min + LadSpace.md,
+          leading: hymn == null
+              ? Icon(Icons.help_outline, color: p.textSecondary)
+              : HymnNumberBadge(hymn!.numberLabel),
+          title: Text(
+            title,
+            style: LadTheme.textStyle(LadTypeScale.listTitle, p.text),
+          ),
+          subtitle: notes,
+          onTap: hymn == null
+              ? null
+              : () => context.push('/cantique/${hymn!.id}'),
+          trailing: menu,
+        ),
       ),
-      title: Text(title),
-      subtitle: item.notes == null ? null : Text(item.notes!),
-      onTap: hymn == null ? null : () => context.push('/cantique/${hymn!.id}'),
-      trailing: PopupMenuButton<String>(
-        onSelected: onAction,
-        itemBuilder: (_) => [
-          if (index > 0) PopupMenuItem(value: 'up', child: Text(l10n.moveUp)),
-          if (index < count - 1)
-            PopupMenuItem(value: 'down', child: Text(l10n.moveDown)),
-          PopupMenuItem(value: 'note', child: Text(l10n.editNote)),
-          PopupMenuItem(value: 'remove', child: Text(l10n.removeFromList)),
-        ],
-      ),
+    );
+  }
+}
+
+/// Ajout direct d'un cantique par son numéro imprimé (« 37bis »).
+class _AddByNumber extends ConsumerStatefulWidget {
+  const _AddByNumber({required this.onAdd});
+
+  final Future<void> Function(String hymnId) onAdd;
+
+  @override
+  ConsumerState<_AddByNumber> createState() => _AddByNumberState();
+}
+
+class _AddByNumberState extends ConsumerState<_AddByNumber> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
+    final input = _controller.text.trim();
+    if (input.isEmpty) return;
+    final label = parseNumberLabel(input);
+    final hymn = label == null
+        ? null
+        : await ref.read(hymnByLabelProvider(label).future);
+    if (hymn == null) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.numberNotFound(label ?? input))),
+      );
+      return;
+    }
+    await widget.onAdd(hymn.id);
+    _controller.clear();
+    messenger.showSnackBar(
+      SnackBar(content: Text(l10n.hymnAdded(hymn.numberLabel))),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _controller,
+            textInputAction: TextInputAction.done,
+            decoration: InputDecoration(
+              hintText: l10n.addByNumberHint,
+              isDense: true,
+              prefixIcon: Icon(Icons.tag, color: context.lad.gold),
+            ),
+            onSubmitted: (_) => _submit(),
+          ),
+        ),
+        const SizedBox(width: LadSpace.sm),
+        IconButton.filled(
+          tooltip: l10n.addByNumber,
+          icon: const Icon(Icons.add),
+          onPressed: _submit,
+        ),
+      ],
     );
   }
 }

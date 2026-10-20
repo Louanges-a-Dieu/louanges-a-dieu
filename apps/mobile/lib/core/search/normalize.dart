@@ -12,6 +12,15 @@ String fold(String input) {
 
 final _spaces = RegExp(r'\s+');
 
+/// Numéro saisi (« 37 », « 037 », « 37bis », « 37 BIS ») → numéro tel
+/// qu'imprimé (« 37bis »), ou `null` si la saisie n'est pas un numéro.
+String? parseNumberLabel(String input) {
+  final m = _numberInput.firstMatch(input.trim());
+  return m == null ? null : '${int.parse(m[1]!)}${m[2]?.toLowerCase() ?? ''}';
+}
+
+final _numberInput = RegExp(r'^(\d{1,4})\s*(bis|ter)?$', caseSensitive: false);
+
 /// Lettres latines et chiffres conservés ; tout le reste devient un espace.
 final _wordChar = RegExp(r'[a-z0-9]');
 

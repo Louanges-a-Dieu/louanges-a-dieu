@@ -72,6 +72,11 @@
 .sources {
   grid-area: sources;
   min-width: 0;
+  padding: var(--lad-space-lg);
+  border: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+  border-radius: var(--lad-radius-lg);
+  background: var(--lad-color-surface-warm);
+  align-self: start;
 }
 
 .stage {
@@ -196,7 +201,7 @@
 .blankOn {
   min-height: var(--lad-touch-target-min);
   padding: 0 var(--lad-space-lg);
-  border-radius: var(--lad-radius-pill);
+  border-radius: var(--lad-radius-md);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -205,7 +210,7 @@
 .primary {
   border: 0;
   background: var(--lad-color-gold-text);
-  color: var(--lad-color-background);
+  color: var(--lad-color-surface);
 }
 
 .secondary {
@@ -242,8 +247,15 @@
   margin: 0 auto var(--lad-space-sm);
   padding: var(--lad-space-lg);
   overflow: hidden;
-  border-radius: var(--lad-radius-md);
-  background: var(--lad-color-background);
+  border-radius: var(--lad-radius-lg);
+  /* Même lumière discrète que l'écran projeté. */
+  background:
+    radial-gradient(
+      ellipse 70% 55% at 70% 105%,
+      color-mix(in srgb, var(--lad-color-gold-light) 16%, transparent),
+      transparent 70%
+    ),
+    var(--lad-color-background);
   color: var(--lad-color-text);
   text-align: center;
 }
@@ -285,6 +297,11 @@
   margin: 0;
   font-family: var(--lad-font-display);
   font-size: 1.4em;
+}
+
+/* « Écran noir » : noir pur, comme l'écran projeté. */
+.preview[data-blank] {
+  background: black;
 }
 
 .previewBlank {

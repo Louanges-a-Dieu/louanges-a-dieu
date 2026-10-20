@@ -5,8 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../app/state.dart';
 import '../../core/catalog/catalog_models.dart';
 import '../../core/design_system/components.dart';
+import '../../core/design_system/theme.dart';
+import '../../core/design_system/tokens.g.dart';
 import '../../core/search/normalize.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../favorites/favorite_button.dart';
 
 /// Recueil (F-REC-001/002) : par numéro et par ordre alphabétique, hors connexion.
 class HymnalScreen extends ConsumerWidget {
@@ -15,11 +18,26 @@ class HymnalScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final count = ref.watch(hymnsByNumberProvider).value?.length;
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(l10n.navHymnal),
+          toolbarHeight: kToolbarHeight + LadSpace.md,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.hymnalTitle),
+              if (count != null)
+                Text(
+                  l10n.hymnCount(count),
+                  style: LadTheme.textStyle(
+                    LadTypeScale.caption,
+                    context.lad.textSecondary,
+                  ),
+                ),
+            ],
+          ),
           actions: [
             IconButton(
               tooltip: l10n.goToNumber,
@@ -32,12 +50,7 @@ class HymnalScreen extends ConsumerWidget {
               onPressed: () => context.push('/recherche'),
             ),
           ],
-          bottom: TabBar(
-            tabs: [
-              Tab(text: l10n.byNumber),
-              Tab(text: l10n.alphabetical),
-            ],
-          ),
+          bottom: PillTabBar(tabs: [l10n.byNumber, l10n.alphabetical]),
         ),
         body: TabBarView(
           children: [
@@ -78,7 +91,8 @@ class _HymnList extends ConsumerWidget {
     return ref
         .watch(provider)
         .when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () =>
+              LoadingState(label: AppLocalizations.of(context).loading),
           error: (e, _) => MessageState(title: '$e'),
           data: (hymns) {
             final items = <Object>[];
@@ -96,15 +110,19 @@ class _HymnList extends ConsumerWidget {
               interactive: true,
               thumbVisibility: true,
               child: ListView.builder(
+                padding: const EdgeInsets.only(bottom: LadSpace.xl),
                 itemCount: items.length,
-                itemBuilder: (context, i) => switch (items[i]) {
-                  final String header => ListSectionHeader(header),
-                  final HymnSummary h => HymnListTile(
-                    hymn: h,
-                    onTap: () => context.push('/cantique/${h.id}'),
-                  ),
-                  _ => const SizedBox.shrink(),
-                },
+                itemBuilder: (context, i) => ReadableWidth(
+                  child: switch (items[i]) {
+                    final String header => ListSectionHeader(header),
+                    final HymnSummary h => HymnListTile(
+                      hymn: h,
+                      onTap: () => context.push('/cantique/${h.id}'),
+                      trailing: FavoriteButton(hymnId: h.id),
+                    ),
+                    _ => const SizedBox.shrink(),
+                  },
+                ),
               ),
             );
           },
@@ -122,10 +140,6 @@ class _GoToNumberDialog extends StatefulWidget {
 
 class _GoToNumberDialogState extends State<_GoToNumberDialog> {
   final _controller = TextEditingController();
-  static final _valid = RegExp(
-    r'^(\d{1,4})\s*(bis|ter)?$',
-    caseSensitive: false,
-  );
 
   @override
   void dispose() {
@@ -134,10 +148,8 @@ class _GoToNumberDialogState extends State<_GoToNumberDialog> {
   }
 
   void _submit() {
-    final m = _valid.firstMatch(_controller.text.trim());
-    if (m == null) return;
-    Navigator.of(context)
-        .pop('${int.parse(m[1]!)}${m[2]?.toLowerCase() ?? ''}');
+    final label = parseNumberLabel(_controller.text);
+    if (label != null) Navigator.of(context).pop(label);
   }
 
   @override

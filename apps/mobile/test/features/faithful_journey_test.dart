@@ -35,7 +35,7 @@ void main() {
           openingLine: null,
         ),
     ], DateTime(2026, 10, 18))!;
-    expect(find.text('Cantique du jour'.toUpperCase()), findsOneWidget);
+    expect(find.text('Le cantique du jour'), findsOneWidget);
     expect(find.text(expected.title), findsOneWidget);
     expect(find.text('Numéro, titre ou paroles'), findsOneWidget);
   });
@@ -55,6 +55,11 @@ void main() {
     expect(find.bySemanticsLabel(RegExp('^Cantique 37 bis')), findsOneWidget);
     expect(find.text('Le jour se lève.'), findsOneWidget);
     expect(find.text('Se chante sur la mélodie du n° 37'), findsOneWidget);
+    // Actions réelles seulement : pas d'audio sans enregistrement.
+    for (final label in ['Lire', 'Projeter', 'Partager', 'À une liste']) {
+      expect(find.text(label), findsOneWidget);
+    }
+    expect(find.textContaining('Écouter'), findsNothing);
 
     await tester.tap(find.byTooltip('Ajouter aux favoris'));
     await idle(tester);

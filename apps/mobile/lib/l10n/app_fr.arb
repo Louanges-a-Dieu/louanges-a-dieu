@@ -177,7 +177,8 @@
   "@hymnCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -266,5 +267,77 @@
   "nothingToProjectMessage": "Ce programme ne contient aucun cantique ni moment.",
   "allSlides": "Toutes les diapositives",
   "privacyPolicy": "Confidentialité",
-  "linkOpenFailed": "Impossible d’ouvrir le lien."
+  "linkOpenFailed": "Impossible d’ouvrir le lien.",
+  "homeEyebrow": "Le recueil vivant",
+  "heroTitle": "Que chaque chant devienne une prière.",
+  "heroLead": "Retrouvez vos cantiques, méditez leurs paroles et préparez les louanges ensemble.",
+  "hymnOfTheDayTitle": "Le cantique du jour",
+  "hymnOfTheDayLead": "Une invitation à prendre un instant de louange.",
+  "openHymn": "Ouvrir le cantique",
+  "projectLyrics": "Projeter les paroles",
+  "shortcutHymnalHint": "Par numéro ou titre",
+  "shortcutFavoritesHint": "Les chants à retrouver",
+  "shortcutWorshipHint": "Composer le programme",
+  "shortcutProjectHint": "Sur un grand écran",
+  "recentTitle": "Reprendre votre lecture",
+  "recentLead": "Vos derniers cantiques ouverts, sur cet appareil.",
+  "clearHistory": "Effacer",
+  "clearHistoryTooltip": "Effacer l’historique de lecture",
+  "hymnalTitle": "Le recueil",
+  "searchTitle": "La bonne parole, retrouvée.",
+  "searchLead": "Dans les numéros, les titres et les paroles.",
+  "searchFieldHint": "Un numéro (37, 37bis), un titre, une parole…",
+  "searchErrorTitle": "La recherche n’a pas abouti",
+  "searchErrorMessage": "Réessayez. Le recueil reste disponible sur cet appareil.",
+  "searching": "Recherche…",
+  "loading": "Chargement…",
+  "favoritesTitle": "Vos chants précieux",
+  "favoriteCount": "{count, plural, =0{Aucun favori} =1{1 favori} other{{count} favoris}}",
+  "@favoriteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "read": "Lire",
+  "shareHymn": "Partager le cantique",
+  "addToListShort": "À une liste",
+  "previous": "Précédent",
+  "next": "Suivant",
+  "previousSection": "Section précédente",
+  "nextSection": "Section suivante",
+  "readerByStanza": "Couplet par couplet",
+  "readerByStanzaHint": "Une section à la fois ; Précédent et Suivant passent d’une section à l’autre.",
+  "smallerText": "Réduire le texte",
+  "largerText": "Agrandir le texte",
+  "readingSettings": "Réglages de lecture",
+  "sectionProgress": "{current} / {total}",
+  "@sectionProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "worshipTitle": "Préparer le culte",
+  "worshipLead": "Un conducteur clair, à partager et à projeter.",
+  "addByNumberHint": "N° (ex. 37bis)",
+  "addByNumber": "Ajouter ce numéro",
+  "hymnAdded": "Cantique {label} ajouté au programme.",
+  "chooseInHymnal": "Choisir",
+  "@hymnAdded": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "offlinePanelTitle": "Recueil sur cet appareil",
+  "offlineLead": "Votre recueil, même sans réseau.",
+  "checking": "Vérification en cours…"
 }

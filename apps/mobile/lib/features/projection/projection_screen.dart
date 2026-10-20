@@ -322,7 +322,7 @@ class _Controller extends StatelessWidget {
               return ListTile(
                 dense: slide is! TitleSlide && slide is! SectionSlide,
                 selected: selected,
-                selectedTileColor: p.gold.withValues(alpha: 0.12),
+                selectedTileColor: p.goldPale,
                 contentPadding: EdgeInsets.only(
                   left: slide is LyricsSlide ? LadSpace.xxl : LadSpace.md,
                   right: LadSpace.md,
@@ -415,8 +415,23 @@ class SlidePreview extends StatelessWidget {
       aspectRatio: 16 / 9,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          // « Écran noir » : noir pur, comme l'écran projeté.
+          // « Écran noir » : noir pur, comme l'écran projeté ; sinon le fond
+          // vert-noir et sa lumière discrète venue du bas.
           color: blank ? Colors.black : p.background,
+          gradient: blank
+              ? null
+              : RadialGradient(
+                  center: const Alignment(0.4, 1.1),
+                  radius: 0.9,
+                  // Un dégradé remplace la couleur : teintes opaques sur le fond.
+                  colors: [
+                    Color.alphaBlend(
+                      p.goldLight.withValues(alpha: 0.16),
+                      p.background,
+                    ),
+                    p.background,
+                  ],
+                ),
           borderRadius: BorderRadius.circular(LadRadius.md),
           border: Border.all(color: context.lad.hairline),
         ),

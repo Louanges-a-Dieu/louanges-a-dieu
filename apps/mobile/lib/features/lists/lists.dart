@@ -171,44 +171,47 @@ class PlaylistScreen extends ConsumerWidget {
               },
               itemBuilder: (context, i) {
                 final h = hymns[i];
-                return Row(
+                return HymnListTile(
                   key: ValueKey('${h.id}-$i'),
-                  children: [
-                    Expanded(
-                      child: HymnListTile(
-                        hymn: h,
-                        onTap: () => context.push('/cantique/${h.id}'),
-                      ),
-                    ),
-                    PopupMenuButton<String>(
-                      onSelected: (action) {
-                        final order = [...ids];
-                        switch (action) {
-                          case 'up' when i > 0:
-                            order.insert(i - 1, order.removeAt(i));
-                          case 'down' when i < order.length - 1:
-                            order.insert(i + 1, order.removeAt(i));
-                          case 'remove':
-                            order.removeAt(i);
-                        }
-                        reorder(order);
-                      },
-                      itemBuilder: (_) => [
-                        if (i > 0)
-                          PopupMenuItem(value: 'up', child: Text(l10n.moveUp)),
-                        if (i < hymns.length - 1)
+                  hymn: h,
+                  onTap: () => context.push('/cantique/${h.id}'),
+                  // Espace à droite : poignée de déplacement (grands écrans).
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      PopupMenuButton<String>(
+                        onSelected: (action) {
+                          final order = [...ids];
+                          switch (action) {
+                            case 'up' when i > 0:
+                              order.insert(i - 1, order.removeAt(i));
+                            case 'down' when i < order.length - 1:
+                              order.insert(i + 1, order.removeAt(i));
+                            case 'remove':
+                              order.removeAt(i);
+                          }
+                          reorder(order);
+                        },
+                        itemBuilder: (_) => [
+                          if (i > 0)
+                            PopupMenuItem(
+                              value: 'up',
+                              child: Text(l10n.moveUp),
+                            ),
+                          if (i < hymns.length - 1)
+                            PopupMenuItem(
+                              value: 'down',
+                              child: Text(l10n.moveDown),
+                            ),
                           PopupMenuItem(
-                            value: 'down',
-                            child: Text(l10n.moveDown),
+                            value: 'remove',
+                            child: Text(l10n.removeFromList),
                           ),
-                        PopupMenuItem(
-                          value: 'remove',
-                          child: Text(l10n.removeFromList),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: LadSpace.xxl),
-                  ],
+                        ],
+                      ),
+                      const SizedBox(width: LadSpace.xxl),
+                    ],
+                  ),
                 );
               },
             ),

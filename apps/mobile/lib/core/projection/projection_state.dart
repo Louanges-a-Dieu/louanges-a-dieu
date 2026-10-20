@@ -65,15 +65,7 @@ String slideLabel(Slide slide) => switch (slide) {
     :final parts,
   ) =>
     [
-      switch (sectionType) {
-        SectionType.verse => 'Couplet',
-        SectionType.refrain => 'Refrain',
-        SectionType.bridge => 'Pont',
-        SectionType.intro => 'Introduction',
-        SectionType.outro => 'Conclusion',
-        SectionType.note => 'Note',
-      },
-      ?sectionNumber?.toString(),
+      sectionName(sectionType, sectionNumber),
       if (parts > 1) '($part/$parts)',
     ].join(' '),
 };

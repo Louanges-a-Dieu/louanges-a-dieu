@@ -87,6 +87,20 @@ final class PublishedHymn {
 
 enum SectionType { verse, refrain, bridge, intro, outro, note }
 
+/// Nom d'une section tel qu'affiché (« Couplet 2 », « Refrain ») ; le numéro
+/// n'apparaît que s'il est imprimé.
+String sectionName(SectionType type, int? number) => [
+  switch (type) {
+    SectionType.verse => 'Couplet',
+    SectionType.refrain => 'Refrain',
+    SectionType.bridge => 'Pont',
+    SectionType.intro => 'Introduction',
+    SectionType.outro => 'Conclusion',
+    SectionType.note => 'Note',
+  },
+  ?number?.toString(),
+].join(' ');
+
 @immutable
 final class HymnSection {
   const HymnSection({

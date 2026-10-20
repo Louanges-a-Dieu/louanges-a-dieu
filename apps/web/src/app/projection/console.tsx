@@ -406,7 +406,12 @@ function ReadinessBadge({
 
 function Preview({ slide, blank }: { slide: Slide | null; blank: boolean }) {
   return (
-    <div className={styles.preview} data-theme="projection" aria-label="Aperçu de l’écran projeté">
+    <div
+      className={styles.preview}
+      data-theme="projection"
+      data-blank={blank || undefined}
+      aria-label="Aperçu de l’écran projeté"
+    >
       {blank ? (
         <p className={styles.previewBlank}>Écran noir</p>
       ) : slide === null ? null : slide.kind === 'title' ? (

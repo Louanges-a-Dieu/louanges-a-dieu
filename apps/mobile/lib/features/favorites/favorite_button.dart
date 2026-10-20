@@ -20,8 +20,10 @@ class FavoriteButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final isFavorite =
-        ref.watch(favoriteIdsProvider).value?.contains(hymnId) ?? false;
+    // Seul le cœur de ce cantique est reconstruit quand un favori change.
+    final isFavorite = ref.watch(
+      favoriteIdsProvider.select((ids) => ids.value?.contains(hymnId) ?? false),
+    );
     return IconButton(
       tooltip: isFavorite ? l10n.removeFavorite : l10n.addFavorite,
       isSelected: isFavorite,

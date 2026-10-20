@@ -164,6 +164,7 @@ class HymnHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.lad;
     return Semantics(
+      container: true,
       header: true,
       label: 'Cantique ${spokenNumber(hymn.numberLabel)}, ${hymn.title}',
       excludeSemantics: true,
@@ -197,12 +198,23 @@ class SectionBlock extends StatelessWidget {
     super.key,
     required this.section,
     required this.fontSize,
+    this.showName = false,
   });
 
   final HymnSection section;
   final double fontSize;
 
+  /// Affiche le nom de la section au-dessus (« Refrain », « Couplet 2 ») ;
+  /// un couplet sans numéro imprimé n'est pas étiqueté (pas de « Couplet »
+  /// répété à chaque strophe).
+  final bool showName;
+
+  bool get _named =>
+      showName && (section.type != SectionType.verse || section.number != null);
+
   bool get _isRefrain => section.type == SectionType.refrain;
+
+  String get _name => sectionName(section.type, section.number);
 
   @override
   Widget build(BuildContext context) {
@@ -227,6 +239,10 @@ class SectionBlock extends StatelessWidget {
     final lines = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (_named) ...[
+          ExcludeSemantics(child: Overline(_name)),
+          const SizedBox(height: LadSpace.sm),
+        ],
         for (final line in section.lines)
           Text.rich(
             _lineSpan(line, base, marker),
@@ -242,9 +258,17 @@ class SectionBlock extends StatelessWidget {
       ],
     );
 
-    if (!_isRefrain) return lines;
+    // Un nœud d'accessibilité par section, annoncé par son nom.
+    if (!_isRefrain) {
+      return Semantics(
+        container: true,
+        label: _named ? _name : null,
+        child: lines,
+      );
+    }
     return Semantics(
-      label: 'Refrain',
+      container: true,
+      label: _name,
       child: Container(
         padding: const EdgeInsets.only(left: LadSpace.lg),
         decoration: BoxDecoration(
@@ -274,13 +298,16 @@ class SectionBlock extends StatelessWidget {
 
 // -------------------------------------------------------------- listes
 
-/// Ligne de cantique dans une liste : numéro, titre, premier vers s'il diffère.
+/// Ligne de cantique dans une liste : carte fine avec numéro, titre serif,
+/// premier vers s'il diffère (ou extrait trouvé) et action facultative
+/// (favori, menu) hors de la zone d'ouverture.
 class HymnListTile extends StatelessWidget {
   const HymnListTile({
     super.key,
     required this.hymn,
     this.excerpt,
     required this.onTap,
+    this.trailing,
   });
 
   final HymnSummary hymn;
@@ -288,6 +315,15 @@ class HymnListTile extends StatelessWidget {
   /// Vers à afficher sous le titre (résultat de recherche dans les paroles).
   final String? excerpt;
   final VoidCallback onTap;
+
+  /// Action propre à la ligne (cœur, menu), annoncée séparément.
+  final Widget? trailing;
+
+  /// Marges d'une ligne dans une liste pleine largeur.
+  static const margin = EdgeInsets.symmetric(
+    horizontal: LadSpace.lg,
+    vertical: LadSpace.xs,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -297,58 +333,132 @@ class HymnListTile extends StatelessWidget {
         (hymn.openingLine != null && !hymn.openingLine!.startsWith(hymn.title)
             ? hymn.openingLine
             : null);
-    return Semantics(
-      button: true,
-      label:
-          'Cantique ${spokenNumber(hymn.numberLabel)}, ${hymn.title}${subtitle == null ? '' : ', $subtitle'}',
-      excludeSemantics: true,
-      child: InkWell(
-        onTap: onTap,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            minHeight: LadTouchTarget.min + LadSpace.md,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: LadSpace.lg,
-              vertical: LadSpace.sm,
-            ),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: LadSpace.huge,
-                  child: Text(
-                    hymn.numberLabel,
-                    style: LadTheme.textStyle(
-                      LadTypeScale.listNumber,
-                      p.goldText,
+    return Padding(
+      padding: margin,
+      child: Material(
+        color: p.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(LadRadius.md),
+          side: BorderSide(color: p.hairline, width: LadStroke.hairline),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Row(
+          children: [
+            Expanded(
+              child: Semantics(
+                button: true,
+                label:
+                    'Cantique ${spokenNumber(hymn.numberLabel)}, ${hymn.title}${subtitle == null ? '' : ', $subtitle'}',
+                excludeSemantics: true,
+                child: InkWell(
+                  onTap: onTap,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minHeight: LadTouchTarget.min + LadSpace.md,
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        LadSpace.md,
+                        LadSpace.sm + 2,
+                        trailing == null ? LadSpace.md : 0,
+                        LadSpace.sm + 2,
+                      ),
+                      child: Row(
+                        children: [
+                          HymnNumberBadge(hymn.numberLabel),
+                          const SizedBox(width: LadSpace.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  hymn.title,
+                                  style: LadTheme.textStyle(
+                                    LadTypeScale.listTitle,
+                                    p.text,
+                                  ),
+                                ),
+                                if (subtitle != null) ...[
+                                  const SizedBox(height: LadSpace.xxs),
+                                  Text(
+                                    subtitle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: LadTheme.textStyle(
+                                      LadTypeScale.caption,
+                                      p.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        hymn.title,
-                        style: LadTheme.textStyle(LadTypeScale.body, p.text),
-                      ),
-                      if (subtitle != null)
-                        Text(
-                          subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: LadTheme.textStyle(
-                            LadTypeScale.label,
-                            p.textSecondary,
-                          ).copyWith(fontFamily: LadFonts.lyrics),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
+            ?trailing,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Onglets-filtres en pilules (« Par numéro », « A–Z ») ; même comportement
+/// que [TabBar] (glissement, état conservé).
+class PillTabBar extends StatelessWidget implements PreferredSizeWidget {
+  const PillTabBar({super.key, required this.tabs});
+
+  final List<String> tabs;
+
+  @override
+  Size get preferredSize =>
+      const Size.fromHeight(LadTouchTarget.min + LadSpace.md);
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.lad;
+    final label = LadTheme.textStyle(LadTypeScale.label, p.text);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        LadSpace.lg,
+        0,
+        LadSpace.lg,
+        LadSpace.md,
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: p.surface,
+            borderRadius: BorderRadius.circular(LadRadius.pill),
+            border: Border.all(color: p.hairline, width: LadStroke.hairline),
+          ),
+          child: TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            dividerHeight: 0,
+            padding: const EdgeInsets.all(LadSpace.xxs + 1),
+            labelPadding: const EdgeInsets.symmetric(horizontal: LadSpace.lg),
+            indicatorSize: TabBarIndicatorSize.tab,
+            indicator: BoxDecoration(
+              color: p.goldText,
+              borderRadius: BorderRadius.circular(LadRadius.pill),
+            ),
+            labelColor: p.surface,
+            unselectedLabelColor: p.text,
+            labelStyle: label.copyWith(fontWeight: FontWeight.w600),
+            unselectedLabelStyle: label,
+            splashBorderRadius: BorderRadius.circular(LadRadius.pill),
+            tabs: [
+              for (final t in tabs)
+                Tab(height: LadTouchTarget.min - 8, text: t),
+            ],
           ),
         ),
       ),
@@ -720,4 +830,20 @@ class HeroCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Limite la largeur d'une ligne de liste sur tablette, centrée.
+class ReadableWidth extends StatelessWidget {
+  const ReadableWidth({super.key, required this.child, this.maxWidth = 860});
+
+  final Widget child;
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: child,
+    ),
+  );
 }

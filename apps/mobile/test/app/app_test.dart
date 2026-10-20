@@ -8,6 +8,6 @@ void main() {
     _,
   ) async {
     expect(find.text('Louanges à Dieu'), findsOneWidget);
-    expect(find.text('Recueil de cantiques'), findsOneWidget);
+    expect(find.text('Que chaque chant devienne une prière.'), findsOneWidget);
   });
 }

@@ -197,7 +197,8 @@ void main() {
       await tester.enterText(find.byType(TextField), 'Culte du soir');
       await tapText(tester, 'Créer');
       await tapText(tester, 'Ajouter un moment');
-      await tester.enterText(find.byType(TextField), 'Accueil');
+      // Boîte de dialogue : le champ « N° » de l'éditeur est aussi présent.
+      await tester.enterText(find.byType(TextField).last, 'Accueil');
       await tapText(tester, 'Créer');
       await tapText(tester, 'Ajouter un cantique');
       await tester.enterText(find.byType(TextField), '12');

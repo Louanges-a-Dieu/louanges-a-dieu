@@ -2,7 +2,7 @@
   max-width: 24rem;
   padding: var(--lad-space-xl) var(--lad-space-lg);
   border: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
-  border-radius: 1.5rem;
+  border-radius: var(--lad-radius-xl);
   background: var(--lad-color-background);
 }
 
@@ -41,7 +41,7 @@
 
 .refrain {
   padding-left: var(--lad-space-md);
-  border-left: var(--lad-stroke-refrain-rule) solid var(--lad-color-gold);
+  border-left: var(--lad-stroke-refrain-rule) solid var(--lad-color-gold-light);
   font-style: italic;
 }
 

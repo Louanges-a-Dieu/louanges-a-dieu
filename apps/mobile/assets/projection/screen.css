@@ -29,7 +29,14 @@ body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  background: var(--lad-color-background);
+  /* Lumière discrète venue du bas : l'œil reste sur les paroles. */
+  background:
+    radial-gradient(
+      ellipse 70% 55% at 70% 105%,
+      color-mix(in srgb, var(--lad-color-gold-light) 16%, transparent),
+      transparent 70%
+    ),
+    var(--lad-color-background);
   color: var(--lad-color-text);
   font-family: var(--lad-font-lyrics);
 }
