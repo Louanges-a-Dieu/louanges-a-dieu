@@ -62,4 +62,27 @@ void main() {
     expect(hymn.openingLine, isNull);
     expect(hymn.people, isEmpty);
   });
+
+  test('lit les enregistrements : clé relative, durée, passages', () {
+    final json = jsonDecode(
+      File('${dir.path}/valid-with-audio.json').readAsStringSync(),
+    ) as Map<String, Object?>;
+    final hymn = PublishedHymn.fromJson(json);
+    final melody = hymn.audio.first;
+    expect(melody.mediaType, MediaType.melody);
+    expect(melody.storageKey, 'cantiques/0038/melodie.mp3');
+    expect(melody.duration, const Duration(milliseconds: 125500));
+    expect(melody.segments[1].sectionId, hymn.sections[1].id);
+    expect(melody.segments[1].start, const Duration(seconds: 30));
+    expect(melody.segments[2].sectionId, isNull);
+    expect(hymn.audio.last.duration, isNull);
+  });
+
+  test('sans clé « audio », aucun enregistrement', () {
+    final json = jsonDecode(
+      File('${dir.path}/valid-minimal-unknown-metadata.json')
+          .readAsStringSync(),
+    ) as Map<String, Object?>;
+    expect(PublishedHymn.fromJson(json).audio, isEmpty);
+  });
 }

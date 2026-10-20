@@ -13,6 +13,7 @@ final class Env {
     required this.supabasePublishableKey,
     this.publicWebUrl = '',
     this.sentryDsn = '',
+    this.audioBaseUrl = '',
   });
 
   /// Lit les valeurs fournies au build.
@@ -24,6 +25,7 @@ final class Env {
     ),
     'PUBLIC_WEB_URL': String.fromEnvironment('PUBLIC_WEB_URL'),
     'SENTRY_DSN': String.fromEnvironment('SENTRY_DSN'),
+    'AUDIO_BASE_URL': String.fromEnvironment('AUDIO_BASE_URL'),
   });
 
   /// Valide une configuration brute. Lève [FormatException] si elle est
@@ -40,6 +42,13 @@ final class Env {
       RegExp(r'/+$'),
       '',
     );
+    final audio = (values['AUDIO_BASE_URL'] ?? '').replaceFirst(
+      RegExp(r'/+$'),
+      '',
+    );
+    if (audio.isNotEmpty && !audio.startsWith('https://')) {
+      throw const FormatException('AUDIO_BASE_URL doit être en HTTPS');
+    }
     if (environment != AppEnvironment.dev) {
       if (!url.startsWith('https://')) {
         throw FormatException('SUPABASE_URL doit être en HTTPS en $name');
@@ -57,6 +66,7 @@ final class Env {
       supabasePublishableKey: key,
       publicWebUrl: web,
       sentryDsn: values['SENTRY_DSN'] ?? '',
+      audioBaseUrl: audio,
     );
   }
 
@@ -70,10 +80,22 @@ final class Env {
   /// Suivi des plantages (Sentry) ; vide = désactivé.
   final String sentryDsn;
 
+  /// Adresse publique du compartiment des enregistrements (Backblaze B2, ou
+  /// le CDN placé devant), sans « / » final ; vide = écoute indisponible.
+  final String audioBaseUrl;
+
   /// Vrai si un backend est configuré. Sans backend, l'app reste pleinement
   /// utilisable hors connexion (lecture et recherche).
   bool get hasBackend =>
       supabaseUrl.isNotEmpty && supabasePublishableKey.isNotEmpty;
+
+  /// Vrai si l'app sait où lire les enregistrements.
+  bool get hasAudio => audioBaseUrl.isNotEmpty;
+
+  /// Adresse publique d'un enregistrement, à partir de sa clé relative.
+  Uri audioUrl(String storageKey) => Uri.parse(
+    '$audioBaseUrl/${storageKey.split('/').map(Uri.encodeComponent).join('/')}',
+  );
 
   /// Adresse publique d'un programme partagé.
   String sharedProgramUrl(String token) => '$publicWebUrl/programme/$token';

@@ -69,6 +69,51 @@ export const HymnPerson = z.object({
   fullName: nonBlank,
 });
 
+export const MediaType = z.enum([
+  'melody',
+  'accompaniment',
+  'choir',
+  'soprano',
+  'alto',
+  'tenor',
+  'bass',
+  'instrumental',
+  'other',
+]);
+
+/**
+ * Clé RELATIVE d'un fichier audio dans le stockage des médias (Backblaze B2,
+ * ADR-016) : jamais une URL. Les clients la joignent à l'adresse de base de
+ * leur configuration. MP3 ou AAC, lisibles sur iOS, Android et le web.
+ */
+export const StorageKey = z
+  .string()
+  .regex(/^[A-Za-z0-9][A-Za-z0-9._/-]*\.(mp3|m4a|aac)$/, {
+    message: 'clé de stockage invalide (attendu : chemin relatif .mp3, .m4a ou .aac)',
+  })
+  .refine((key) => !key.includes('..') && !key.includes('//'), {
+    message: 'clé de stockage invalide (« .. » ou « // » interdits)',
+  });
+
+/** Passage d'un enregistrement correspondant à une section des paroles. */
+export const AudioSegment = z
+  .object({
+    /** Section chantée ; null si le passage n'en suit aucune (introduction…). */
+    sectionId: z.uuid().nullable(),
+    startMs: z.int().nonnegative(),
+    endMs: z.int().positive(),
+    order: z.int().nonnegative(),
+  })
+  .refine((s) => s.endMs > s.startMs, { message: 'fin avant le début du passage' });
+
+export const AudioTrack = z.object({
+  id: z.uuid(),
+  mediaType: MediaType,
+  storageKey: StorageKey,
+  durationSeconds: z.number().positive().nullable(),
+  segments: z.array(AudioSegment),
+});
+
 export const PublishedHymn = z
   .object({
     id: z.uuid(),
@@ -83,6 +128,8 @@ export const PublishedHymn = z
     relations: z.array(HymnRelation),
     people: z.array(HymnPerson),
     themes: z.array(nonBlank),
+    /** Enregistrements diffusables ; clé absente si le cantique n'en a aucun. */
+    audio: z.array(AudioTrack).min(1).optional(),
   })
   .superRefine((hymn, ctx) => {
     const expected = `${hymn.numberNumeric}${hymn.numberSuffix ?? ''}`;
@@ -97,6 +144,18 @@ export const PublishedHymn = z
     if (new Set(orders).size !== orders.length) {
       ctx.addIssue({ code: 'custom', path: ['sections'], message: 'ordre de section dupliqué' });
     }
+    const sectionIds = new Set(hymn.sections.map((s) => s.id));
+    hymn.audio?.forEach((track, t) =>
+      track.segments.forEach((segment, i) => {
+        if (segment.sectionId !== null && !sectionIds.has(segment.sectionId)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['audio', t, 'segments', i, 'sectionId'],
+            message: 'section inconnue de ce cantique',
+          });
+        }
+      }),
+    );
     if (hymn.relations.some((r) => r.relatedHymnId === hymn.id)) {
       ctx.addIssue({
         code: 'custom',
@@ -109,3 +168,5 @@ export const PublishedHymn = z
 export type PublishedHymn = z.infer<typeof PublishedHymn>;
 export type HymnSection = z.infer<typeof HymnSection>;
 export type HymnLine = z.infer<typeof HymnLine>;
+export type AudioTrack = z.infer<typeof AudioTrack>;
+export type AudioSegment = z.infer<typeof AudioSegment>;

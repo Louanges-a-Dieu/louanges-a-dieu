@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../app/env.dart';
 import '../../app/state.dart';
 import '../../core/catalog/published_hymn.dart';
 import '../../core/catalog/sung_order.dart';
@@ -12,6 +13,7 @@ import '../../core/design_system/tokens.g.dart';
 import '../../core/preferences/preferences.dart';
 import '../../core/sharing/hymn_text.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../audio/audio_screen.dart';
 import '../favorites/favorite_button.dart';
 import '../lists/lists.dart';
 
@@ -156,8 +158,8 @@ class _Banner extends StatelessWidget {
   }
 }
 
-/// Actions réellement disponibles (pas d'audio tant qu'aucun enregistrement
-/// n'existe).
+/// Actions réellement disponibles : « Écouter » seulement si le cantique a un
+/// enregistrement publié et que l'hébergement des médias est configuré.
 class _Actions extends ConsumerWidget {
   const _Actions({required this.hymn});
 
@@ -180,6 +182,15 @@ class _Actions extends ConsumerWidget {
             onPressed: () => context.push('/lecture/${hymn.id}'),
           ),
         ),
+        if (canListen(ref.watch(envProvider), hymn))
+          action(
+            l10n.listenTooltip,
+            OutlinedButton.icon(
+              icon: const Icon(Icons.headphones_outlined),
+              label: Text(l10n.listen),
+              onPressed: () => context.push('/ecoute/${hymn.id}'),
+            ),
+          ),
         action(
           l10n.project,
           OutlinedButton.icon(

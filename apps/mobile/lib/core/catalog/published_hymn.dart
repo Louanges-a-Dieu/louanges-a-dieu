@@ -20,6 +20,7 @@ final class PublishedHymn {
     required this.relations,
     required this.people,
     required this.themes,
+    this.audio = const [],
   });
 
   /// Lève [FormatException] si le contenu ne respecte pas le contrat.
@@ -38,7 +39,15 @@ final class PublishedHymn {
       relations: reader.list('relations', HymnRelation.fromJson),
       people: reader.list('people', HymnPerson.fromJson),
       themes: reader.stringList('themes'),
+      audio: json.containsKey('audio')
+          ? reader.list('audio', AudioTrack.fromJson)
+          : const [],
     );
+    if (json.containsKey('audio') && hymn.audio.isEmpty) {
+      throw const FormatException(
+        'cantique.audio : clé absente attendue quand il n’y a aucun enregistrement',
+      );
+    }
     hymn._validate();
     return hymn;
   }
@@ -60,6 +69,9 @@ final class PublishedHymn {
   final List<HymnPerson> people;
   final List<String> themes;
 
+  /// Enregistrements diffusables (vide si le cantique n'en a aucun).
+  final List<AudioTrack> audio;
+
   void _validate() {
     if (!RegExp(r'^[1-9]\d{0,3}(bis|ter)?$').hasMatch(numberLabel)) {
       throw FormatException('Libellé de numéro invalide : $numberLabel');
@@ -78,6 +90,15 @@ final class PublishedHymn {
     final orders = sections.map((s) => s.order).toSet();
     if (orders.length != sections.length) {
       throw const FormatException('Ordre de section dupliqué');
+    }
+    final sectionIds = sections.map((s) => s.id).toSet();
+    for (final track in audio) {
+      for (final segment in track.segments) {
+        final sectionId = segment.sectionId;
+        if (sectionId != null && !sectionIds.contains(sectionId)) {
+          throw FormatException('Passage audio : section inconnue $sectionId');
+        }
+      }
     }
     if (relations.any((r) => r.relatedHymnId == id)) {
       throw const FormatException('Relation d’un cantique avec lui-même');
@@ -243,6 +264,112 @@ final class HymnPerson {
   final String fullName;
 }
 
+enum MediaType {
+  melody,
+  accompaniment,
+  choir,
+  soprano,
+  alto,
+  tenor,
+  bass,
+  instrumental,
+  other,
+}
+
+/// Nom d'un type d'enregistrement tel qu'affiché.
+String mediaTypeName(MediaType type) => switch (type) {
+  MediaType.melody => 'Mélodie',
+  MediaType.accompaniment => 'Accompagnement',
+  MediaType.choir => 'Chorale',
+  MediaType.soprano => 'Soprano',
+  MediaType.alto => 'Alto',
+  MediaType.tenor => 'Ténor',
+  MediaType.bass => 'Basse',
+  MediaType.instrumental => 'Instrumental',
+  MediaType.other => 'Enregistrement',
+};
+
+/// Enregistrement audio d'un cantique, hébergé hors de la base (ADR-016).
+@immutable
+final class AudioTrack {
+  const AudioTrack({
+    required this.id,
+    required this.mediaType,
+    required this.storageKey,
+    required this.duration,
+    required this.segments,
+  });
+
+  factory AudioTrack.fromJson(Map<String, Object?> json) {
+    final reader = _Reader(json, 'audio');
+    final key = reader.string('storageKey');
+    if (!_storageKey.hasMatch(key) ||
+        key.contains('..') ||
+        key.contains('//')) {
+      throw FormatException('audio.storageKey : clé relative attendue ($key)');
+    }
+    final seconds = reader.nullablePositiveNumber('durationSeconds');
+    return AudioTrack(
+      id: reader.uuid('id'),
+      mediaType: reader.enumValue('mediaType', MediaType.values),
+      storageKey: key,
+      duration: seconds == null
+          ? null
+          : Duration(milliseconds: (seconds * 1000).round()),
+      segments: reader.list('segments', AudioSegment.fromJson),
+    );
+  }
+
+  static final _storageKey = RegExp(
+    r'^[A-Za-z0-9][A-Za-z0-9._/-]*\.(mp3|m4a|aac)$',
+  );
+
+  final String id;
+  final MediaType mediaType;
+
+  /// Chemin relatif dans le stockage des médias (jamais une URL).
+  final String storageKey;
+
+  /// Durée connue à la publication, sinon `null` (lue sur le fichier).
+  final Duration? duration;
+  final List<AudioSegment> segments;
+}
+
+/// Passage d'un enregistrement correspondant à une section des paroles.
+@immutable
+final class AudioSegment {
+  const AudioSegment({
+    required this.sectionId,
+    required this.start,
+    required this.end,
+    required this.order,
+  });
+
+  factory AudioSegment.fromJson(Map<String, Object?> json) {
+    final reader = _Reader(json, 'passage');
+    final start = reader.integer('startMs', min: 0);
+    final end = reader.integer('endMs', min: 1);
+    if (end <= start) {
+      throw const FormatException('passage : fin avant le début');
+    }
+    final sectionId = json['sectionId'];
+    return AudioSegment(
+      sectionId: (reader._has('sectionId') && sectionId == null)
+          ? null
+          : reader.uuid('sectionId'),
+      start: Duration(milliseconds: start),
+      end: Duration(milliseconds: end),
+      order: reader.integer('order', min: 0),
+    );
+  }
+
+  /// Section chantée, ou `null` (introduction, interlude…).
+  final String? sectionId;
+  final Duration start;
+  final Duration end;
+  final int order;
+}
+
 /// Lecture stricte d'un objet JSON (erreurs explicites en français).
 final class _Reader {
   _Reader(this.json, this.context);
@@ -297,6 +424,14 @@ final class _Reader {
       _fail(key, 'entier entre ${min ?? '-∞'} et ${max ?? '+∞'}');
     }
     return value;
+  }
+
+  double? nullablePositiveNumber(String key) {
+    _has(key);
+    final value = json[key];
+    if (value == null) return null;
+    if (value is! num || value <= 0) _fail(key, 'nombre positif');
+    return value.toDouble();
   }
 
   int? nullableInteger(String key) =>

@@ -335,5 +335,28 @@
   },
   "offlinePanelTitle": "Recueil sur cet appareil",
   "offlineLead": "Votre recueil, même sans réseau.",
-  "checking": "Vérification en cours…"
+  "checking": "Vérification en cours…",
+  "listen": "Écouter",
+  "listenTooltip": "Écouter un enregistrement",
+  "listening": "Écoute",
+  "noRecordingTitle": "Aucun enregistrement",
+  "noRecordingMessage": "Ce cantique n’a pas encore d’enregistrement à écouter.",
+  "lyricsHeading": "Les paroles",
+  "play": "Lecture",
+  "pause": "Pause",
+  "audioLoading": "Chargement de l’enregistrement",
+  "rewind10": "Reculer de 10 secondes",
+  "forward10": "Avancer de 10 secondes",
+  "audioNeedsNetwork": "L’écoute demande une connexion Internet.",
+  "audioErrorTitle": "Lecture impossible",
+  "audioErrorMessage": "Vérifiez votre connexion Internet, puis réessayez.",
+  "audioVersion": "Version",
+  "goToSection": "Écouter à partir de : {name}",
+  "@goToSection": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

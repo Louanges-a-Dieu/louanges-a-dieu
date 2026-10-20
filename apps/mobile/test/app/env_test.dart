@@ -9,6 +9,29 @@ void main() {
       expect(env.hasBackend, isFalse);
     });
 
+    test('écoute : sans adresse des enregistrements, indisponible', () {
+      expect(Env.parse(const {'APP_ENV': 'dev'}).hasAudio, isFalse);
+    });
+
+    test('écoute : adresse en HTTPS, clé jointe sans « / » double', () {
+      final env = Env.parse(const {
+        'APP_ENV': 'dev',
+        'AUDIO_BASE_URL': 'https://f003.backblazeb2.com/file/lad-audio/',
+      });
+      expect(env.hasAudio, isTrue);
+      expect(
+        env.audioUrl('cantiques/0037bis/melodie.mp3').toString(),
+        'https://f003.backblazeb2.com/file/lad-audio/cantiques/0037bis/melodie.mp3',
+      );
+      expect(
+        () => Env.parse(const {
+          'APP_ENV': 'dev',
+          'AUDIO_BASE_URL': 'http://exemple.test/audio',
+        }),
+        throwsFormatException,
+      );
+    });
+
     test('rejette un environnement inconnu', () {
       expect(
         () => Env.parse(const {'APP_ENV': 'production'}),

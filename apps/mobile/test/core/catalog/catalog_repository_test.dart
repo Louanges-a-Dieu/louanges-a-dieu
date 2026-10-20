@@ -44,7 +44,11 @@ void main() {
     'restitue le contenu complet d’un cantique (refrain, répétitions)',
     () async {
       final hymn = (await repo.hymnByLabel('2'))!;
-      expect(hymn.sections.map((s) => s.type.name), ['verse', 'refrain', 'verse']);
+      expect(hymn.sections.map((s) => s.type.name), [
+        'verse',
+        'refrain',
+        'verse',
+      ]);
       final one = (await repo.hymnByLabel('1'))!;
       expect(one.sections.first.lines.last.repeat?.count, 2);
     },

@@ -1,0 +1,86 @@
+{
+  "id": "00000000-0000-4000-8000-000000000038",
+  "numberLabel": "38",
+  "numberNumeric": 38,
+  "numberSuffix": null,
+  "title": "Ligne d'ouverture de test",
+  "openingLine": "Ligne d'ouverture de test,",
+  "languageCode": "fr",
+  "sections": [
+    {
+      "id": "00000000-0000-4000-8000-000000000101",
+      "type": "verse",
+      "number": 1,
+      "order": 0,
+      "lines": [
+        {
+          "text": "Ligne d'ouverture de test,",
+          "repeat": null
+        },
+        {
+          "text": "Deuxième ligne répétée. (bis)",
+          "repeat": {
+            "count": 2,
+            "marker": "(bis)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000102",
+      "type": "refrain",
+      "number": null,
+      "order": 1,
+      "lines": [
+        {
+          "text": "Ligne de refrain chantée trois fois (ter)",
+          "repeat": {
+            "count": 3,
+            "marker": "(ter)"
+          }
+        }
+      ]
+    }
+  ],
+  "bibleReferences": [
+    {
+      "displayText": "Psaumes 150",
+      "book": "Psaumes",
+      "chapterStart": 150,
+      "verseStart": null,
+      "chapterEnd": null,
+      "verseEnd": null
+    }
+  ],
+  "relations": [],
+  "people": [],
+  "themes": [],
+  "audio": [
+    {
+      "id": "00000000-0000-4000-8000-000000000501",
+      "mediaType": "melody",
+      "storageKey": "cantiques/0038/melodie.mp3",
+      "durationSeconds": 125.5,
+      "segments": [
+        {
+          "sectionId": "00000000-0000-4000-8000-000000000999",
+          "startMs": 0,
+          "endMs": 30000,
+          "order": 0
+        },
+        {
+          "sectionId": "00000000-0000-4000-8000-000000000102",
+          "startMs": 30000,
+          "endMs": 52000,
+          "order": 1
+        },
+        {
+          "sectionId": null,
+          "startMs": 52000,
+          "endMs": 60000,
+          "order": 2
+        }
+      ]
+    }
+  ]
+}
