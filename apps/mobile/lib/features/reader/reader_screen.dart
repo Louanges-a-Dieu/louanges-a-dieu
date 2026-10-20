@@ -13,7 +13,8 @@ import '../../core/preferences/preferences.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../favorites/favorite_button.dart';
 
-/// Mode lecture : une strophe (couplet ou refrain) à la fois. Précédent /
+/// Mode lecture : une strophe (couplet ou refrain) à la fois, le refrain
+/// répété après chaque couplet (ordre chanté, ADR-009). Précédent /
 /// Suivant (boutons, glissement, flèches du clavier) passent d'une strophe à
 /// l'autre ; Cantique précédent / suivant changent de cantique. Taille
 /// réglable, largeur de lecture limitée, écran maintenu allumé.
@@ -61,7 +62,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final hymn = ref.watch(hymnProvider(current.id)).value;
     final sections = hymn == null
         ? const <HymnSection>[]
-        : _sections(hymn, prefs);
+        : sungOrder(hymn.sections);
     final section = _section.clamp(
       0,
       sections.isEmpty ? 0 : sections.length - 1,
@@ -106,15 +107,6 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                     ),
                   ),
           ),
-          IconButton(
-            tooltip: l10n.readingSettings,
-            icon: const Icon(Icons.tune),
-            onPressed: () => showModalBottomSheet<void>(
-              context: context,
-              showDragHandle: true,
-              builder: (_) => const _ReaderSettings(),
-            ),
-          ),
         ],
       ),
       body: CallbackShortcuts(
@@ -149,15 +141,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       ),
     );
   }
-
-  static List<HymnSection> _sections(
-    PublishedHymn hymn,
-    ReadingPreferences prefs,
-  ) => prefs.sungOrder ? sungOrder(hymn.sections) : hymn.sections;
 }
 
-/// En bas, dans la zone de sécurité : cantique précédent / suivant (discrets),
-/// puis strophe précédente / suivante (principaux) et la position.
+/// En bas, dans la zone de sécurité, symboles seuls (nom en infobulle et
+/// pour les lecteurs d'écran) : cantique précédent, strophe précédente,
+/// position, strophe suivante, cantique suivant.
 class _Controls extends StatelessWidget {
   const _Controls({
     required this.progress,
@@ -177,37 +165,7 @@ class _Controls extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final p = context.lad;
-    Widget hymnButton(
-      String label,
-      IconData icon,
-      VoidCallback? onPressed, {
-      bool end = false,
-    }) {
-      // Marges et écart réduits : le libellé entier tient sur une ligne
-      // dès 360 px ; au-delà de la place disponible, il passe à la ligne.
-      final parts = [
-        Icon(icon, size: 18),
-        const SizedBox(width: LadSpace.xs),
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 2,
-            textAlign: end ? TextAlign.end : TextAlign.start,
-          ),
-        ),
-      ];
-      return TextButton(
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: LadSpace.xs),
-        ),
-        onPressed: onPressed,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: end ? parts.reversed.toList() : parts,
-        ),
-      );
-    }
-
+    const stanzaSize = Size.square(56);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: p.background,
@@ -218,76 +176,59 @@ class _Controls extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            LadSpace.lg,
-            LadSpace.xs,
-            LadSpace.lg,
-            LadSpace.sm,
+          padding: const EdgeInsets.symmetric(
+            horizontal: LadSpace.lg,
+            vertical: LadSpace.sm,
           ),
           // Sur tablette, alignés sur la largeur du texte.
           child: Center(
             heightFactor: 1,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 680),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: hymnButton(
-                            l10n.previousHymn,
-                            Icons.skip_previous,
-                            onPreviousHymn,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: hymnButton(
-                            l10n.nextHymn,
-                            Icons.skip_next,
-                            onNextHymn,
-                            end: true,
-                          ),
-                        ),
-                      ),
-                    ],
+                  IconButton(
+                    tooltip: l10n.previousHymn,
+                    color: p.goldText,
+                    icon: const Icon(Icons.skip_previous),
+                    onPressed: onPreviousHymn,
                   ),
-                  const SizedBox(height: LadSpace.xs),
-                  Row(
-                    children: [
-                      Tooltip(
-                        message: l10n.previousSection,
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.chevron_left),
-                          label: Text(l10n.previous),
-                          onPressed: onPreviousSection,
-                        ),
+                  const Spacer(),
+                  IconButton.outlined(
+                    tooltip: l10n.previousSection,
+                    iconSize: 28,
+                    style: IconButton.styleFrom(minimumSize: stanzaSize),
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: onPreviousSection,
+                  ),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minWidth: 72),
+                    child: Text(
+                      progress,
+                      textAlign: TextAlign.center,
+                      style: LadTheme.textStyle(
+                        LadTypeScale.caption,
+                        p.textSecondary,
                       ),
-                      Expanded(
-                        child: Text(
-                          progress,
-                          textAlign: TextAlign.center,
-                          style: LadTheme.textStyle(
-                            LadTypeScale.caption,
-                            p.textSecondary,
-                          ),
-                        ),
-                      ),
-                      Tooltip(
-                        message: l10n.nextSection,
-                        child: FilledButton.icon(
-                          icon: const Icon(Icons.chevron_right),
-                          iconAlignment: IconAlignment.end,
-                          label: Text(l10n.next),
-                          onPressed: onNextSection,
-                        ),
-                      ),
-                    ],
+                    ),
+                  ),
+                  IconButton.filled(
+                    tooltip: l10n.nextSection,
+                    iconSize: 28,
+                    style: IconButton.styleFrom(
+                      minimumSize: stanzaSize,
+                      backgroundColor: p.goldText,
+                      foregroundColor: p.surface,
+                    ),
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: onNextSection,
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    tooltip: l10n.nextHymn,
+                    color: p.goldText,
+                    icon: const Icon(Icons.skip_next),
+                    onPressed: onNextHymn,
                   ),
                 ],
               ),
@@ -420,60 +361,15 @@ class _ReaderHeader extends StatelessWidget {
           Text(
             hymn.title,
             textAlign: TextAlign.center,
-            style: LadTheme.textStyle(LadTypeScale.title, p.text),
+            // Plus grand que sur la fiche : le titre se lit de loin.
+            style: LadTheme.textStyle(
+              LadTypeScale.title,
+              p.text,
+            ).copyWith(fontSize: LadTypeScale.title.size + 6),
           ),
           const SizedBox(height: LadSpace.md),
           const AccentRule(),
         ],
-      ),
-    );
-  }
-}
-
-/// Réglages de lecture (taille, ordre chanté),
-/// enregistrés sur l'appareil.
-class _ReaderSettings extends ConsumerWidget {
-  const _ReaderSettings();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final prefs =
-        ref.watch(preferencesProvider).value ?? const ReadingPreferences();
-    final notifier = ref.read(preferencesProvider.notifier);
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          LadSpace.xl,
-          0,
-          LadSpace.xl,
-          LadSpace.xl,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.textSize),
-            Slider(
-              value: prefs.lyricsSize,
-              min: LadLyricsSize.min,
-              max: LadLyricsSize.max,
-              divisions:
-                  ((LadLyricsSize.max - LadLyricsSize.min) / LadLyricsSize.step)
-                      .round(),
-              label: prefs.lyricsSize.round().toString(),
-              onChanged: (v) =>
-                  notifier.change((p) => p.copyWith(lyricsSize: v)),
-            ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.sungOrderOption),
-              value: prefs.sungOrder,
-              onChanged: (v) =>
-                  notifier.change((p) => p.copyWith(sungOrder: v)),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -55,6 +55,7 @@
   "nextHymn": "Cantique suivant",
   "textSize": "Taille du texte",
   "sungOrderOption": "Répéter le refrain après chaque couplet",
+  "sungOrderHint": "Sur la fiche du cantique. Le mode lecture le répète toujours.",
   "favoritesEmptyTitle": "Aucun favori",
   "favoritesEmptyMessage": "Touchez le cœur d’un cantique pour le retrouver ici, même hors connexion.",
   "settings": "Réglages",
@@ -304,13 +305,10 @@
   "read": "Lire",
   "shareHymn": "Partager le cantique",
   "addToListShort": "À une liste",
-  "previous": "Précédent",
-  "next": "Suivant",
-  "previousSection": "Section précédente",
-  "nextSection": "Section suivante",
+  "previousSection": "Strophe précédente",
+  "nextSection": "Strophe suivante",
   "smallerText": "Réduire le texte",
   "largerText": "Agrandir le texte",
-  "readingSettings": "Réglages de lecture",
   "sectionProgress": "{current} / {total}",
   "@sectionProgress": {
     "placeholders": {

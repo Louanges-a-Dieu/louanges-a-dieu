@@ -17,8 +17,9 @@ final class ReadingPreferences {
   final double lyricsSize;
   final ThemeMode themeMode;
 
-  /// Répéter le refrain après chaque couplet en lecture (ordre chanté).
-  /// Désactivé par défaut : la lecture suit l'ordre imprimé (Q-07, ADR-009).
+  /// Répéter le refrain après chaque couplet sur la fiche (ordre chanté) ;
+  /// le mode lecture l’applique toujours.
+  /// Désactivé par défaut : la fiche suit l'ordre imprimé (Q-07, ADR-009).
   final bool sungOrder;
 
   ReadingPreferences copyWith({

@@ -91,6 +91,7 @@ List<Map<String, Object?>> sampleHymns() => [
     'L’Éternel est mon berger',
     verses: [
       ['L’Éternel est mon berger,', 'Je ne manquerai de rien.'],
+      ['Il me fait reposer', 'Dans de verts pâturages.'],
     ],
     refrain: ['Alléluia, gloire à Dieu,', 'Chantons Son Nom.'],
   ),

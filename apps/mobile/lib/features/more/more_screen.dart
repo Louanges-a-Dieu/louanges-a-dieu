@@ -75,6 +75,12 @@ class MoreScreen extends ConsumerWidget {
                   notifier.change((p) => p.copyWith(lyricsSize: v)),
             ),
           ),
+          SwitchListTile(
+            title: Text(l10n.sungOrderOption),
+            subtitle: Text(l10n.sungOrderHint),
+            value: prefs.sungOrder,
+            onChanged: (v) => notifier.change((p) => p.copyWith(sungOrder: v)),
+          ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.cloud_off_outlined),

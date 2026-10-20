@@ -28,46 +28,54 @@ void main() {
     expect(prefs.lyricsSize, const ReadingPreferences().lyricsSize + 2);
   });
 
-  testApp('une strophe à la fois, puis cantique suivant / précédent', (
+  testApp('une strophe à la fois, refrain répété, cantique suivant', (
     tester,
     _,
   ) async {
     await openReader(tester, '2', 'L’Éternel est mon berger');
+    const verse1 = 'L’Éternel est mon berger,';
+    const verse2 = 'Il me fait reposer';
+    const refrain = 'Alléluia, gloire à Dieu,';
+    Future<void> next() async {
+      await tester.tap(find.byTooltip('Strophe suivante'));
+      await idle(tester);
+    }
 
-    // Le couplet seul, puis le refrain seul.
-    expect(find.text('L’Éternel est mon berger,'), findsOneWidget);
-    expect(find.text('Alléluia, gloire à Dieu,'), findsNothing);
-    expect(find.text('1 / 2'), findsOneWidget);
-
-    await tester.tap(find.byTooltip('Section suivante'));
-    await idle(tester);
-    expect(find.text('Alléluia, gloire à Dieu,'), findsOneWidget);
-    expect(find.text('L’Éternel est mon berger,'), findsNothing);
-    expect(find.text('2 / 2'), findsOneWidget);
+    // Ordre chanté : couplet 1, refrain, couplet 2, refrain ; une à la fois.
+    expect(find.text(verse1), findsOneWidget);
+    expect(find.text(refrain), findsNothing);
+    expect(find.text('1 / 4'), findsOneWidget);
+    await next();
+    expect(find.text(refrain), findsOneWidget);
+    expect(find.text(verse1), findsNothing);
+    await next();
+    expect(find.text(verse2), findsOneWidget);
+    await next();
+    expect(find.text(refrain), findsOneWidget);
+    expect(find.text('4 / 4'), findsOneWidget);
 
     // Dernière strophe : Suivant ne change pas de cantique.
-    await tester.tap(find.byTooltip('Section suivante'));
-    await idle(tester);
-    expect(find.text('2 / 2'), findsOneWidget);
+    await next();
+    expect(find.text('4 / 4'), findsOneWidget);
 
     // Cantique suivant : première strophe ; retour au précédent.
-    await tester.tap(find.text('Cantique suivant'));
+    await tester.tap(find.byTooltip('Cantique suivant'));
     await idle(tester);
     expect(find.text('Mon cœur Te loue, Seigneur,'), findsOneWidget);
-    expect(find.text('Alléluia, gloire à Dieu,'), findsNothing);
+    expect(find.text(refrain), findsNothing);
 
-    await tester.tap(find.text('Cantique précédent'));
+    await tester.tap(find.byTooltip('Cantique précédent'));
     await idle(tester);
-    expect(find.text('L’Éternel est mon berger,'), findsOneWidget);
-    expect(find.text('1 / 2'), findsOneWidget);
+    expect(find.text(verse1), findsOneWidget);
+    expect(find.text('1 / 4'), findsOneWidget);
 
     // Glisser vers la gauche : strophe suivante.
     await tester.fling(find.byType(ListView), const Offset(-300, 0), 1000);
     await idle(tester);
-    expect(find.text('2 / 2'), findsOneWidget);
+    expect(find.text('2 / 4'), findsOneWidget);
   });
 
-  testApp('petit écran, grands caractères : les quatre boutons tiennent', (
+  testApp('petit écran, grands caractères : les commandes tiennent', (
     tester,
     _,
   ) async {
@@ -78,15 +86,16 @@ void main() {
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     await openReader(tester, '2', 'L’Éternel est mon berger');
     expect(tester.takeException(), isNull); // aucun débordement
-    for (final label in [
+    for (final tooltip in [
       'Cantique précédent',
+      'Strophe précédente',
+      'Strophe suivante',
       'Cantique suivant',
-      'Précédent',
-      'Suivant',
     ]) {
-      final rect = tester.getRect(find.text(label));
+      final rect = tester.getRect(find.byTooltip(tooltip));
       expect(rect.left, greaterThanOrEqualTo(0));
       expect(rect.right, lessThanOrEqualTo(320));
+      expect(rect.height, greaterThanOrEqualTo(48)); // cible tactile
     }
   });
 }
