@@ -11,7 +11,6 @@ final class ReadingPreferences {
     this.lyricsSize = LadLyricsSize.defaultSize,
     this.themeMode = ThemeMode.system,
     this.sungOrder = false,
-    this.readerByStanza = false,
   });
 
   /// Taille des paroles (pt), entre [LadLyricsSize.min] et [LadLyricsSize.max].
@@ -22,14 +21,10 @@ final class ReadingPreferences {
   /// Désactivé par défaut : la lecture suit l'ordre imprimé (Q-07, ADR-009).
   final bool sungOrder;
 
-  /// Mode lecture : une section à la fois (sinon le cantique entier).
-  final bool readerByStanza;
-
   ReadingPreferences copyWith({
     double? lyricsSize,
     ThemeMode? themeMode,
     bool? sungOrder,
-    bool? readerByStanza,
   }) => ReadingPreferences(
     lyricsSize: (lyricsSize ?? this.lyricsSize).clamp(
       LadLyricsSize.min,
@@ -37,7 +32,6 @@ final class ReadingPreferences {
     ),
     themeMode: themeMode ?? this.themeMode,
     sungOrder: sungOrder ?? this.sungOrder,
-    readerByStanza: readerByStanza ?? this.readerByStanza,
   );
 }
 
@@ -49,7 +43,6 @@ class PreferencesRepository {
   static const _size = 'pref.lyricsSize';
   static const _theme = 'pref.themeMode';
   static const _sung = 'pref.sungOrder';
-  static const _byStanza = 'pref.readerByStanza';
 
   Future<ReadingPreferences> load() async {
     final rows = await (_db.select(
@@ -60,9 +53,6 @@ class PreferencesRepository {
       lyricsSize: double.tryParse(values[_size] ?? ''),
       themeMode: ThemeMode.values.asNameMap()[values[_theme]],
       sungOrder: values[_sung] == null ? null : values[_sung] == 'true',
-      readerByStanza: values[_byStanza] == null
-          ? null
-          : values[_byStanza] == 'true',
     );
   }
 
@@ -71,7 +61,6 @@ class PreferencesRepository {
       SyncStateCompanion.insert(key: _size, value: '${p.lyricsSize}'),
       SyncStateCompanion.insert(key: _theme, value: p.themeMode.name),
       SyncStateCompanion.insert(key: _sung, value: '${p.sungOrder}'),
-      SyncStateCompanion.insert(key: _byStanza, value: '${p.readerByStanza}'),
     ]),
   );
 }

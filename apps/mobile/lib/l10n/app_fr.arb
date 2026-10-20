@@ -308,8 +308,6 @@
   "next": "Suivant",
   "previousSection": "Section précédente",
   "nextSection": "Section suivante",
-  "readerByStanza": "Couplet par couplet",
-  "readerByStanzaHint": "Une section à la fois ; Précédent et Suivant passent d’une section à l’autre.",
   "smallerText": "Réduire le texte",
   "largerText": "Agrandir le texte",
   "readingSettings": "Réglages de lecture",

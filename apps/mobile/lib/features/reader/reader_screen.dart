@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../app/state.dart';
-import '../../core/catalog/catalog_models.dart';
 import '../../core/catalog/published_hymn.dart';
 import '../../core/catalog/sung_order.dart';
 import '../../core/design_system/components.dart';
@@ -12,11 +12,11 @@ import '../../core/design_system/tokens.g.dart';
 import '../../core/preferences/preferences.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../favorites/favorite_button.dart';
-import '../hymn/hymn_screen.dart';
 
-/// Mode lecture : texte seul, largeur de lecture limitée, taille réglable,
-/// cantique précédent/suivant (glissement ou boutons), écran maintenu
-/// allumé. Option « couplet par couplet » : une section à la fois.
+/// Mode lecture : une strophe (couplet ou refrain) à la fois. Précédent /
+/// Suivant (boutons, glissement, flèches du clavier) passent d'une strophe à
+/// l'autre ; Cantique précédent / suivant changent de cantique. Taille
+/// réglable, largeur de lecture limitée, écran maintenu allumé.
 class ReaderScreen extends ConsumerStatefulWidget {
   const ReaderScreen({super.key, required this.hymnId});
 
@@ -27,11 +27,9 @@ class ReaderScreen extends ConsumerStatefulWidget {
 }
 
 class _ReaderScreenState extends ConsumerState<ReaderScreen> {
-  PageController? _pages;
   int? _index;
 
-  /// Section affichée en mode « couplet par couplet » ; -1 : la dernière
-  /// (retour depuis le cantique suivant).
+  /// Strophe affichée dans le cantique courant.
   int _section = 0;
 
   @override
@@ -43,16 +41,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   @override
   void dispose() {
     WakelockPlus.disable().ignore();
-    _pages?.dispose();
     super.dispose();
   }
-
-  void _turn(int delta) => delta > 0
-      ? _pages!.nextPage(duration: LadDurations.base, curve: Curves.easeOut)
-      : _pages!.previousPage(
-          duration: LadDurations.base,
-          curve: Curves.easeOut,
-        );
 
   @override
   Widget build(BuildContext context) {
@@ -65,31 +55,30 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     _index ??= hymns
         .indexWhere((h) => h.id == widget.hymnId)
         .clamp(0, hymns.length - 1);
-    _pages ??= PageController(initialPage: _index!);
-    final current = hymns[_index!];
+    final index = _index!;
+    final current = hymns[index];
 
-    // Sections du cantique affiché (mode « couplet par couplet »).
     final hymn = ref.watch(hymnProvider(current.id)).value;
     final sections = hymn == null
         ? const <HymnSection>[]
         : _sections(hymn, prefs);
-    final byStanza = prefs.readerByStanza && sections.isNotEmpty;
-    final section = _section < 0
-        ? sections.length - 1
-        : _section.clamp(0, sections.isEmpty ? 0 : sections.length - 1);
+    final section = _section.clamp(
+      0,
+      sections.isEmpty ? 0 : sections.length - 1,
+    );
 
-    void step(int delta) {
-      if (!byStanza) return _turn(delta);
-      final target = section + delta;
-      if (target >= 0 && target < sections.length) {
-        setState(() => _section = target);
-      } else if (delta > 0 && _index! < hymns.length - 1) {
-        _turn(1);
-      } else if (delta < 0 && _index! > 0) {
-        _turn(-1);
-        _section = -1;
-      }
-    }
+    final VoidCallback? previousSection = section > 0
+        ? () => setState(() => _section = section - 1)
+        : null;
+    final VoidCallback? nextSection = section < sections.length - 1
+        ? () => setState(() => _section = section + 1)
+        : null;
+    VoidCallback? toHymn(int target) => target >= 0 && target < hymns.length
+        ? () => setState(() {
+            _index = target;
+            _section = 0;
+          })
+        : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -128,33 +117,35 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           ),
         ],
       ),
-      body: PageView.builder(
-        controller: _pages,
-        itemCount: hymns.length,
-        onPageChanged: (i) => setState(() {
-          _index = i;
-          if (_section >= 0) _section = 0;
-        }),
-        itemBuilder: (context, i) => _ReaderPage(
-          summary: hymns[i],
-          prefs: prefs,
-          section: i == _index && byStanza ? section : null,
+      body: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.arrowLeft): ?previousSection,
+          const SingleActivator(LogicalKeyboardKey.arrowRight): ?nextSection,
+        },
+        child: Focus(
+          autofocus: true,
+          child: _SwipeDetector(
+            onSwipeLeft: nextSection,
+            onSwipeRight: previousSection,
+            child: hymn == null
+                ? const SizedBox.expand()
+                : _ReaderPage(
+                    hymn: hymn,
+                    sections: sections,
+                    section: section,
+                    fontSize: prefs.lyricsSize,
+                  ),
+          ),
         ),
       ),
       bottomNavigationBar: _Controls(
-        previousTooltip: byStanza ? l10n.previousSection : l10n.previousHymn,
-        nextTooltip: byStanza ? l10n.nextSection : l10n.nextHymn,
-        progress: byStanza
-            ? l10n.sectionProgress(section + 1, sections.length)
-            : current.numberLabel,
-        onPrevious: byStanza
-            ? (section > 0 || _index! > 0 ? () => step(-1) : null)
-            : (_index! > 0 ? () => step(-1) : null),
-        onNext: byStanza
-            ? (section < sections.length - 1 || _index! < hymns.length - 1
-                  ? () => step(1)
-                  : null)
-            : (_index! < hymns.length - 1 ? () => step(1) : null),
+        progress: sections.isEmpty
+            ? current.numberLabel
+            : l10n.sectionProgress(section + 1, sections.length),
+        onPreviousSection: previousSection,
+        onNextSection: nextSection,
+        onPreviousHymn: toHymn(index - 1),
+        onNextHymn: toHymn(index + 1),
       ),
     );
   }
@@ -165,26 +156,58 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   ) => prefs.sungOrder ? sungOrder(hymn.sections) : hymn.sections;
 }
 
-/// Précédent / Suivant bien espacés, en bas, dans la zone de sécurité.
+/// En bas, dans la zone de sécurité : cantique précédent / suivant (discrets),
+/// puis strophe précédente / suivante (principaux) et la position.
 class _Controls extends StatelessWidget {
   const _Controls({
-    required this.previousTooltip,
-    required this.nextTooltip,
     required this.progress,
-    required this.onPrevious,
-    required this.onNext,
+    required this.onPreviousSection,
+    required this.onNextSection,
+    required this.onPreviousHymn,
+    required this.onNextHymn,
   });
 
-  final String previousTooltip;
-  final String nextTooltip;
   final String progress;
-  final VoidCallback? onPrevious;
-  final VoidCallback? onNext;
+  final VoidCallback? onPreviousSection;
+  final VoidCallback? onNextSection;
+  final VoidCallback? onPreviousHymn;
+  final VoidCallback? onNextHymn;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final p = context.lad;
+    Widget hymnButton(
+      String label,
+      IconData icon,
+      VoidCallback? onPressed, {
+      bool end = false,
+    }) {
+      // Marges et écart réduits : le libellé entier tient sur une ligne
+      // dès 360 px ; au-delà de la place disponible, il passe à la ligne.
+      final parts = [
+        Icon(icon, size: 18),
+        const SizedBox(width: LadSpace.xs),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 2,
+            textAlign: end ? TextAlign.end : TextAlign.start,
+          ),
+        ),
+      ];
+      return TextButton(
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: LadSpace.xs),
+        ),
+        onPressed: onPressed,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: end ? parts.reversed.toList() : parts,
+        ),
+      );
+    }
+
     return DecoratedBox(
       decoration: BoxDecoration(
         color: p.background,
@@ -195,40 +218,80 @@ class _Controls extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: LadSpace.lg,
-            vertical: LadSpace.sm,
+          padding: const EdgeInsets.fromLTRB(
+            LadSpace.lg,
+            LadSpace.xs,
+            LadSpace.lg,
+            LadSpace.sm,
           ),
-          child: Row(
-            children: [
-              Tooltip(
-                message: previousTooltip,
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.chevron_left),
-                  label: Text(l10n.previous),
-                  onPressed: onPrevious,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  progress,
-                  textAlign: TextAlign.center,
-                  style: LadTheme.textStyle(
-                    LadTypeScale.caption,
-                    p.textSecondary,
+          // Sur tablette, alignés sur la largeur du texte.
+          child: Center(
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 680),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: hymnButton(
+                            l10n.previousHymn,
+                            Icons.skip_previous,
+                            onPreviousHymn,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: hymnButton(
+                            l10n.nextHymn,
+                            Icons.skip_next,
+                            onNextHymn,
+                            end: true,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                  const SizedBox(height: LadSpace.xs),
+                  Row(
+                    children: [
+                      Tooltip(
+                        message: l10n.previousSection,
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.chevron_left),
+                          label: Text(l10n.previous),
+                          onPressed: onPreviousSection,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          progress,
+                          textAlign: TextAlign.center,
+                          style: LadTheme.textStyle(
+                            LadTypeScale.caption,
+                            p.textSecondary,
+                          ),
+                        ),
+                      ),
+                      Tooltip(
+                        message: l10n.nextSection,
+                        child: FilledButton.icon(
+                          icon: const Icon(Icons.chevron_right),
+                          iconAlignment: IconAlignment.end,
+                          label: Text(l10n.next),
+                          onPressed: onNextSection,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              Tooltip(
-                message: nextTooltip,
-                child: FilledButton.icon(
-                  icon: const Icon(Icons.chevron_right),
-                  iconAlignment: IconAlignment.end,
-                  label: Text(l10n.next),
-                  onPressed: onNext,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -236,36 +299,69 @@ class _Controls extends StatelessWidget {
   }
 }
 
-class _ReaderPage extends ConsumerWidget {
-  const _ReaderPage({
-    required this.summary,
-    required this.prefs,
-    required this.section,
+/// Glissement horizontal rapide, lu sur les événements bruts : la sélection
+/// de texte (appui long) et le défilement vertical gardent leurs gestes.
+class _SwipeDetector extends StatefulWidget {
+  const _SwipeDetector({
+    required this.onSwipeLeft,
+    required this.onSwipeRight,
+    required this.child,
   });
 
-  final HymnSummary summary;
-  final ReadingPreferences prefs;
-
-  /// Section seule à afficher, ou `null` pour le cantique entier.
-  final int? section;
+  final VoidCallback? onSwipeLeft;
+  final VoidCallback? onSwipeRight;
+  final Widget child;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final hymn = ref.watch(hymnProvider(summary.id)).value;
-    if (hymn == null) return const SizedBox.shrink();
-    final header = _ReaderHeader(hymn: hymn);
-    final index = section;
-    if (index == null) {
-      return HymnContent(
-        hymn: hymn,
-        fontSize: prefs.lyricsSize,
-        sungOrderEnabled: prefs.sungOrder,
-        header: header,
-        maxWidth: 680,
-        bottomPadding: LadSpace.xxl,
-      );
-    }
-    final sections = _ReaderScreenState._sections(hymn, prefs);
+  State<_SwipeDetector> createState() => _SwipeDetectorState();
+}
+
+class _SwipeDetectorState extends State<_SwipeDetector> {
+  static const _minDistance = 60.0;
+  static const _maxDuration = Duration(milliseconds: 450);
+
+  Offset? _start;
+  Duration? _startTime;
+
+  @override
+  Widget build(BuildContext context) => Listener(
+    onPointerDown: (e) {
+      _start = e.position;
+      _startTime = e.timeStamp;
+    },
+    onPointerUp: (e) {
+      final start = _start;
+      final startTime = _startTime;
+      _start = null;
+      if (start == null || startTime == null) return;
+      final d = e.position - start;
+      if (e.timeStamp - startTime > _maxDuration ||
+          d.dx.abs() < _minDistance ||
+          d.dx.abs() < d.dy.abs() * 2) {
+        return;
+      }
+      (d.dx < 0 ? widget.onSwipeLeft : widget.onSwipeRight)?.call();
+    },
+    onPointerCancel: (_) => _start = null,
+    child: widget.child,
+  );
+}
+
+class _ReaderPage extends StatelessWidget {
+  const _ReaderPage({
+    required this.hymn,
+    required this.sections,
+    required this.section,
+    required this.fontSize,
+  });
+
+  final PublishedHymn hymn;
+  final List<HymnSection> sections;
+  final int section;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
     return SelectionArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
@@ -280,19 +376,20 @@ class _ReaderPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                header,
+                _ReaderHeader(hymn: hymn),
                 const SizedBox(height: LadSpace.xl),
-                AnimatedSwitcher(
-                  duration: MediaQuery.disableAnimationsOf(context)
-                      ? Duration.zero
-                      : LadDurations.base,
-                  child: SectionBlock(
-                    key: ValueKey(index),
-                    section: sections[index],
-                    fontSize: prefs.lyricsSize,
-                    showName: true,
+                if (sections.isNotEmpty)
+                  AnimatedSwitcher(
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : LadDurations.base,
+                    child: SectionBlock(
+                      key: ValueKey('${hymn.id}/$section'),
+                      section: sections[section],
+                      fontSize: fontSize,
+                      showName: true,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -333,7 +430,7 @@ class _ReaderHeader extends StatelessWidget {
   }
 }
 
-/// Réglages de lecture (taille, ordre chanté, couplet par couplet),
+/// Réglages de lecture (taille, ordre chanté),
 /// enregistrés sur l'appareil.
 class _ReaderSettings extends ConsumerWidget {
   const _ReaderSettings();
@@ -367,14 +464,6 @@ class _ReaderSettings extends ConsumerWidget {
               label: prefs.lyricsSize.round().toString(),
               onChanged: (v) =>
                   notifier.change((p) => p.copyWith(lyricsSize: v)),
-            ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.readerByStanza),
-              subtitle: Text(l10n.readerByStanzaHint),
-              value: prefs.readerByStanza,
-              onChanged: (v) =>
-                  notifier.change((p) => p.copyWith(readerByStanza: v)),
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,

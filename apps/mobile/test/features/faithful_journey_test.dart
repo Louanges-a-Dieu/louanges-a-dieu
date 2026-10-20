@@ -142,7 +142,7 @@ void main() {
     await tester.tap(find.byTooltip('Mode lecture'));
     await idle(tester);
     expect(find.text('Au matin je Te cherche,'), findsOneWidget);
-    await tester.tap(find.byTooltip('Cantique suivant'));
+    await tester.tap(find.text('Cantique suivant'));
     await idle(tester);
     expect(find.text('Le jour se lève.'), findsOneWidget);
   });
@@ -156,7 +156,7 @@ void main() {
     await idle(tester);
     await tester.tap(find.byTooltip('Mode lecture'));
     await idle(tester);
-    await tester.tap(find.byTooltip('Cantique suivant'));
+    await tester.tap(find.text('Cantique suivant'));
     await idle(tester);
     await tester.tap(find.byTooltip('Ajouter aux favoris'));
     await idle(tester);
