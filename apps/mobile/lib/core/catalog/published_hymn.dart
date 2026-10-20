@@ -91,12 +91,18 @@ final class PublishedHymn {
     if (orders.length != sections.length) {
       throw const FormatException('Ordre de section dupliqué');
     }
-    final sectionIds = sections.map((s) => s.id).toSet();
+    final lineCounts = {for (final s in sections) s.id: s.lines.length};
     for (final track in audio) {
       for (final segment in track.segments) {
         final sectionId = segment.sectionId;
-        if (sectionId != null && !sectionIds.contains(sectionId)) {
+        if (sectionId == null) continue;
+        final lines = lineCounts[sectionId];
+        if (lines == null) {
           throw FormatException('Passage audio : section inconnue $sectionId');
+        }
+        final line = segment.lineIndex;
+        if (line != null && line >= lines) {
+          throw FormatException('Passage audio : ligne $line inexistante');
         }
       }
     }
@@ -333,6 +339,9 @@ final class AudioTrack {
   /// Durée connue à la publication, sinon `null` (lue sur le fichier).
   final Duration? duration;
   final List<AudioSegment> segments;
+
+  /// Vrai si la piste est synchronisée ligne par ligne : karaoké possible.
+  bool get hasLineCues => segments.any((s) => s.lineIndex != null);
 }
 
 /// Passage d'un enregistrement correspondant à une section des paroles.
@@ -340,6 +349,7 @@ final class AudioTrack {
 final class AudioSegment {
   const AudioSegment({
     required this.sectionId,
+    this.lineIndex,
     required this.start,
     required this.end,
     required this.order,
@@ -353,7 +363,17 @@ final class AudioSegment {
       throw const FormatException('passage : fin avant le début');
     }
     final sectionId = json['sectionId'];
+    final lineIndex = json['lineIndex'];
+    if (lineIndex != null && (lineIndex is! int || lineIndex < 0)) {
+      throw const FormatException('passage.lineIndex : entier positif attendu');
+    }
+    if (lineIndex != null && sectionId == null) {
+      throw const FormatException(
+        'passage : une ligne appartient à une section',
+      );
+    }
     return AudioSegment(
+      lineIndex: lineIndex as int?,
       sectionId: (reader._has('sectionId') && sectionId == null)
           ? null
           : reader.uuid('sectionId'),
@@ -365,6 +385,10 @@ final class AudioSegment {
 
   /// Section chantée, ou `null` (introduction, interlude…).
   final String? sectionId;
+
+  /// Vers chanté (0 = premier) pour une piste synchronisée ligne par ligne
+  /// (karaoké) ; `null` : la section entière.
+  final int? lineIndex;
   final Duration start;
   final Duration end;
   final int order;

@@ -469,3 +469,41 @@ export async function saveAudioSegmentsAction(form: FormData) {
     }),
   );
 }
+
+const Cues = z
+  .array(
+    z.object({
+      section_id: Uuid,
+      line_index: z.int().nonnegative(),
+      start_ms: z.int().nonnegative(),
+      end_ms: z.int().positive(),
+    }),
+  )
+  .min(1)
+  .refine(
+    (cues) =>
+      cues.every((c, i) => c.end_ms > c.start_ms && (i === 0 || c.start_ms >= cues[i - 1]!.end_ms)),
+    {
+      message: 'temps non croissants',
+    },
+  );
+
+/** Karaoké : remplace les passages d'une piste par sa synchronisation vers par vers. */
+export async function saveAudioCuesAction(form: FormData) {
+  const hymnId = String(form.get('hymn_id'));
+  const trackId = z.uuid().safeParse(form.get('track_id'));
+  let cues: z.infer<typeof Cues> | null = null;
+  try {
+    const parsed = Cues.safeParse(JSON.parse(String(form.get('cues'))));
+    if (parsed.success) cues = parsed.data;
+  } catch {
+    cues = null;
+  }
+  if (!trackId.success || !cues) {
+    back(page(hymnId), { erreur: 'Synchronisation invalide : recommencez.' });
+  }
+  const { supabase } = await requireEditor();
+  await run(hymnId, `Karaoké : ${cues.length} vers synchronisés.`, () =>
+    supabase.rpc('set_audio_segments', { p_track_id: trackId.data, p_segments: cues }),
+  );
+}

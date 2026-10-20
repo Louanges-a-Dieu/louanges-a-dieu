@@ -75,7 +75,12 @@ void main() {
     expect(melody.segments[1].sectionId, hymn.sections[1].id);
     expect(melody.segments[1].start, const Duration(seconds: 30));
     expect(melody.segments[2].sectionId, isNull);
-    expect(hymn.audio.last.duration, isNull);
+    expect(hymn.audio[1].duration, isNull);
+    expect(melody.hasLineCues, isFalse);
+    final karaoke = hymn.audio.last;
+    expect(karaoke.mediaType, MediaType.accompaniment);
+    expect(karaoke.hasLineCues, isTrue);
+    expect(karaoke.segments[1].lineIndex, 1);
   });
 
   test('sans clé « audio », aucun enregistrement', () {

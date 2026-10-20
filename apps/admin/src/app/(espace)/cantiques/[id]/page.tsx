@@ -6,11 +6,12 @@ import { notFound } from 'next/navigation';
 import { SubmitButton } from '@/components/buttons';
 import { Flash } from '@/components/flash';
 import { HymnPreview } from '@/components/hymn-preview';
+import { KaraokeSync } from '@/components/karaoke-sync';
 import { RIGHTS_LABELS, SeverityBadge, StatusBadge } from '@/components/status';
 import ui from '@/components/ui.module.css';
 import { requireEditor } from '@/lib/auth';
 import { param } from '@/lib/data';
-import { MEDIA_LABELS, audioUrl, formatClock, formatSegments } from '@/lib/audio';
+import { MEDIA_LABELS, audioUrl, formatClock, formatSegments, syncLines } from '@/lib/audio';
 import { sectionName } from '@/lib/text';
 import { transitions } from '@/lib/transitions';
 
@@ -23,6 +24,7 @@ import {
   addRightsAction,
   addAudioTrackAction,
   deleteAudioTrackAction,
+  saveAudioCuesAction,
   saveAudioSegmentsAction,
   updateAudioTrackAction,
   deletePersonAction,
@@ -114,7 +116,7 @@ export default async function HymnEditorPage({
     supabase
       .from('audio_tracks')
       .select(
-        'id, media_type, storage_key, duration_seconds, rights_status, segments:audio_segments(section_id, start_ms, end_ms, display_order)',
+        'id, media_type, storage_key, duration_seconds, rights_status, segments:audio_segments(section_id, line_index, start_ms, end_ms, display_order)',
       )
       .eq('hymn_id', id)
       .order('created_at'),
@@ -123,6 +125,7 @@ export default async function HymnEditorPage({
   if (!hymn) notFound();
   const here = `/cantiques/${id}`;
   const rightsStatus = effective.data?.rights_status ?? 'unknown';
+  const karaokeLines = preview.data ? syncLines((preview.data as PublishedHymn).sections) : [];
 
   return (
     <>
@@ -511,6 +514,7 @@ export default async function HymnEditorPage({
               );
               const url = audioUrl(track.storage_key);
               const label = MEDIA_LABELS[track.media_type] ?? track.media_type;
+              const lineCues = segments.filter((g) => g.line_index != null).length;
               return (
                 <div key={track.id} className={styles.section}>
                   <div className={styles.sectionHead}>
@@ -580,29 +584,65 @@ export default async function HymnEditorPage({
                     </label>
                     <SubmitButton>Enregistrer</SubmitButton>
                   </form>
-                  <details className={styles.add}>
-                    <summary>
-                      Passages ({segments.length === 0 ? 'non repérés' : segments.length})
-                    </summary>
-                    <p className={ui.hint}>
-                      Une ligne par début de passage : temps puis section (« Couplet 2 », « Refrain
-                      », ou « #3 » pour la 3ᵉ section imprimée ; « - » pour un passage sans
-                      paroles). Dernière ligne : la fin, par exemple « 2:10 fin ». L’application met
-                      alors en avant les paroles chantées. Vider le texte pour retirer les passages.
-                    </p>
-                    <form action={saveAudioSegmentsAction}>
+                  {lineCues > 0 ? (
+                    <form action={saveAudioSegmentsAction} className={ui.row}>
                       <input type="hidden" name="hymn_id" value={id} />
                       <input type="hidden" name="track_id" value={track.id} />
-                      <textarea
-                        className={ui.textarea}
-                        name="segments"
-                        rows={Math.max(4, segments.length + 2)}
-                        defaultValue={formatSegments(segments, sections.data ?? [])}
-                        placeholder={'0:00 Couplet 1\n0:32 Refrain\n1:05 fin'}
-                        aria-label={`Passages : ${label}`}
-                      />
-                      <SubmitButton>Enregistrer les passages</SubmitButton>
+                      <input type="hidden" name="segments" value="" />
+                      <span>
+                        Karaoké : <strong>{lineCues} vers synchronisés</strong>.
+                      </span>
+                      <SubmitButton
+                        variant="ghost"
+                        confirm="Effacer la synchronisation karaoké de cet enregistrement ?"
+                      >
+                        Effacer
+                      </SubmitButton>
                     </form>
+                  ) : (
+                    <details className={styles.add}>
+                      <summary>
+                        Passages ({segments.length === 0 ? 'non repérés' : segments.length})
+                      </summary>
+                      <p className={ui.hint}>
+                        Une ligne par début de passage : temps puis section (« Couplet 2 », «
+                        Refrain », ou « #3 » pour la 3ᵉ section imprimée ; « - » pour un passage
+                        sans paroles). Dernière ligne : la fin, par exemple « 2:10 fin ».
+                        L’application met alors en avant les paroles chantées. Vider le texte pour
+                        retirer les passages.
+                      </p>
+                      <form action={saveAudioSegmentsAction}>
+                        <input type="hidden" name="hymn_id" value={id} />
+                        <input type="hidden" name="track_id" value={track.id} />
+                        <textarea
+                          className={ui.textarea}
+                          name="segments"
+                          rows={Math.max(4, segments.length + 2)}
+                          defaultValue={formatSegments(segments, sections.data ?? [])}
+                          placeholder={'0:00 Couplet 1\n0:32 Refrain\n1:05 fin'}
+                          aria-label={`Passages : ${label}`}
+                        />
+                        <SubmitButton>Enregistrer les passages</SubmitButton>
+                      </form>
+                    </details>
+                  )}
+                  <details className={styles.add}>
+                    <summary>
+                      Karaoké : {lineCues > 0 ? 'resynchroniser' : 'synchroniser'} vers par vers
+                    </summary>
+                    {url && karaokeLines.length > 0 ? (
+                      <KaraokeSync
+                        src={url}
+                        lines={karaokeLines}
+                        hymnId={id}
+                        trackId={track.id}
+                        action={saveAudioCuesAction}
+                      />
+                    ) : (
+                      <p className={ui.muted}>
+                        Indisponible : adresse des enregistrements (AUDIO_BASE_URL) non configurée.
+                      </p>
+                    )}
                   </details>
                   <form action={deleteAudioTrackAction}>
                     <input type="hidden" name="hymn_id" value={id} />

@@ -17,6 +17,7 @@ final class FakePlayer implements HymnAudioPlayer {
   final titles = <String>[];
   final seeks = <Duration>[];
   var stopped = false;
+  Object? owner;
   var failNextOpen = false;
   final _state = ValueNotifier(const PlaybackState());
 
@@ -26,7 +27,8 @@ final class FakePlayer implements HymnAudioPlayer {
   void emit(PlaybackState s) => _state.value = s;
 
   @override
-  Future<void> open(AudioSourceSpec source) async {
+  Future<void> open(AudioSourceSpec source, {required Object owner}) async {
+    this.owner = owner;
     opened.add(source.uri);
     titles.add('${source.title} · ${source.version}');
     _state.value = failNextOpen
@@ -53,7 +55,9 @@ final class FakePlayer implements HymnAudioPlayer {
   }
 
   @override
-  Future<void> stop() async {
+  Future<void> release(Object owner) async {
+    if (!identical(owner, this.owner)) return;
+    this.owner = null;
     stopped = true;
     _state.value = const PlaybackState();
   }
@@ -148,6 +152,44 @@ List<Map<String, Object?>> hymnsWithAudio() {
       'segments': const <Object?>[],
     },
   ];
+  return hymns;
+}
+
+/// Comme [hymnsWithAudio], plus un accompagnement synchronisé vers par vers
+/// (karaoké) : couplet 1, refrain, couplet 2 (deux vers chacun).
+List<Map<String, Object?>> hymnsWithKaraoke() {
+  final hymns = hymnsWithAudio();
+  final hymn = hymns.firstWhere((h) => h['numberLabel'] == '2');
+  final ids = [
+    for (final s in hymn['sections']! as List<Object?>)
+      (s! as Map<String, Object?>)['id']! as String,
+  ];
+  var t = 2000;
+  final cues = <Map<String, Object?>>[];
+  for (final (section, line) in [
+    (ids[0], 0),
+    (ids[0], 1),
+    (ids[1], 0),
+    (ids[1], 1),
+    (ids[2], 0),
+    (ids[2], 1),
+  ]) {
+    cues.add({
+      'sectionId': section,
+      'lineIndex': line,
+      'startMs': t,
+      'endMs': t + 4000,
+      'order': cues.length,
+    });
+    t += 4000;
+  }
+  (hymn['audio']! as List<Object?>).add({
+    'id': '00000000-0000-4000-8000-0000000a0003',
+    'mediaType': 'accompaniment',
+    'storageKey': 'cantiques/0002/accompagnement.mp3',
+    'durationSeconds': 30,
+    'segments': cues,
+  });
   return hymns;
 }
 
@@ -357,6 +399,74 @@ void main() {
       );
     },
     hymns: hymnsWithAudio(),
+    env: _audioEnv,
+    overrides: fakes,
+  );
+
+  testApp(
+    'pas de piste synchronisée : aucun bouton « Karaoké »',
+    (tester, _) async {
+      await openHymn(tester, '2', 'L’Éternel est mon berger');
+      expect(find.text('Écouter'), findsOneWidget);
+      expect(find.text('Karaoké'), findsNothing);
+    },
+    hymns: hymnsWithAudio(),
+    env: _audioEnv,
+    overrides: fakes,
+  );
+
+  testApp(
+    'karaoké : introduction, vers chanté, vers suivants, toucher pour y aller',
+    (tester, _) async {
+      await openHymn(tester, '2', 'L’Éternel est mon berger');
+      await tester.tap(find.text('Karaoké'));
+      await idle(tester);
+
+      // L'accompagnement synchronisé est choisi d'abord.
+      expect(
+        player.opened.single.toString(),
+        '$_base/cantiques/0002/accompagnement.mp3',
+      );
+      // Introduction : titre, compte à rebours, premier vers annoncé.
+      expect(find.text('Début dans 2 s'), findsOneWidget);
+      expect(find.text('L’Éternel est mon berger,'), findsOneWidget);
+
+      // Pendant le 2ᵉ vers : le précédent et les deux suivants restent visibles.
+      await player.seek(const Duration(seconds: 7));
+      await idle(tester);
+      final sung = tester.widget<Semantics>(
+        find
+            .ancestor(
+              of: find.text('Je ne manquerai de rien.'),
+              matching: find.byWidgetPredicate(
+                (w) => w is Semantics && w.properties.selected == true,
+              ),
+            )
+            .first,
+      );
+      expect(sung.properties.selected, isTrue);
+      expect(find.text('L’Éternel est mon berger,'), findsOneWidget);
+      expect(find.text('REFRAIN'), findsNothing); // annoncé avec son 1er vers
+      expect(find.text('Alléluia, gloire à Dieu,'), findsOneWidget);
+      expect(find.text('Chantons Son Nom.'), findsOneWidget);
+      expect(find.text('Il me fait reposer'), findsNothing);
+
+      // Toucher un vers suivant : la lecture y va.
+      await tester.tap(find.text('Chantons Son Nom.'));
+      await idle(tester);
+      expect(player.seeks.last, const Duration(seconds: 14));
+
+      // Écoute normale : le nouvel écran garde le lecteur.
+      await tester.tap(find.byTooltip('Écoute normale'));
+      await idle(tester);
+      expect(player.stopped, isFalse);
+      expect(
+        player.opened.last.toString(),
+        '$_base/cantiques/0002/melodie.mp3',
+      );
+      expect(find.text('Les paroles'), findsOneWidget);
+    },
+    hymns: hymnsWithKaraoke(),
     env: _audioEnv,
     overrides: fakes,
   );

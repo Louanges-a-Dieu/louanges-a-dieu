@@ -100,11 +100,19 @@ export const AudioSegment = z
   .object({
     /** Section chantée ; null si le passage n'en suit aucune (introduction…). */
     sectionId: z.uuid().nullable(),
+    /**
+     * Vers chanté (0 = premier vers de la section) pour une piste synchronisée
+     * ligne par ligne (karaoké) ; null ou absent : la section entière.
+     */
+    lineIndex: z.int().nonnegative().nullable().optional(),
     startMs: z.int().nonnegative(),
     endMs: z.int().positive(),
     order: z.int().nonnegative(),
   })
-  .refine((s) => s.endMs > s.startMs, { message: 'fin avant le début du passage' });
+  .refine((s) => s.endMs > s.startMs, { message: 'fin avant le début du passage' })
+  .refine((s) => s.lineIndex == null || s.sectionId !== null, {
+    message: 'une ligne appartient à une section',
+  });
 
 export const AudioTrack = z.object({
   id: z.uuid(),
@@ -144,14 +152,22 @@ export const PublishedHymn = z
     if (new Set(orders).size !== orders.length) {
       ctx.addIssue({ code: 'custom', path: ['sections'], message: 'ordre de section dupliqué' });
     }
-    const sectionIds = new Set(hymn.sections.map((s) => s.id));
+    const lineCounts = new Map(hymn.sections.map((s) => [s.id, s.lines.length]));
     hymn.audio?.forEach((track, t) =>
       track.segments.forEach((segment, i) => {
-        if (segment.sectionId !== null && !sectionIds.has(segment.sectionId)) {
+        if (segment.sectionId === null) return;
+        const lines = lineCounts.get(segment.sectionId);
+        if (lines === undefined) {
           ctx.addIssue({
             code: 'custom',
             path: ['audio', t, 'segments', i, 'sectionId'],
             message: 'section inconnue de ce cantique',
+          });
+        } else if (segment.lineIndex != null && segment.lineIndex >= lines) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['audio', t, 'segments', i, 'lineIndex'],
+            message: 'ligne inexistante dans la section',
           });
         }
       }),

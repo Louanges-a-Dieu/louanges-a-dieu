@@ -1,0 +1,52 @@
+.sync {
+  margin-top: var(--lad-space-sm);
+}
+
+.audio {
+  display: block;
+  width: 100%;
+  margin: var(--lad-space-sm) 0;
+}
+
+.lines {
+  margin: var(--lad-space-md) 0;
+  padding: 0;
+  list-style: none;
+  max-height: 22rem;
+  overflow: auto;
+  border: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+  border-radius: var(--lad-radius-md);
+}
+
+.lines li {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: 0 var(--lad-space-sm);
+  padding: var(--lad-space-xs) var(--lad-space-sm);
+  font-family: var(--lad-font-lyrics);
+}
+
+.section {
+  grid-column: 1 / -1;
+  font-family: var(--lad-font-ui);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lad-color-gold-text);
+  margin-top: var(--lad-space-xs);
+}
+
+.time {
+  font-family: var(--lad-font-ui);
+  font-variant-numeric: tabular-nums;
+  color: var(--lad-color-text-secondary);
+}
+
+.done {
+  color: var(--lad-color-text-secondary);
+}
+
+.current {
+  background: var(--lad-color-surface-warm);
+  font-weight: 600;
+}

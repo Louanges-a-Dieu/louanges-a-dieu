@@ -67,14 +67,15 @@ final class AudioSourceSpec {
 abstract interface class HymnAudioPlayer {
   ValueListenable<PlaybackState> get state;
 
-  /// Prépare [source] sans lancer la lecture.
-  Future<void> open(AudioSourceSpec source);
+  /// Prépare [source] sans lancer la lecture, pour l'écran [owner].
+  Future<void> open(AudioSourceSpec source, {required Object owner});
   Future<void> play();
   Future<void> pause();
   Future<void> seek(Duration position);
 
-  /// Arrête la lecture et libère l'enregistrement (en quittant l'écran).
-  Future<void> stop();
+  /// Arrête la lecture en quittant l'écran [owner] ; sans effet si un autre
+  /// écran (karaoké ↔ écoute) a déjà pris le lecteur.
+  Future<void> release(Object owner);
 }
 
 /// Lecteur unique de l'app.
@@ -112,12 +113,14 @@ final class JustAudioHymnPlayer implements HymnAudioPlayer {
   final _state = ValueNotifier(const PlaybackState());
   late final List<StreamSubscription<Object?>> _subscriptions;
   Future<void>? _session;
+  Object? _owner;
 
   @override
   ValueListenable<PlaybackState> get state => _state;
 
   @override
-  Future<void> open(AudioSourceSpec source) async {
+  Future<void> open(AudioSourceSpec source, {required Object owner}) async {
+    _owner = owner;
     // Catégorie « musique » : l'écoute reste audible quand le téléphone est
     // en mode silencieux, comme pour toute app de musique.
     await (_session ??= AudioSession.instance.then(
@@ -180,7 +183,9 @@ final class JustAudioHymnPlayer implements HymnAudioPlayer {
   Future<void> seek(Duration position) => _player.seek(position);
 
   @override
-  Future<void> stop() async {
+  Future<void> release(Object owner) async {
+    if (!identical(owner, _owner)) return;
+    _owner = null;
     await _player.stop();
     _state.value = const PlaybackState();
   }

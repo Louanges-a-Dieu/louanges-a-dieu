@@ -33,6 +33,7 @@ de production. Noter pour chaque appareil : modèle, version du système, versio
 | A-5 | Télécharger, passer en mode avion, écouter | Lecture complète sans réseau | | | |
 | A-6 | Plus → Hors connexion → Supprimer les enregistrements | Place libérée ; « Télécharger » réapparaît | | | |
 | A-7 | Quitter l'écran d'écoute | La lecture s'arrête, la notification disparaît | | | |
+| A-8 | Karaoké d'un cantique synchronisé | Le vers chanté suit la voix (écart < ½ s), se remplit ligne après ligne ; toucher un vers y va ; « Écoute normale » ne coupe pas | | | |
 
 Accessibilité (5.10) : VoiceOver / TalkBack sur l'accueil, la recherche, une fiche (numéro
 « 37 bis » lu correctement, refrain annoncé), le mode lecture ; texte système agrandi au maximum.

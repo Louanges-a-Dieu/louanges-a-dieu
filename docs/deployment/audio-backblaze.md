@@ -68,6 +68,16 @@ cantique, sinon par « #n » (n-ième section imprimée) ; « - » marque un pas
 L'app met alors en avant les paroles chantées et permet d'y aller d'un toucher. Vider le texte
 retire les passages.
 
+**Karaoké** (facultatif) : *Karaoké : synchroniser vers par vers* sur l'enregistrement
+(il faut `AUDIO_BASE_URL` pour le back-office). « Démarrer », puis la touche **Espace** au tout
+début de chaque vers surligné (les vers suivent l'ordre chanté, refrain après chaque couplet) ;
+**S** si l'enregistrement ne chante pas ce vers ; **Retour arrière** pour annuler le dernier
+appui ; **Entrée** à la fin. Vérifier les temps affichés, puis « Enregistrer la
+synchronisation ». L'app propose alors le **Karaoké** : le vers chanté en grand, rempli au rythme
+du chant, avec le précédent et les suivants ; une version « Accompagnement » synchronisée est
+choisie d'abord. Une synchronisation vers par vers remplace les passages par section (et sert
+aussi à mettre en avant les paroles dans l'écoute normale).
+
 Puis **publier** : l'enregistrement part avec la release suivante. Ajouter, modifier ou retirer
 un enregistrement ne repasse **pas** le cantique en brouillon (le texte n'a pas changé) ; tout
 est tracé dans le journal. Retirer un enregistrement ne supprime pas le fichier sur Backblaze.

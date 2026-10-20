@@ -1,3 +1,6 @@
+import { sungOrder, type HymnSection } from '@lad/shared-contracts';
+
+import type { SyncLine } from './karaoke';
 import { sectionName } from './text';
 
 /** Types d'enregistrement, avec le nom affiché dans l'application. */
@@ -58,6 +61,7 @@ export interface SegmentRow {
   section_id: string | null;
   start_ms: number;
   end_ms: number;
+  line_index?: number | null;
 }
 
 /** Marqueur de fin d'enregistrement, et passage sans paroles. */
@@ -174,4 +178,16 @@ export function audioUrl(storageKey: string): string | null {
   const base = (process.env.AUDIO_BASE_URL ?? '').replace(/\/+$/, '');
   if (!base.startsWith('https://')) return null;
   return `${base}/${storageKey.split('/').map(encodeURIComponent).join('/')}`;
+}
+
+/** Vers à synchroniser pour le karaoké, dans l'ordre chanté (refrain répété). */
+export function syncLines(sections: HymnSection[]): SyncLine[] {
+  return sungOrder(sections).flatMap((section) =>
+    section.lines.map((line, i) => ({
+      sectionId: section.id,
+      lineIndex: i,
+      text: line.text,
+      section: i === 0 ? sectionName(section.type, section.number) : null,
+    })),
+  );
 }

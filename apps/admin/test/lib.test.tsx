@@ -9,7 +9,9 @@ import {
   parseClock,
   parseDuration,
   parseSegments,
+  syncLines,
 } from '../src/lib/audio';
+import { cuesFromTaps } from '../src/lib/karaoke';
 import { normalizeSectionText, sectionName, themeSlug } from '../src/lib/text';
 import { transitions } from '../src/lib/transitions';
 import { OptionalInt, OptionalText, ReturnPath } from '../src/lib/validation';
@@ -208,5 +210,36 @@ describe('enregistrements audio', () => {
       />,
     );
     expect(html).toContain('Écouter : Chorale');
+  });
+});
+
+describe('karaoké : synchronisation vers par vers', () => {
+  const line = (text: string) => ({ text, repeat: null });
+  const sections = [
+    { id: 'c1', type: 'verse' as const, number: 1, order: 0, lines: [line('A1'), line('A2')] },
+    { id: 'r', type: 'refrain' as const, number: null, order: 1, lines: [line('R1')] },
+    { id: 'c2', type: 'verse' as const, number: 2, order: 2, lines: [line('B1')] },
+  ];
+
+  it('vers dans l’ordre chanté, refrain répété, section annoncée sur son premier vers', () => {
+    expect(syncLines(sections).map((l) => `${l.section ?? ''}|${l.text}`)).toEqual([
+      'Couplet 1|A1',
+      '|A2',
+      'Refrain|R1',
+      'Couplet 2|B1',
+      'Refrain|R1',
+    ]);
+  });
+
+  it('chaque vers finit au début du suivant chanté ; vers passés ignorés', () => {
+    const lines = syncLines(sections);
+    expect(cuesFromTaps(lines, [1000, 4000, null, 9000, 12000], 15000)).toEqual([
+      { section_id: 'c1', line_index: 0, start_ms: 1000, end_ms: 4000 },
+      { section_id: 'c1', line_index: 1, start_ms: 4000, end_ms: 9000 },
+      { section_id: 'c2', line_index: 0, start_ms: 9000, end_ms: 12000 },
+      { section_id: 'r', line_index: 0, start_ms: 12000, end_ms: 15000 },
+    ]);
+    // Arrêt avant la fin : seuls les vers marqués comptent.
+    expect(cuesFromTaps(lines, [0, 2000], 3000)).toHaveLength(2);
   });
 });

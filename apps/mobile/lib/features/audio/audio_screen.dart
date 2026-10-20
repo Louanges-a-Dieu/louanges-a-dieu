@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/env.dart';
 import '../../app/state.dart';
@@ -13,6 +16,33 @@ import '../../l10n/generated/app_localizations.dart';
 import '../favorites/favorite_button.dart';
 import 'audio_downloads.dart';
 import 'audio_player.dart';
+
+/// Source d'une piste : le fichier téléchargé s'il existe (écoute sans
+/// Internet), sinon l'enregistrement en ligne.
+Future<AudioSourceSpec> audioSourceFor(
+  WidgetRef ref,
+  PublishedHymn hymn,
+  AudioTrack track,
+) async {
+  File? file;
+  try {
+    file = await ref.read(audioDownloadsProvider).file(track);
+  } on Object {
+    file =
+        null; // stockage illisible : l'enregistrement en ligne reste possible
+  }
+  return AudioSourceSpec(
+    id: track.id,
+    uri: file?.uri ?? ref.read(envProvider).audioUrl(track.storageKey),
+    title: '${hymn.numberLabel} — ${hymn.title}',
+    version: mediaTypeName(track.mediaType),
+  );
+}
+
+/// Vrai si le karaoké de [hymn] est possible : une piste synchronisée ligne
+/// par ligne.
+bool canKaraoke(Env env, PublishedHymn hymn) =>
+    canListen(env, hymn) && hymn.audio.any((t) => t.hasLineCues);
 
 /// Vrai si l'écoute de [hymn] est possible : au moins un enregistrement
 /// publié et un hébergement configuré. Sinon, aucun bouton « Écouter ».
@@ -34,7 +64,17 @@ class AudioScreen extends ConsumerWidget {
     final env = ref.watch(envProvider);
     final hymn = ref.watch(hymnProvider(hymnId));
     return Scaffold(
-      appBar: AppBar(actions: [FavoriteButton(hymnId: hymnId)]),
+      appBar: AppBar(
+        actions: [
+          if (hymn.value case final h? when canKaraoke(env, h))
+            IconButton(
+              tooltip: l10n.karaokeTooltip,
+              icon: const Icon(Icons.mic_none),
+              onPressed: () => context.pushReplacement('/karaoke/$hymnId'),
+            ),
+          FavoriteButton(hymnId: hymnId),
+        ],
+      ),
       body: hymn.when(
         loading: () => const SizedBox.shrink(),
         error: (e, _) => MessageState(title: '$e'),
@@ -84,7 +124,7 @@ class _ListeningState extends ConsumerState<_Listening> {
   void dispose() {
     _player.state.removeListener(_follow);
     // La lecture continue écran verrouillé, mais pas après avoir quitté l'écran.
-    _player.stop();
+    _player.release(this);
     super.dispose();
   }
 
@@ -92,17 +132,9 @@ class _ListeningState extends ConsumerState<_Listening> {
   /// sans Internet), sinon l'enregistrement en ligne.
   Future<void> _open() async {
     final track = _track;
-    final hymn = widget.hymn;
-    final file = await ref.read(audioDownloadsProvider).file(track);
+    final source = await audioSourceFor(ref, widget.hymn, track);
     if (!mounted || track.id != _track.id) return;
-    await _player.open(
-      AudioSourceSpec(
-        id: track.id,
-        uri: file?.uri ?? ref.read(envProvider).audioUrl(track.storageKey),
-        title: '${hymn.numberLabel} — ${hymn.title}',
-        version: mediaTypeName(track.mediaType),
-      ),
-    );
+    await _player.open(source, owner: this);
   }
 
   void _choose(AudioTrack track) {
@@ -178,7 +210,7 @@ class _ListeningState extends ConsumerState<_Listening> {
                   ),
                   if (hymn.audio.length > 1) ...[
                     const SizedBox(height: LadSpace.lg),
-                    _TrackChoice(
+                    TrackChoice(
                       tracks: hymn.audio,
                       selected: _track,
                       onSelected: _choose,
@@ -225,7 +257,7 @@ class _ListeningState extends ConsumerState<_Listening> {
         return Column(
           children: [
             Expanded(child: list),
-            _PlayerBar(
+            PlayerBar(
               state: state,
               track: _track,
               dragging: _dragging,
@@ -387,8 +419,9 @@ class _Banner extends StatelessWidget {
 
 /// En bas, dans la zone de sécurité : curseur de position, durées, ±10 s et
 /// lecture / pause.
-class _PlayerBar extends StatelessWidget {
-  const _PlayerBar({
+class PlayerBar extends StatelessWidget {
+  const PlayerBar({
+    super.key,
     required this.state,
     required this.track,
     required this.dragging,
@@ -623,8 +656,9 @@ class _PlaybackError extends StatelessWidget {
 
 /// Versions disponibles (mélodie, chorale, voix…), seulement s'il y en a
 /// plusieurs.
-class _TrackChoice extends StatelessWidget {
-  const _TrackChoice({
+class TrackChoice extends StatelessWidget {
+  const TrackChoice({
+    super.key,
     required this.tracks,
     required this.selected,
     required this.onSelected,

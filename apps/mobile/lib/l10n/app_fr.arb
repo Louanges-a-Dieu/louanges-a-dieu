@@ -351,6 +351,20 @@
   "audioErrorTitle": "Lecture impossible",
   "audioErrorMessage": "Vérifiez votre connexion Internet, puis réessayez.",
   "audioVersion": "Version",
+  "karaoke": "Karaoké",
+  "karaokeTooltip": "Chanter en karaoké",
+  "listenNormally": "Écoute normale",
+  "karaokeUnavailableTitle": "Karaoké indisponible",
+  "karaokeUnavailableMessage": "Ce cantique n’a pas encore d’enregistrement synchronisé ligne par ligne.",
+  "karaokeGoToLine": "Chanter à partir de ce vers",
+  "karaokeStartsIn": "Début dans {seconds} s",
+  "@karaokeStartsIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "audioDownload": "Télécharger pour écouter sans Internet",
   "audioDownloading": "Téléchargement…",
   "audioDownloadingPercent": "Téléchargement… {percent} %",

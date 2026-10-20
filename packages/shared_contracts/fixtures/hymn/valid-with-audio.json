@@ -88,6 +88,35 @@
       "storageKey": "cantiques/0038/chorale.m4a",
       "durationSeconds": null,
       "segments": []
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000503",
+      "mediaType": "accompaniment",
+      "storageKey": "cantiques/0038/accompagnement.mp3",
+      "durationSeconds": 40,
+      "segments": [
+        {
+          "sectionId": "00000000-0000-4000-8000-000000000101",
+          "lineIndex": 0,
+          "startMs": 2000,
+          "endMs": 9000,
+          "order": 0
+        },
+        {
+          "sectionId": "00000000-0000-4000-8000-000000000101",
+          "lineIndex": 1,
+          "startMs": 9000,
+          "endMs": 16000,
+          "order": 1
+        },
+        {
+          "sectionId": "00000000-0000-4000-8000-000000000102",
+          "lineIndex": 0,
+          "startMs": 16000,
+          "endMs": 24000,
+          "order": 2
+        }
+      ]
     }
   ]
 }

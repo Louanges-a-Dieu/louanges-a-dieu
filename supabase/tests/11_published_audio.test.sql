@@ -76,11 +76,11 @@ select is(
     'storageKey', 'cantiques/0001/melodie.mp3',
     'durationSeconds', 125.5,
     'segments', jsonb_build_array(
-      jsonb_build_object('sectionId', '5e110000-0000-4000-8000-000000000011',
+      jsonb_build_object('sectionId', '5e110000-0000-4000-8000-000000000011', 'lineIndex', null,
                          'startMs', 0, 'endMs', 30000, 'order', 0),
-      jsonb_build_object('sectionId', '5e110000-0000-4000-8000-000000000012',
+      jsonb_build_object('sectionId', '5e110000-0000-4000-8000-000000000012', 'lineIndex', null,
                          'startMs', 30000, 'endMs', 52000, 'order', 1),
-      jsonb_build_object('sectionId', null, 'startMs', 52000, 'endMs', 60000, 'order', 2)
+      jsonb_build_object('sectionId', null, 'lineIndex', null, 'startMs', 52000, 'endMs', 60000, 'order', 2)
     )
   ),
   'piste publiée : clé relative, durée, segments rattachés aux sections du cantique'
@@ -144,7 +144,37 @@ select throws_ok(
        jsonb_build_object('section_id', null, 'start_ms', 5000, 'end_ms', 1000))) $$,
   '23514', null, 'un passage qui finit avant de commencer est refusé'
 );
+
+-- Karaoké (migration 0021) : passages ligne par ligne.
+select is(
+  public.set_audio_segments('ad110000-0000-4000-8000-000000000001', jsonb_build_array(
+    jsonb_build_object('section_id', '5e110000-0000-4000-8000-000000000011', 'line_index', 0,
+                       'start_ms', 0, 'end_ms', 4000),
+    jsonb_build_object('section_id', '5e110000-0000-4000-8000-000000000012', 'line_index', 0,
+                       'start_ms', 4000, 'end_ms', 8000)
+  )),
+  2,
+  'passages ligne par ligne enregistrés'
+);
+select throws_ok(
+  $$ select public.set_audio_segments('ad110000-0000-4000-8000-000000000001', jsonb_build_array(
+       jsonb_build_object('section_id', '5e110000-0000-4000-8000-000000000011', 'line_index', 1,
+                          'start_ms', 0, 'end_ms', 1000))) $$,
+  '23514', null, 'une ligne qui n''existe pas dans la section est refusée'
+);
+select throws_ok(
+  $$ select public.set_audio_segments('ad110000-0000-4000-8000-000000000001', jsonb_build_array(
+       jsonb_build_object('section_id', null, 'line_index', 0, 'start_ms', 0, 'end_ms', 1000))) $$,
+  '23514', null, 'une ligne sans section est refusée'
+);
 reset role;
+
+select is(
+  private.hymn_payload('a1100000-0000-4000-8000-000000000001') -> 'audio' -> 0 -> 'segments' -> 1,
+  jsonb_build_object('sectionId', '5e110000-0000-4000-8000-000000000012', 'lineIndex', 0,
+                     'startMs', 4000, 'endMs', 8000, 'order', 1),
+  'le contenu publié porte la ligne de chaque passage'
+);
 
 set local role anon;
 select throws_ok(

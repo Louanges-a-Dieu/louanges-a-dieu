@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/account/account_screen.dart';
 import '../features/audio/audio_screen.dart';
+import '../features/audio/karaoke_screen.dart';
 import '../features/favorites/favorites_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/hymn/hymn_screen.dart';
@@ -121,6 +122,12 @@ final routerProvider = Provider<GoRouter>(
         path: '/ecoute/:id',
         parentNavigatorKey: _rootKey,
         builder: (_, state) => AudioScreen(hymnId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/karaoke/:id',
+        parentNavigatorKey: _rootKey,
+        builder: (_, state) =>
+            KaraokeScreen(hymnId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/lecture/:id',

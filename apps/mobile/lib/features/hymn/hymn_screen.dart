@@ -191,6 +191,15 @@ class _Actions extends ConsumerWidget {
               onPressed: () => context.push('/ecoute/${hymn.id}'),
             ),
           ),
+        if (canKaraoke(ref.watch(envProvider), hymn))
+          action(
+            l10n.karaokeTooltip,
+            OutlinedButton.icon(
+              icon: const Icon(Icons.mic_none),
+              label: Text(l10n.karaoke),
+              onPressed: () => context.push('/karaoke/${hymn.id}'),
+            ),
+          ),
         action(
           l10n.project,
           OutlinedButton.icon(
