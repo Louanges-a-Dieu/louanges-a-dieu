@@ -351,6 +351,34 @@
   "audioErrorTitle": "Lecture impossible",
   "audioErrorMessage": "Vérifiez votre connexion Internet, puis réessayez.",
   "audioVersion": "Version",
+  "audioDownload": "Télécharger pour écouter sans Internet",
+  "audioDownloading": "Téléchargement…",
+  "audioDownloadingPercent": "Téléchargement… {percent} %",
+  "@audioDownloadingPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "audioDownloadFailed": "Téléchargement impossible. Vérifiez votre connexion Internet, puis réessayez.",
+  "audioOnDevice": "Sur cet appareil : écoute sans Internet.",
+  "audioRemoveDownload": "Supprimer",
+  "audioDownloadsTitle": "Enregistrements téléchargés",
+  "audioDownloadsNone": "Aucun enregistrement téléchargé. Sur l’écran d’écoute, « Télécharger » permet d’écouter un cantique sans Internet.",
+  "audioDownloadsUsage": "{count, plural, =1{1 enregistrement} other{{count} enregistrements}} sur cet appareil ({megabytes} Mo).",
+  "@audioDownloadsUsage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "megabytes": {
+        "type": "String"
+      }
+    }
+  },
+  "audioDownloadsDeleteAll": "Supprimer les enregistrements",
+  "audioDownloadsDeleteConfirm": "Les enregistrements téléchargés seront retirés de cet appareil. Vous pourrez les télécharger à nouveau.",
   "goToSection": "Écouter à partir de : {name}",
   "@goToSection": {
     "placeholders": {

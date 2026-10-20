@@ -16,8 +16,10 @@ dependencies:
     sdk: flutter
   flutter_riverpod: ^3.4.3
   go_router: ^18.1.0
+  http: ^1.6.0
   intl: ^0.20.3
   just_audio: ^0.10.6
+  just_audio_background: ^0.0.1-beta.17
   path: ^1.9.1
   path_provider: ^2.1.6
   qr_flutter: ^4.1.0

@@ -4,6 +4,7 @@ import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 
 /// Étape du lecteur, telle que l'écran la présente.
 enum PlaybackStatus { idle, loading, ready, completed, error }
@@ -38,26 +39,61 @@ final class PlaybackState {
   );
 }
 
-/// Lecteur d'un enregistrement de cantique (lecture en flux, depuis Internet).
-/// Abstrait pour que les tests d'écran n'aient besoin ni de réseau ni de
-/// greffon natif.
+/// Enregistrement à lire : adresse web, ou fichier téléchargé sur l'appareil
+/// (`file://`), et ce qu'affichent la notification et l'écran verrouillé.
+@immutable
+final class AudioSourceSpec {
+  const AudioSourceSpec({
+    required this.id,
+    required this.uri,
+    required this.title,
+    required this.version,
+  });
+
+  final String id;
+  final Uri uri;
+
+  /// « 6 — Oui, certains chantent ».
+  final String title;
+
+  /// « Mélodie », « Chorale »…
+  final String version;
+}
+
+/// Lecteur des enregistrements de cantiques. Un seul pour toute l'app : la
+/// lecture continue app en arrière-plan ou écran verrouillé, avec les
+/// commandes du système (notification, écran verrouillé, casque). Abstrait
+/// pour que les tests d'écran n'aient besoin ni de réseau ni de greffon.
 abstract interface class HymnAudioPlayer {
   ValueListenable<PlaybackState> get state;
 
-  /// Prépare [url] sans lancer la lecture.
-  Future<void> open(Uri url);
+  /// Prépare [source] sans lancer la lecture.
+  Future<void> open(AudioSourceSpec source);
   Future<void> play();
   Future<void> pause();
   Future<void> seek(Duration position);
-  Future<void> dispose();
+
+  /// Arrête la lecture et libère l'enregistrement (en quittant l'écran).
+  Future<void> stop();
 }
 
-/// Crée un lecteur par écran d'écoute (libéré en quittant l'écran).
-final audioPlayerFactoryProvider = Provider<HymnAudioPlayer Function()>(
-  (ref) => JustAudioHymnPlayer.new,
+/// Lecteur unique de l'app.
+final audioPlayerProvider = Provider<HymnAudioPlayer>((ref) {
+  final player = JustAudioHymnPlayer();
+  ref.onDispose(player.dispose);
+  return player;
+});
+
+/// À appeler une fois au démarrage, avant tout lecteur : service de lecture
+/// en arrière-plan et canal de notification Android.
+Future<void> initBackgroundAudio() => JustAudioBackground.init(
+  androidNotificationChannelId: 'org.louangesadieu.app.audio',
+  androidNotificationChannelName: 'Écoute des cantiques',
+  androidNotificationOngoing: true,
 );
 
-/// Implémentation `just_audio` : iOS, Android et navigateur.
+/// Implémentation `just_audio` (+ `just_audio_background`) : iOS, Android et
+/// navigateur.
 final class JustAudioHymnPlayer implements HymnAudioPlayer {
   JustAudioHymnPlayer() {
     _subscriptions = [
@@ -75,13 +111,13 @@ final class JustAudioHymnPlayer implements HymnAudioPlayer {
   final _player = AudioPlayer();
   final _state = ValueNotifier(const PlaybackState());
   late final List<StreamSubscription<Object?>> _subscriptions;
-  static Future<void>? _session;
+  Future<void>? _session;
 
   @override
   ValueListenable<PlaybackState> get state => _state;
 
   @override
-  Future<void> open(Uri url) async {
+  Future<void> open(AudioSourceSpec source) async {
     // Catégorie « musique » : l'écoute reste audible quand le téléphone est
     // en mode silencieux, comme pour toute app de musique.
     await (_session ??= AudioSession.instance.then(
@@ -89,7 +125,17 @@ final class JustAudioHymnPlayer implements HymnAudioPlayer {
     ));
     _state.value = const PlaybackState(status: PlaybackStatus.loading);
     try {
-      final duration = await _player.setUrl(url.toString());
+      final duration = await _player.setAudioSource(
+        AudioSource.uri(
+          source.uri,
+          tag: MediaItem(
+            id: source.id,
+            title: source.title,
+            artist: source.version,
+            album: 'Louanges à Dieu',
+          ),
+        ),
+      );
       _state.value = _state.value.copyWith(
         status: PlaybackStatus.ready,
         duration: duration,
@@ -134,6 +180,11 @@ final class JustAudioHymnPlayer implements HymnAudioPlayer {
   Future<void> seek(Duration position) => _player.seek(position);
 
   @override
+  Future<void> stop() async {
+    await _player.stop();
+    _state.value = const PlaybackState();
+  }
+
   Future<void> dispose() async {
     for (final s in _subscriptions) {
       await s.cancel();

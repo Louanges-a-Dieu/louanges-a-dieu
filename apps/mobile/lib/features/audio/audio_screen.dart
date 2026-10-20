@@ -11,6 +11,7 @@ import '../../core/design_system/tokens.g.dart';
 import '../../core/preferences/preferences.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../favorites/favorite_button.dart';
+import 'audio_downloads.dart';
 import 'audio_player.dart';
 
 /// Vrai si l'écoute de [hymn] est possible : au moins un enregistrement
@@ -63,7 +64,7 @@ class _Listening extends ConsumerStatefulWidget {
 }
 
 class _ListeningState extends ConsumerState<_Listening> {
-  late final HymnAudioPlayer _player = ref.read(audioPlayerFactoryProvider)();
+  late final HymnAudioPlayer _player = ref.read(audioPlayerProvider);
   late AudioTrack _track = widget.hymn.audio.first;
 
   /// Position pendant que l'on fait glisser le curseur.
@@ -82,12 +83,27 @@ class _ListeningState extends ConsumerState<_Listening> {
   @override
   void dispose() {
     _player.state.removeListener(_follow);
-    _player.dispose();
+    // La lecture continue écran verrouillé, mais pas après avoir quitté l'écran.
+    _player.stop();
     super.dispose();
   }
 
-  void _open() =>
-      _player.open(ref.read(envProvider).audioUrl(_track.storageKey));
+  /// Prépare la piste choisie : le fichier téléchargé s'il existe (écoute
+  /// sans Internet), sinon l'enregistrement en ligne.
+  Future<void> _open() async {
+    final track = _track;
+    final hymn = widget.hymn;
+    final file = await ref.read(audioDownloadsProvider).file(track);
+    if (!mounted || track.id != _track.id) return;
+    await _player.open(
+      AudioSourceSpec(
+        id: track.id,
+        uri: file?.uri ?? ref.read(envProvider).audioUrl(track.storageKey),
+        title: '${hymn.numberLabel} — ${hymn.title}',
+        version: mediaTypeName(track.mediaType),
+      ),
+    );
+  }
 
   void _choose(AudioTrack track) {
     if (track.id == _track.id) return;
@@ -155,12 +171,10 @@ class _ListeningState extends ConsumerState<_Listening> {
                 children: [
                   _Banner(hymn: hymn, track: _track),
                   const SizedBox(height: LadSpace.md),
-                  Text(
-                    l10n.audioNeedsNetwork,
-                    style: LadTheme.textStyle(
-                      LadTypeScale.caption,
-                      p.textSecondary,
-                    ),
+                  _Offline(
+                    key: ValueKey(_track.id),
+                    track: _track,
+                    onDeleted: _open,
                   ),
                   if (hymn.audio.length > 1) ...[
                     const SizedBox(height: LadSpace.lg),
@@ -233,6 +247,88 @@ class _ListeningState extends ConsumerState<_Listening> {
             ),
           ],
         );
+      },
+    );
+  }
+}
+
+/// Écoute hors connexion de la version choisie : téléchargement (avec son
+/// avancement), puis « sur cet appareil » et suppression. Dans un navigateur,
+/// seule la mention « demande une connexion Internet » reste.
+class _Offline extends ConsumerWidget {
+  const _Offline({super.key, required this.track, required this.onDeleted});
+
+  final AudioTrack track;
+
+  /// Après suppression du fichier : revenir à l'enregistrement en ligne.
+  final VoidCallback onDeleted;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final p = context.lad;
+    final downloads = ref.watch(audioDownloadsProvider);
+    final caption = LadTheme.textStyle(LadTypeScale.caption, p.textSecondary);
+    if (!downloads.supported) {
+      return Text(l10n.audioNeedsNetwork, style: caption);
+    }
+    return ValueListenableBuilder(
+      valueListenable: downloads.watch(track),
+      builder: (context, state, _) => switch (state.status) {
+        DownloadStatus.unknown => const SizedBox(height: LadSpace.xxl),
+        DownloadStatus.ready => Row(
+          children: [
+            Icon(Icons.offline_pin_outlined, color: p.gold, size: 20),
+            const SizedBox(width: LadSpace.sm),
+            Expanded(child: Text(l10n.audioOnDevice, style: caption)),
+            TextButton(
+              onPressed: () async {
+                await downloads.delete(track);
+                onDeleted();
+              },
+              child: Text(l10n.audioRemoveDownload),
+            ),
+          ],
+        ),
+        DownloadStatus.downloading => Semantics(
+          liveRegion: true,
+          label: l10n.audioDownloading,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                state.progress == null
+                    ? l10n.audioDownloading
+                    : l10n.audioDownloadingPercent(
+                        (state.progress! * 100).floor(),
+                      ),
+                style: caption,
+              ),
+              const SizedBox(height: LadSpace.xs),
+              LinearProgressIndicator(value: state.progress),
+            ],
+          ),
+        ),
+        DownloadStatus.absent || DownloadStatus.failed => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              state.status == DownloadStatus.failed
+                  ? l10n.audioDownloadFailed
+                  : l10n.audioNeedsNetwork,
+              style: caption,
+            ),
+            const SizedBox(height: LadSpace.xs),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.download_outlined),
+              label: Text(l10n.audioDownload),
+              onPressed: () => downloads.download(
+                track,
+                ref.read(envProvider).audioUrl(track.storageKey),
+              ),
+            ),
+          ],
+        ),
       },
     );
   }

@@ -22,6 +22,18 @@ de production. Noter pour chaque appareil : modèle, version du système, versio
 | T-009 | Corriger un cantique publié dans le back-office | Les apps gardent l'ancienne version jusqu'à la nouvelle publication | | | |
 | T-010 | Ouvrir des cantiques sans auteur ni thème | Aucun champ vide ni « inconnu » affiché | | | |
 
+Écoute (dès qu'un enregistrement est publié et `AUDIO_BASE_URL` configurée) :
+
+| Test | Scénario | Attendu | iPhone | Android | Tablette |
+|---|---|---|---|---|---|
+| A-1 | Écouter, puis verrouiller l'écran | La lecture continue ; titre, version et commandes sur l'écran verrouillé | | | |
+| A-2 | App en arrière-plan (autre app ouverte) | La lecture continue ; notification avec lecture/pause (Android) | | | |
+| A-3 | Bouton du casque / des écouteurs | Lecture et pause | | | |
+| A-4 | Téléphone en mode silencieux | L'enregistrement reste audible | | | |
+| A-5 | Télécharger, passer en mode avion, écouter | Lecture complète sans réseau | | | |
+| A-6 | Plus → Hors connexion → Supprimer les enregistrements | Place libérée ; « Télécharger » réapparaît | | | |
+| A-7 | Quitter l'écran d'écoute | La lecture s'arrête, la notification disparaît | | | |
+
 Accessibilité (5.10) : VoiceOver / TalkBack sur l'accueil, la recherche, une fiche (numéro
 « 37 bis » lu correctement, refrain annoncé), le mode lecture ; texte système agrandi au maximum.
 

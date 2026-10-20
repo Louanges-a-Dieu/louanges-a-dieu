@@ -15,6 +15,7 @@ import '../../core/design_system/tokens.g.dart';
 import '../../core/preferences/preferences.dart';
 import '../../core/sync/catalog_sync.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../audio/audio_downloads.dart';
 
 /// Onglet « Plus » : réglages, état hors connexion, à propos, licences.
 class MoreScreen extends ConsumerWidget {
@@ -257,9 +258,94 @@ class _OfflineScreenState extends ConsumerState<OfflineScreen> {
                     ],
                   ),
                 ),
+                if (ref.watch(envProvider).hasAudio &&
+                    ref.watch(audioDownloadsProvider).supported) ...[
+                  const SizedBox(height: LadSpace.lg),
+                  const _AudioDownloadsPanel(),
+                ],
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Enregistrements téléchargés pour l'écoute sans Internet : nombre, place
+/// occupée, suppression.
+class _AudioDownloadsPanel extends ConsumerWidget {
+  const _AudioDownloadsPanel();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final p = context.lad;
+    final usage = ref.watch(audioDownloadsUsageProvider).value;
+    final megabytes = NumberFormat(
+      '0.0',
+      'fr',
+    ).format((usage?.bytes ?? 0) / (1024 * 1024));
+    return Container(
+      padding: const EdgeInsets.all(LadSpace.lg + 4),
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: BorderRadius.circular(LadRadius.lg),
+        border: Border.all(color: p.hairline, width: LadStroke.hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.headphones_outlined, color: p.gold),
+              const SizedBox(width: LadSpace.sm),
+              Expanded(
+                child: Text(
+                  l10n.audioDownloadsTitle,
+                  style: LadTheme.textStyle(LadTypeScale.cardTitle, p.text),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: LadSpace.md),
+          Text(
+            usage == null
+                ? '—'
+                : usage.count == 0
+                ? l10n.audioDownloadsNone
+                : l10n.audioDownloadsUsage(usage.count, megabytes),
+            style: LadTheme.textStyle(LadTypeScale.body, p.textSecondary),
+          ),
+          if ((usage?.count ?? 0) > 0) ...[
+            const SizedBox(height: LadSpace.md),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.delete_outline),
+              label: Text(l10n.audioDownloadsDeleteAll),
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text(l10n.audioDownloadsDeleteAll),
+                    content: Text(l10n.audioDownloadsDeleteConfirm),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: Text(l10n.cancel),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: Text(l10n.audioRemoveDownload),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed != true) return;
+                await ref.read(audioDownloadsProvider).deleteAll();
+                ref.invalidate(audioDownloadsUsageProvider);
+              },
+            ),
+          ],
         ],
       ),
     );

@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:louanges_a_dieu/core/catalog/published_hymn.dart';
+import 'package:louanges_a_dieu/features/audio/audio_downloads.dart';
 import 'package:louanges_a_dieu/features/audio/audio_player.dart';
 
 import '../support/app_harness.dart';
@@ -10,8 +14,9 @@ import 'faithful_journey_test.dart' show idle, search;
 /// Lecteur factice : enregistre les ordres reçus, sans réseau ni greffon.
 final class FakePlayer implements HymnAudioPlayer {
   final opened = <Uri>[];
+  final titles = <String>[];
   final seeks = <Duration>[];
-  var disposed = false;
+  var stopped = false;
   var failNextOpen = false;
   final _state = ValueNotifier(const PlaybackState());
 
@@ -21,8 +26,9 @@ final class FakePlayer implements HymnAudioPlayer {
   void emit(PlaybackState s) => _state.value = s;
 
   @override
-  Future<void> open(Uri url) async {
-    opened.add(url);
+  Future<void> open(AudioSourceSpec source) async {
+    opened.add(source.uri);
+    titles.add('${source.title} · ${source.version}');
     _state.value = failNextOpen
         ? const PlaybackState(status: PlaybackStatus.error)
         : const PlaybackState(
@@ -47,7 +53,66 @@ final class FakePlayer implements HymnAudioPlayer {
   }
 
   @override
-  Future<void> dispose() async => disposed = true;
+  Future<void> stop() async {
+    stopped = true;
+    _state.value = const PlaybackState();
+  }
+}
+
+/// Téléchargements factices : « fichiers » tenus en mémoire.
+final class FakeDownloads implements AudioDownloads {
+  final files = <String, File>{};
+  final _states = <String, ValueNotifier<DownloadState>>{};
+
+  @override
+  bool get supported => true;
+
+  @override
+  Future<Directory> Function() get root => throw UnimplementedError();
+
+  @override
+  Future<File?> file(AudioTrack track) async => files[track.id];
+
+  @override
+  ValueListenable<DownloadState> watch(AudioTrack track) => _states.putIfAbsent(
+    track.id,
+    () => ValueNotifier(
+      DownloadState(
+        files.containsKey(track.id)
+            ? DownloadStatus.ready
+            : DownloadStatus.absent,
+      ),
+    ),
+  );
+
+  void _set(AudioTrack track, DownloadStatus status) =>
+      (watch(track) as ValueNotifier<DownloadState>).value = DownloadState(
+        status,
+      );
+
+  @override
+  Future<void> download(AudioTrack track, Uri url) async {
+    files[track.id] = File('/appareil/${track.id}.mp3');
+    _set(track, DownloadStatus.ready);
+  }
+
+  @override
+  Future<void> delete(AudioTrack track) async {
+    files.remove(track.id);
+    _set(track, DownloadStatus.absent);
+  }
+
+  @override
+  Future<({int count, int bytes})> usage() async =>
+      (count: files.length, bytes: files.length * 3 * 1024 * 1024);
+
+  @override
+  Future<void> deleteAll() async {
+    files.clear();
+    for (final s in _states.values) {
+      s.value = const DownloadState(DownloadStatus.absent);
+    }
+  }
 }
 
 const _base = 'https://media.test/lad-audio';
@@ -94,7 +159,15 @@ Future<void> openHymn(WidgetTester tester, String query, String title) async {
 
 void main() {
   late FakePlayer player;
-  setUp(() => player = FakePlayer());
+  late FakeDownloads downloads;
+  setUp(() {
+    player = FakePlayer();
+    downloads = FakeDownloads();
+  });
+  final fakes = [
+    audioPlayerProvider.overrideWith((ref) => player),
+    audioDownloadsProvider.overrideWith((ref) => downloads),
+  ];
 
   testApp('pas d’hébergement configuré : aucun bouton « Écouter »', (
     tester,
@@ -174,14 +247,17 @@ void main() {
         '$_base/cantiques/0002/chorale.m4a',
       );
 
-      // En quittant l'écran, le lecteur est libéré (la lecture s'arrête).
+      // Notification et écran verrouillé : numéro, titre et version.
+      expect(player.titles.first, '2 — L’Éternel est mon berger · Mélodie');
+
+      // En quittant l'écran, la lecture s'arrête.
       await tester.tap(find.byType(BackButton));
       await idle(tester);
-      expect(player.disposed, isTrue);
+      expect(player.stopped, isTrue);
     },
     hymns: hymnsWithAudio(),
     env: _audioEnv,
-    overrides: [audioPlayerFactoryProvider.overrideWithValue(() => player)],
+    overrides: fakes,
   );
 
   testApp(
@@ -201,6 +277,87 @@ void main() {
     },
     hymns: hymnsWithAudio(),
     env: _audioEnv,
-    overrides: [audioPlayerFactoryProvider.overrideWithValue(() => player)],
+    overrides: fakes,
+  );
+
+  testApp(
+    'hors connexion : télécharger, écouter le fichier, supprimer',
+    (tester, _) async {
+      await openHymn(tester, '2', 'L’Éternel est mon berger');
+      await tester.tap(find.text('Écouter'));
+      await idle(tester);
+      expect(player.opened.last.scheme, 'https');
+
+      await tester.tap(find.text('Télécharger pour écouter sans Internet'));
+      await idle(tester);
+      expect(downloads.files, contains('00000000-0000-4000-8000-0000000a0001'));
+      expect(
+        find.text('Sur cet appareil : écoute sans Internet.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('L’écoute demande une connexion Internet.'),
+        findsNothing,
+      );
+
+      // Écoute suivante : le fichier de l'appareil, sans réseau.
+      await tester.tap(find.byType(BackButton));
+      await idle(tester);
+      await tester.tap(find.text('Écouter'));
+      await idle(tester);
+      expect(
+        player.opened.last.toString(),
+        'file:///appareil/00000000-0000-4000-8000-0000000a0001.mp3',
+      );
+
+      // Supprimer : retour à l'enregistrement en ligne.
+      await tester.tap(find.text('Supprimer'));
+      await idle(tester);
+      expect(downloads.files, isEmpty);
+      expect(player.opened.last.scheme, 'https');
+      expect(
+        find.text('Télécharger pour écouter sans Internet'),
+        findsOneWidget,
+      );
+    },
+    hymns: hymnsWithAudio(),
+    env: _audioEnv,
+    overrides: fakes,
+  );
+
+  testApp(
+    'Plus → Hors connexion : enregistrements téléchargés, suppression',
+    (tester, _) async {
+      const track = AudioTrack(
+        id: '00000000-0000-4000-8000-0000000a0001',
+        mediaType: MediaType.melody,
+        storageKey: 'cantiques/0002/melodie.mp3',
+        duration: null,
+        segments: [],
+      );
+      await downloads.download(track, Uri.parse('$_base/x.mp3'));
+      await tester.tap(find.text('Plus').last);
+      await idle(tester);
+      await tester.tap(find.text('Hors connexion'));
+      await idle(tester);
+      await tester.ensureVisible(find.text('Supprimer les enregistrements'));
+      await idle(tester);
+      expect(
+        find.text('1 enregistrement sur cet appareil (3,0 Mo).'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Supprimer les enregistrements'));
+      await idle(tester);
+      await tester.tap(find.widgetWithText(FilledButton, 'Supprimer'));
+      await idle(tester);
+      expect(downloads.files, isEmpty);
+      expect(
+        find.textContaining('Aucun enregistrement téléchargé'),
+        findsOneWidget,
+      );
+    },
+    hymns: hymnsWithAudio(),
+    env: _audioEnv,
+    overrides: fakes,
   );
 }

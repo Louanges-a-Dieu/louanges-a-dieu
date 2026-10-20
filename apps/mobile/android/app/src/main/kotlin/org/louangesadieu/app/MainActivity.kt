@@ -1,5 +1,6 @@
 package org.louangesadieu.app
 
-import io.flutter.embedding.android.FlutterActivity
+import com.ryanheise.audioservice.AudioServiceActivity
 
-class MainActivity : FlutterActivity()
+// Activité compatible avec le service de lecture en arrière-plan (audio_service).
+class MainActivity : AudioServiceActivity()

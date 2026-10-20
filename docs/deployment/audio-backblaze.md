@@ -84,8 +84,14 @@ Ajouter l'adresse à la configuration de chaque environnement de l'app
 
 HTTPS obligatoire (l'app refuse de démarrer sinon). Reconstruire l'app.
 
-## Limites actuelles
+## Écoute dans l'app
 
-- Lecture en flux : il faut Internet ; pas d'écoute hors connexion.
-- La lecture s'arrête en quittant l'écran (pas de lecture en arrière-plan, écran verrouillé).
-- Le dépôt des fichiers se fait dans le tableau de bord Backblaze (pas depuis le back-office).
+- **Arrière-plan** : la lecture continue écran verrouillé ou app en arrière-plan, avec titre,
+  version et commandes sur l'écran verrouillé, dans la notification (Android) et via le casque
+  (`just_audio_background`). Elle s'arrête quand on quitte l'écran d'écoute.
+- **Hors connexion** : « Télécharger pour écouter sans Internet » enregistre le fichier sur
+  l'appareil (dossier de l'app, jamais sauvegardé ailleurs) ; l'écoute utilise alors ce fichier.
+  Plus → Hors connexion indique la place occupée et permet de tout supprimer. Un fichier
+  remplacé sur Backblaze avec un nouveau chemin est retéléchargé à la demande. Dans un
+  navigateur, l'écoute reste en ligne uniquement.
+- À vérifier sur appareils réels : `docs/qa/recette.md` (tests A-1 à A-7).

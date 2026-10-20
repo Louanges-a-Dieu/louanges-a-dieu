@@ -6,10 +6,13 @@ import 'app/app.dart';
 import 'app/env.dart';
 import 'app/licenses.dart';
 import 'core/observability/crash_reporting.dart';
+import 'features/audio/audio_player.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   registerFontLicenses();
+  // Écoute écran verrouillé / app en arrière-plan, avant tout lecteur.
+  await initBackgroundAudio();
   final env = Env.fromDefines();
   if (env.hasBackend) {
     // Seule la clé publishable est fournie à l'app (ADR-011).
