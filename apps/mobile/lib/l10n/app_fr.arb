@@ -358,6 +358,14 @@
   "karaokeUnavailableMessage": "Ce cantique n’a pas encore d’enregistrement synchronisé ligne par ligne.",
   "karaokeGoToLine": "Chanter à partir de ce vers",
   "karaokeStartsIn": "Début dans {seconds} s",
+  "karaokeResumesIn": "Reprise dans {seconds} s",
+  "@karaokeResumesIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "@karaokeStartsIn": {
     "placeholders": {
       "seconds": {

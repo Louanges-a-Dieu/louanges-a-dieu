@@ -71,7 +71,7 @@ retire les passages.
 **Karaoké** (facultatif) : *Karaoké : synchroniser vers par vers* sur l'enregistrement
 (il faut `AUDIO_BASE_URL` pour le back-office). « Démarrer », puis la touche **Espace** au tout
 début de chaque vers surligné (les vers suivent l'ordre chanté, refrain après chaque couplet) ;
-**S** si l'enregistrement ne chante pas ce vers ; **Retour arrière** pour annuler le dernier
+**P** dès que le chant s'arrête avant un passage instrumental (le vers s'éteint ; l'app affiche « Reprise dans N s ») ; **S** si l'enregistrement ne chante pas ce vers ; **Retour arrière** pour annuler le dernier
 appui ; **Entrée** à la fin. Vérifier les temps affichés, puis « Enregistrer la
 synchronisation ». L'app propose alors le **Karaoké** : le vers chanté en grand, rempli au rythme
 du chant, avec le précédent et les suivants ; une version « Accompagnement » synchronisée est

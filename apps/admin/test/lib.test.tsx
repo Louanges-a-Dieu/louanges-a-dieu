@@ -11,7 +11,7 @@ import {
   parseSegments,
   syncLines,
 } from '../src/lib/audio';
-import { cuesFromTaps } from '../src/lib/karaoke';
+import { canPause, cuesFromTaps, replay, type SyncEvent } from '../src/lib/karaoke';
 import { normalizeSectionText, sectionName, themeSlug } from '../src/lib/text';
 import { transitions } from '../src/lib/transitions';
 import { OptionalInt, OptionalText, ReturnPath } from '../src/lib/validation';
@@ -241,5 +241,26 @@ describe('karaoké : synchronisation vers par vers', () => {
     ]);
     // Arrêt avant la fin : seuls les vers marqués comptent.
     expect(cuesFromTaps(lines, [0, 2000], 3000)).toHaveLength(2);
+  });
+
+  it('pause instrumentale : le vers s’arrête à la pause, pas au vers suivant', () => {
+    const lines = syncLines(sections);
+    const events: SyncEvent[] = [
+      { kind: 'line', at: 1000 },
+      { kind: 'line', at: 4000 },
+      { kind: 'pause', at: 7000 },
+      { kind: 'line', at: 20000 },
+    ];
+    expect(canPause(events)).toBe(true);
+    expect(canPause(events.slice(0, 3))).toBe(false); // déjà en pause
+    expect(canPause([{ kind: 'line', at: null }])).toBe(false); // vers non chanté
+    const { starts, ends } = replay(events);
+    expect(starts).toEqual([1000, 4000, 20000]);
+    expect(ends).toEqual([null, 7000, null]);
+    expect(cuesFromTaps(lines, starts, 25000, ends)).toEqual([
+      { section_id: 'c1', line_index: 0, start_ms: 1000, end_ms: 4000 },
+      { section_id: 'c1', line_index: 1, start_ms: 4000, end_ms: 7000 },
+      { section_id: 'r', line_index: 0, start_ms: 20000, end_ms: 25000 },
+    ]);
   });
 });

@@ -174,6 +174,8 @@ List<Map<String, Object?>> hymnsWithKaraoke() {
     (ids[2], 0),
     (ids[2], 1),
   ]) {
+    // Pause instrumentale de 10 s avant le couplet 2.
+    if (section == ids[2] && line == 0) t += 10000;
     cues.add({
       'sectionId': section,
       'lineIndex': line,
@@ -187,7 +189,7 @@ List<Map<String, Object?>> hymnsWithKaraoke() {
     'id': '00000000-0000-4000-8000-0000000a0003',
     'mediaType': 'accompaniment',
     'storageKey': 'cantiques/0002/accompagnement.mp3',
-    'durationSeconds': 30,
+    'durationSeconds': 40,
     'segments': cues,
   });
   return hymns;
@@ -455,6 +457,19 @@ void main() {
       await tester.tap(find.text('Chantons Son Nom.'));
       await idle(tester);
       expect(player.seeks.last, const Duration(seconds: 14));
+
+      // Pause instrumentale (18 s → 28 s) : le dernier vers s'éteint, compte à
+      // rebours jusqu'au couplet 2.
+      await player.seek(const Duration(seconds: 21));
+      await idle(tester);
+      expect(find.text('Reprise dans 7 s'), findsOneWidget);
+      expect(find.text('Il me fait reposer'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is Semantics && w.properties.selected == true,
+        ),
+        findsNothing,
+      );
 
       // Écoute normale : le nouvel écran garde le lecteur.
       await tester.tap(find.byTooltip('Écoute normale'));

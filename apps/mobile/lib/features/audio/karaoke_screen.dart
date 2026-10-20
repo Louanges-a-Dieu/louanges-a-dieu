@@ -306,9 +306,31 @@ class _Lyrics extends StatelessWidget {
       final i = upcoming;
       final section = lines[i].section;
       final previousSection = i > 0 ? lines[i - 1].section : null;
+      // Pause instrumentale : compte à rebours jusqu'à la reprise du chant.
+      final rest = current == null ? lines[i].start - position : Duration.zero;
       children.addAll([
         if (i > 0) line(i - 1, size: small, color: dim),
         const SizedBox(height: LadSpace.md),
+        if (rest >= const Duration(seconds: 1)) ...[
+          Semantics(
+            liveRegion: true,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.music_note, color: p.goldText, size: 20),
+                const SizedBox(width: LadSpace.xs),
+                Text(
+                  l10n.karaokeResumesIn((rest.inMilliseconds / 1000).ceil()),
+                  style: LadTheme.textStyle(
+                    LadTypeScale.label,
+                    p.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: LadSpace.md),
+        ],
         if (section.id != previousSection?.id || i == 0)
           Overline(
             sectionName(section.type, section.number),
@@ -317,6 +339,7 @@ class _Lyrics extends StatelessWidget {
         _SungLine(
           text: lines[i].text,
           size: big,
+          sung: current != null,
           // Entre deux vers : le prochain s'affiche, pas encore rempli.
           progress: current == null
               ? 0
@@ -355,12 +378,16 @@ class _SungLine extends StatelessWidget {
   const _SungLine({
     required this.text,
     required this.size,
+    required this.sung,
     required this.progress,
     required this.onTap,
   });
 
   final String text;
   final double size;
+
+  /// Faux pendant une pause : le vers est annoncé, pas encore chanté.
+  final bool sung;
   final double progress;
   final VoidCallback onTap;
 
@@ -374,7 +401,7 @@ class _SungLine extends StatelessWidget {
     final still = MediaQuery.disableAnimationsOf(context);
     final scaler = MediaQuery.textScalerOf(context);
     return Semantics(
-      selected: true,
+      selected: sung,
       label: text,
       excludeSemantics: true,
       child: GestureDetector(
@@ -385,7 +412,7 @@ class _SungLine extends StatelessWidget {
               ? Text(
                   text,
                   textAlign: TextAlign.center,
-                  style: style.copyWith(color: p.goldLight),
+                  style: style.copyWith(color: sung ? p.goldLight : p.text),
                 )
               : LayoutBuilder(
                   builder: (context, constraints) {

@@ -50,3 +50,9 @@
   background: var(--lad-color-surface-warm);
   font-weight: 600;
 }
+
+.pause {
+  font-family: var(--lad-font-ui);
+  font-size: 0.8rem;
+  color: var(--lad-color-gold-text);
+}
