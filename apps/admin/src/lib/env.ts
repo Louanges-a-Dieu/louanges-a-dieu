@@ -11,3 +11,13 @@ export function supabaseConfig() {
   }
   return { url, publishableKey };
 }
+
+/** Origine HTTPS de l'hébergement des enregistrements (AUDIO_BASE_URL), si configurée. */
+export function audioOrigin(): string | null {
+  try {
+    const url = new URL(process.env.AUDIO_BASE_URL ?? '');
+    return url.protocol === 'https:' ? url.origin : null;
+  } catch {
+    return null;
+  }
+}

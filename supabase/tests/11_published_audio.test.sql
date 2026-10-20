@@ -99,5 +99,59 @@ select throws_ok(
 );
 reset role;
 
+-- ------------------------------------------------- back-office (migration 0020)
+select isnt_empty(
+  $$ select 1 from public.audit_log
+      where table_name = 'audio_tracks' and record_id = 'ad110000-0000-4000-8000-000000000001' $$,
+  'l''ajout d''une piste est journalisé'
+);
+
+insert into auth.users (id, email) values
+  ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeee11', 'editeur-audio@test.invalid');
+insert into public.user_roles (user_id, role) values
+  ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeee11', 'editor');
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeee11","role":"authenticated","aal":"aal2"}', true);
+
+select is(
+  public.set_audio_segments('ad110000-0000-4000-8000-000000000001', jsonb_build_array(
+    jsonb_build_object('section_id', '5e110000-0000-4000-8000-000000000012', 'start_ms', 0, 'end_ms', 1000),
+    jsonb_build_object('section_id', null, 'start_ms', 1000, 'end_ms', 2000)
+  )),
+  2,
+  'set_audio_segments remplace les passages d''une piste'
+);
+select results_eq(
+  $$ select section_id::text, start_ms, display_order from public.audio_segments
+      where audio_track_id = 'ad110000-0000-4000-8000-000000000001' order by display_order $$,
+  $$ values ('5e110000-0000-4000-8000-000000000012', 0::bigint, 0), (null, 1000::bigint, 1) $$,
+  'passages remplacés, numérotés dans l''ordre'
+);
+select throws_ok(
+  $$ select public.set_audio_segments('ad110000-0000-4000-8000-000000000001', jsonb_build_array(
+       jsonb_build_object('section_id', '5e110000-0000-4000-8000-000000000021', 'start_ms', 0, 'end_ms', 1000))) $$,
+  '23503', null, 'une section d''un autre cantique est refusée'
+);
+select is(
+  (select count(*)::integer from public.audio_segments
+    where audio_track_id = 'ad110000-0000-4000-8000-000000000001'),
+  2,
+  'après un refus, les passages précédents sont intacts'
+);
+select throws_ok(
+  $$ select public.set_audio_segments('ad110000-0000-4000-8000-000000000001', jsonb_build_array(
+       jsonb_build_object('section_id', null, 'start_ms', 5000, 'end_ms', 1000))) $$,
+  '23514', null, 'un passage qui finit avant de commencer est refusé'
+);
+reset role;
+
+set local role anon;
+select throws_ok(
+  $$ select public.set_audio_segments('ad110000-0000-4000-8000-000000000001', '[]'::jsonb) $$,
+  '42501', null, 'anon ne peut pas modifier les passages'
+);
+reset role;
+
 select * from finish();
 rollback;

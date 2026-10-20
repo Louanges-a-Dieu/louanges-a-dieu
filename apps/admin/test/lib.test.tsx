@@ -3,6 +3,13 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { HymnPreview } from '../src/components/hymn-preview';
+import {
+  formatClock,
+  formatSegments,
+  parseClock,
+  parseDuration,
+  parseSegments,
+} from '../src/lib/audio';
 import { normalizeSectionText, sectionName, themeSlug } from '../src/lib/text';
 import { transitions } from '../src/lib/transitions';
 import { OptionalInt, OptionalText, ReturnPath } from '../src/lib/validation';
@@ -103,5 +110,103 @@ describe('aperçu comme sur mobile', () => {
   it('n’affiche aucune information inconnue (T-010)', () => {
     const html = renderToStaticMarkup(<HymnPreview hymn={hymn} />);
     expect(html).not.toMatch(/auteur|thème|référence|undefined|null/i);
+  });
+});
+
+describe('enregistrements audio', () => {
+  const sections = [
+    { id: 's1', section_type: 'verse', section_number: 1 },
+    { id: 's2', section_type: 'refrain', section_number: null },
+    { id: 's3', section_type: 'verse', section_number: null },
+    { id: 's4', section_type: 'verse', section_number: null },
+  ];
+
+  it('durée : « m:ss », « h:mm:ss » ou secondes ; vide → null', () => {
+    expect(parseDuration('')).toBeNull();
+    expect(parseDuration('3:05')).toBe(185);
+    expect(parseDuration('1:02:07')).toBe(3727);
+    expect(parseDuration('185,5')).toBe(185.5);
+    expect(parseDuration('0')).toBe('invalide');
+    expect(parseDuration('3:75')).toBe('invalide');
+    expect(parseDuration('trois minutes')).toBe('invalide');
+  });
+
+  it('horloge : aller-retour', () => {
+    expect(formatClock(185_000)).toBe('3:05');
+    expect(formatClock(3_727_000)).toBe('1:02:07');
+    expect(formatClock(12_500)).toBe('0:12.5');
+    expect(parseClock('0:12.5')).toBe(12_500);
+  });
+
+  it('passages : nom unique, « #n », « - », puis la fin', () => {
+    const result = parseSegments(
+      '0:00 Couplet 1\n0:30 refrain\n\n1:00 #3\n1:30 -\n1:40 #4\n2:10 Refrain\n2:40 fin',
+      sections,
+    );
+    expect(result).toEqual({
+      segments: [
+        { section_id: 's1', start_ms: 0, end_ms: 30_000 },
+        { section_id: 's2', start_ms: 30_000, end_ms: 60_000 },
+        { section_id: 's3', start_ms: 60_000, end_ms: 90_000 },
+        { section_id: null, start_ms: 90_000, end_ms: 100_000 },
+        { section_id: 's4', start_ms: 100_000, end_ms: 130_000 },
+        { section_id: 's2', start_ms: 130_000, end_ms: 160_000 },
+      ],
+    });
+    if ('segments' in result) {
+      expect(parseSegments(formatSegments(result.segments, sections), sections)).toEqual(result);
+    }
+    expect(parseSegments('  \n', sections)).toEqual({ segments: [] });
+  });
+
+  it('passages : erreurs explicites', () => {
+    const error = (text: string) => {
+      const r = parseSegments(text, sections);
+      return 'error' in r ? r.error : null;
+    };
+    expect(error('0:00 Couplet\n1:00 fin')).toContain('ambiguë');
+    expect(error('0:00 Couplet 1\n0:30 Refrain')).toContain('fin');
+    expect(error('0:30 Couplet 1\n0:10 fin')).toContain('croissants');
+    expect(error('0:00 Couplet 1\n0:30 fin\n0:40 Refrain')).toContain('« fin »');
+    expect(error('Couplet 1')).toContain('m:ss');
+  });
+
+  it('aperçu : versions diffusées', () => {
+    const html = renderToStaticMarkup(
+      <HymnPreview
+        hymn={PublishedHymn.parse({
+          id: '00000000-0000-4000-8000-000000000001',
+          numberLabel: '1',
+          numberNumeric: 1,
+          numberSuffix: null,
+          title: 'Titre',
+          openingLine: null,
+          languageCode: 'fr',
+          sections: [
+            {
+              id: '00000000-0000-4000-8000-000000000003',
+              type: 'verse',
+              number: 1,
+              order: 0,
+              lines: [{ text: 'Premier vers', repeat: null }],
+            },
+          ],
+          bibleReferences: [],
+          relations: [],
+          people: [],
+          themes: [],
+          audio: [
+            {
+              id: '00000000-0000-4000-8000-0000000a0001',
+              mediaType: 'choir',
+              storageKey: 'cantiques/0001/chorale.mp3',
+              durationSeconds: null,
+              segments: [],
+            },
+          ],
+        })}
+      />,
+    );
+    expect(html).toContain('Écouter : Chorale');
   });
 });

@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { supabaseConfig } from './lib/env';
+import { audioOrigin, supabaseConfig } from './lib/env';
 
 /** Pages accessibles sans session. */
 const PUBLIC_PATHS = ['/connexion', '/acces-refuse'];
@@ -21,6 +21,8 @@ export async function proxy(request: NextRequest) {
     `style-src 'self'${dev ? " 'unsafe-inline'" : ` 'nonce-${nonce}'`}`,
     "img-src 'self' data:",
     "font-src 'self'",
+    // Écoute des enregistrements (Backblaze B2) sur la fiche d'un cantique.
+    `media-src ${audioOrigin() ?? "'none'"}`,
     "connect-src 'self'",
     "object-src 'none'",
     "base-uri 'none'",

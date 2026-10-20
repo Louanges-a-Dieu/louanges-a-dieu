@@ -9,6 +9,7 @@ projet. Domaine dédié recommandé (par exemple `admin.<domaine>`), jamais inde
 |---|---|
 | `SUPABASE_URL` | `https://<projet>.supabase.co` |
 | `SUPABASE_PUBLISHABLE_KEY` | clé `sb_publishable_…` (publique) |
+| `AUDIO_BASE_URL` | facultative : adresse HTTPS des enregistrements (Backblaze B2, voir `audio-backblaze.md`) ; permet d'écouter un enregistrement sur la fiche d'un cantique |
 
 **Aucune clé secrète** (ADR-011) : chaque action passe par la session de l'éditeur ; la base
 applique la RLS, les déclencheurs de workflow et le journal. En local : copier `.env.example`

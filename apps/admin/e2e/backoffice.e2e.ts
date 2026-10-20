@@ -109,7 +109,9 @@ async function startServer(port: number): Promise<ChildProcess> {
   const child = spawn(resolve(admin, 'node_modules/.bin/next'), ['start', '-p', String(port)], {
     cwd: admin,
     // Next ne lit pas .env.local quand NODE_ENV vaut « test » (cas de Vitest).
-    env: { ...process.env, NODE_ENV: 'production' },
+    // Hébergement des enregistrements fictif : seul l'élément <audio> (sans
+    // préchargement) en dépend.
+    env: { ...process.env, NODE_ENV: 'production', AUDIO_BASE_URL: 'https://media.invalid/lad' },
     stdio: 'ignore',
   });
   for (let i = 0; i < 150; i++) {
@@ -225,6 +227,9 @@ describe.skipIf(!ready)('parcours administrateur (navigateur réel)', () => {
       /script-src 'self' 'nonce-[^']+' 'strict-dynamic'/,
     );
     expect(login.headers.get('x-frame-options')).toBe('DENY');
+    expect(login.headers.get('content-security-policy')).toContain(
+      'media-src https://media.invalid',
+    );
 
     // Session sans second facteur → page MFA → code TOTP → tableau de bord.
     for (const cookie of await sessionCookies(editor.email, editor.password)) {
@@ -336,6 +341,48 @@ describe.skipIf(!ready)('parcours administrateur (navigateur réel)', () => {
     await waitText(`avec le contenu de la release n° ${r1}`);
     const r3 = Number((await text()).match(/Release n° (\d+) publiée avec/)![1]);
     expect(await publicTitle(r3)).toBe('Premier cantique E2E');
+
+    // Enregistrement audio : chemin contrôlé, passages, diffusé à la publication suivante
+    // sans repasser le cantique en brouillon.
+    await go(hymnPath);
+    await fill('input[name=storage_key]', 'https://f003.backblazeb2.com/file/lad/a.mp3');
+    await click('Ajouter', "document.querySelector('input[name=storage_key]').closest('form')");
+    await waitText('Chemin du fichier invalide');
+    await fill('input[name=storage_key]', 'cantiques/e2e/melodie.mp3');
+    await fill('input[name=duration]', '2:00');
+    await click('Ajouter', "document.querySelector('input[name=storage_key]').closest('form')");
+    await waitText('Enregistrement ajouté.');
+    expect(await page.eval("document.querySelector('h1').parentElement.innerText")).toContain(
+      'Validé',
+    );
+    expect(await page.eval<string>("document.querySelector('audio').getAttribute('src')")).toBe(
+      'https://media.invalid/lad/cantiques/e2e/melodie.mp3',
+    );
+    await fill('textarea[name=segments]', '0:00 #1\n1:30 -\n2:00 fin');
+    await click('Enregistrer les passages');
+    await waitText('Passages enregistrés.');
+    expect(await text()).toContain('Passages (2)');
+    expect(
+      await page.eval(
+        'document.querySelector(\'[aria-label="Aperçu comme sur mobile"]\').innerText',
+      ),
+    ).toContain('Écouter : Mélodie');
+    await go(`/publication?edition=${editionId}`);
+    await click('Publier');
+    await waitText('publiée : les applications');
+    const r4 = Number((await text()).match(/Release n° (\d+) publiée/)![1]);
+    const audioRes = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/published_hymns?release_id=eq.${r4}&select=label:payload->>numberLabel,audio:payload->audio`,
+      { headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY! } },
+    );
+    const published = (
+      (await audioRes.json()) as {
+        label: string;
+        audio: { storageKey: string; segments: unknown[] }[] | null;
+      }[]
+    ).find((h) => h.label === '1');
+    expect(published?.audio?.[0]?.storageKey).toBe('cantiques/e2e/melodie.mp3');
+    expect(published?.audio?.[0]?.segments).toHaveLength(2);
 
     // Auteur et thème : visibles dans l'aperçu (rien d'inventé tant qu'ils ne sont pas saisis).
     await go(`/cantiques?edition=${editionId}&q=Second`);

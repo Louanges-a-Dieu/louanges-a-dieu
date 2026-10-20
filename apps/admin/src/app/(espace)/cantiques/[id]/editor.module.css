@@ -42,6 +42,12 @@
   margin-top: var(--lad-space-md);
 }
 
+.audio {
+  display: block;
+  width: 100%;
+  margin-bottom: var(--lad-space-sm);
+}
+
 .add summary {
   cursor: pointer;
   color: var(--lad-color-gold-text);

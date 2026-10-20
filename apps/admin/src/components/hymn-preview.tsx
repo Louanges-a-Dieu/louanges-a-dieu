@@ -1,5 +1,6 @@
 import type { PublishedHymn } from '@lad/shared-contracts';
 
+import { MEDIA_LABELS } from '@/lib/audio';
 import { sectionName } from '@/lib/text';
 
 import styles from './hymn-preview.module.css';
@@ -16,6 +17,11 @@ export function HymnPreview({ hymn }: { hymn: PublishedHymn }) {
     <article className={styles.phone} aria-label="Aperçu comme sur mobile">
       <p className={styles.number}>{hymn.numberLabel}</p>
       <h3 className={styles.title}>{hymn.title}</h3>
+      {hymn.audio && (
+        <p className={styles.references}>
+          Écouter : {hymn.audio.map((t) => MEDIA_LABELS[t.mediaType] ?? t.mediaType).join(', ')}
+        </p>
+      )}
       {hymn.bibleReferences.length > 0 && (
         <p className={styles.references}>
           {hymn.bibleReferences.map((r) => r.displayText).join(' · ')}

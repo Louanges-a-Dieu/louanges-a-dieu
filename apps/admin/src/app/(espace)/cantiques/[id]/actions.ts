@@ -1,8 +1,10 @@
 'use server';
 
+import { StorageKey } from '@lad/shared-contracts';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
+import { parseDuration, parseSegments } from '@/lib/audio';
 import { requireEditor } from '@/lib/auth';
 import { back, errorMessage } from '@/lib/redirect';
 import { normalizeSectionText, themeSlug } from '@/lib/text';
@@ -361,5 +363,109 @@ export async function deleteThemeAction(form: FormData) {
       .delete()
       .eq('hymn_id', parsed.hymn_id)
       .eq('theme_id', parsed.theme_id),
+  );
+}
+
+// ------------------------------------------------- enregistrements audio
+
+const MediaType = z.enum([
+  'melody',
+  'accompaniment',
+  'choir',
+  'soprano',
+  'alto',
+  'tenor',
+  'bass',
+  'instrumental',
+  'other',
+]);
+
+const AudioTrackForm = z.object({
+  hymn_id: Uuid,
+  media_type: MediaType,
+  storage_key: z.string().transform((v) => v.trim().replace(/^\/+/, '')),
+  duration: z.string().catch(''),
+  rights_status: RightsStatus,
+});
+
+/** Rattache un fichier déjà déposé sur Backblaze B2 (ADR-016) au cantique. */
+export async function addAudioTrackAction(form: FormData) {
+  const hymnId = String(form.get('hymn_id'));
+  const parsed = AudioTrackForm.safeParse(Object.fromEntries(form));
+  if (!parsed.success) back(page(hymnId), { erreur: 'Enregistrement invalide.' });
+  const { storage_key, duration, ...rest } = parsed.data;
+  if (!StorageKey.safeParse(storage_key).success) {
+    back(page(hymnId), {
+      erreur:
+        'Chemin du fichier invalide : chemin dans le compartiment (pas une adresse web), ' +
+        'lettres sans accent, chiffres, « . _ - / », et fichier .mp3, .m4a ou .aac.',
+    });
+  }
+  const seconds = parseDuration(duration);
+  if (seconds === 'invalide') {
+    back(page(hymnId), { erreur: 'Durée invalide : « 3:05 », ou laisser vide.' });
+  }
+  const { supabase } = await requireEditor();
+  await run(hymnId, 'Enregistrement ajouté.', () =>
+    supabase.from('audio_tracks').insert({ ...rest, storage_key, duration_seconds: seconds }),
+  );
+}
+
+const AudioTrackUpdate = z.object({
+  hymn_id: Uuid,
+  track_id: Uuid,
+  media_type: MediaType,
+  duration: z.string().catch(''),
+  rights_status: RightsStatus,
+});
+
+export async function updateAudioTrackAction(form: FormData) {
+  const hymnId = String(form.get('hymn_id'));
+  const parsed = AudioTrackUpdate.safeParse(Object.fromEntries(form));
+  if (!parsed.success) back(page(hymnId), { erreur: 'Enregistrement invalide.' });
+  const seconds = parseDuration(parsed.data.duration);
+  if (seconds === 'invalide') {
+    back(page(hymnId), { erreur: 'Durée invalide : « 3:05 », ou laisser vide.' });
+  }
+  const { supabase } = await requireEditor();
+  await run(hymnId, 'Enregistrement modifié.', () =>
+    supabase
+      .from('audio_tracks')
+      .update({
+        media_type: parsed.data.media_type,
+        rights_status: parsed.data.rights_status,
+        duration_seconds: seconds,
+      })
+      .eq('id', parsed.data.track_id)
+      .eq('hymn_id', hymnId),
+  );
+}
+
+export async function deleteAudioTrackAction(form: FormData) {
+  const parsed = z.object({ hymn_id: Uuid, track_id: Uuid }).parse(Object.fromEntries(form));
+  const { supabase } = await requireEditor();
+  await run(parsed.hymn_id, 'Enregistrement retiré (le fichier reste sur Backblaze).', () =>
+    supabase.from('audio_tracks').delete().eq('id', parsed.track_id).eq('hymn_id', parsed.hymn_id),
+  );
+}
+
+/** Remplace les passages d'une piste (texte « m:ss Libellé », une ligne par passage). */
+export async function saveAudioSegmentsAction(form: FormData) {
+  const parsed = z
+    .object({ hymn_id: Uuid, track_id: Uuid, segments: z.string().catch('') })
+    .parse(Object.fromEntries(form));
+  const { supabase } = await requireEditor();
+  const { data: sections } = await supabase
+    .from('hymn_sections')
+    .select('id, section_type, section_number')
+    .eq('hymn_id', parsed.hymn_id)
+    .order('display_order');
+  const result = parseSegments(parsed.segments, sections ?? []);
+  if ('error' in result) back(page(parsed.hymn_id), { erreur: `Passages : ${result.error}` });
+  await run(parsed.hymn_id, 'Passages enregistrés.', () =>
+    supabase.rpc('set_audio_segments', {
+      p_track_id: parsed.track_id,
+      p_segments: result.segments,
+    }),
   );
 }

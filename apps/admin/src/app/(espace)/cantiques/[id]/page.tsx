@@ -10,6 +10,7 @@ import { RIGHTS_LABELS, SeverityBadge, StatusBadge } from '@/components/status';
 import ui from '@/components/ui.module.css';
 import { requireEditor } from '@/lib/auth';
 import { param } from '@/lib/data';
+import { MEDIA_LABELS, audioUrl, formatClock, formatSegments } from '@/lib/audio';
 import { sectionName } from '@/lib/text';
 import { transitions } from '@/lib/transitions';
 
@@ -20,6 +21,10 @@ import {
   addRelationAction,
   addThemeAction,
   addRightsAction,
+  addAudioTrackAction,
+  deleteAudioTrackAction,
+  saveAudioSegmentsAction,
+  updateAudioTrackAction,
   deletePersonAction,
   deleteReferenceAction,
   deleteRelationAction,
@@ -74,6 +79,7 @@ export default async function HymnEditorPage({
     themes,
     allPeople,
     allThemes,
+    audio,
   ] = await Promise.all([
     supabase.from('hymns').select('*').eq('id', id).maybeSingle(),
     supabase.from('hymn_sections').select('*').eq('hymn_id', id).order('display_order'),
@@ -105,6 +111,13 @@ export default async function HymnEditorPage({
     supabase.from('hymn_themes').select('theme_id, theme:themes(name)').eq('hymn_id', id),
     supabase.from('people').select('full_name').order('full_name').limit(500),
     supabase.from('themes').select('name').order('name').limit(500),
+    supabase
+      .from('audio_tracks')
+      .select(
+        'id, media_type, storage_key, duration_seconds, rights_status, segments:audio_segments(section_id, start_ms, end_ms, display_order)',
+      )
+      .eq('hymn_id', id)
+      .order('created_at'),
   ]);
   const hymn = hymnRes.data;
   if (!hymn) notFound();
@@ -476,6 +489,170 @@ export default async function HymnEditorPage({
                 <label className={ui.field}>
                   <span className={ui.label}>Numéro du cantique</span>
                   <input className={ui.input} name="related_label" placeholder="37bis" required />
+                </label>
+                <SubmitButton variant="primary">Ajouter</SubmitButton>
+              </form>
+            </details>
+          </section>
+
+          {/* ------------------------------------------------ enregistrements */}
+          <section className={ui.card} id="audio">
+            <h2 className={ui.h2}>Enregistrements audio</h2>
+            <p className={ui.hint}>
+              Déposer d’abord le fichier sur Backblaze B2, puis indiquer ici son chemin dans le
+              compartiment (par exemple <code>cantiques/0037bis/melodie.mp3</code>). Un
+              enregistrement est diffusé à la prochaine publication, sans repasser le cantique en
+              brouillon ; un enregistrement aux droits « Restreint » n’est jamais diffusé.
+            </p>
+            {(audio.data ?? []).length === 0 && <p className={ui.muted}>Aucun.</p>}
+            {(audio.data ?? []).map((track) => {
+              const segments = [...(track.segments ?? [])].sort(
+                (a, b) => a.display_order - b.display_order,
+              );
+              const url = audioUrl(track.storage_key);
+              const label = MEDIA_LABELS[track.media_type] ?? track.media_type;
+              return (
+                <div key={track.id} className={styles.section}>
+                  <div className={styles.sectionHead}>
+                    <strong>{label}</strong>
+                    <code>{track.storage_key}</code>
+                    {track.rights_status === 'restricted' && (
+                      <span className={ui.muted}>— non diffusé (droits restreints)</span>
+                    )}
+                  </div>
+                  {url ? (
+                    <audio
+                      controls
+                      preload="none"
+                      src={url}
+                      className={styles.audio}
+                      aria-label={`Écouter : ${label}`}
+                    />
+                  ) : (
+                    <p className={ui.muted}>
+                      Écoute ici indisponible : adresse des enregistrements (AUDIO_BASE_URL) non
+                      configurée.
+                    </p>
+                  )}
+                  <form action={updateAudioTrackAction} className={styles.grid}>
+                    <input type="hidden" name="hymn_id" value={id} />
+                    <input type="hidden" name="track_id" value={track.id} />
+                    <label className={ui.field}>
+                      <span className={ui.label}>Version</span>
+                      <select
+                        className={ui.select}
+                        name="media_type"
+                        defaultValue={track.media_type}
+                      >
+                        {Object.entries(MEDIA_LABELS).map(([v, l]) => (
+                          <option key={v} value={v}>
+                            {l}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className={ui.field}>
+                      <span className={ui.label}>Durée (facultative)</span>
+                      <input
+                        className={ui.input}
+                        name="duration"
+                        placeholder="3:05"
+                        defaultValue={
+                          track.duration_seconds == null
+                            ? ''
+                            : formatClock(Math.round(Number(track.duration_seconds) * 1000))
+                        }
+                      />
+                    </label>
+                    <label className={ui.field}>
+                      <span className={ui.label}>Droits</span>
+                      <select
+                        className={ui.select}
+                        name="rights_status"
+                        defaultValue={track.rights_status}
+                      >
+                        {Object.entries(RIGHTS_LABELS).map(([v, l]) => (
+                          <option key={v} value={v}>
+                            {l}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <SubmitButton>Enregistrer</SubmitButton>
+                  </form>
+                  <details className={styles.add}>
+                    <summary>
+                      Passages ({segments.length === 0 ? 'non repérés' : segments.length})
+                    </summary>
+                    <p className={ui.hint}>
+                      Une ligne par début de passage : temps puis section (« Couplet 2 », « Refrain
+                      », ou « #3 » pour la 3ᵉ section imprimée ; « - » pour un passage sans
+                      paroles). Dernière ligne : la fin, par exemple « 2:10 fin ». L’application met
+                      alors en avant les paroles chantées. Vider le texte pour retirer les passages.
+                    </p>
+                    <form action={saveAudioSegmentsAction}>
+                      <input type="hidden" name="hymn_id" value={id} />
+                      <input type="hidden" name="track_id" value={track.id} />
+                      <textarea
+                        className={ui.textarea}
+                        name="segments"
+                        rows={Math.max(4, segments.length + 2)}
+                        defaultValue={formatSegments(segments, sections.data ?? [])}
+                        placeholder={'0:00 Couplet 1\n0:32 Refrain\n1:05 fin'}
+                        aria-label={`Passages : ${label}`}
+                      />
+                      <SubmitButton>Enregistrer les passages</SubmitButton>
+                    </form>
+                  </details>
+                  <form action={deleteAudioTrackAction}>
+                    <input type="hidden" name="hymn_id" value={id} />
+                    <input type="hidden" name="track_id" value={track.id} />
+                    <SubmitButton
+                      variant="ghost"
+                      confirm="Retirer cet enregistrement du cantique ? Le fichier reste sur Backblaze."
+                    >
+                      Retirer
+                    </SubmitButton>
+                  </form>
+                </div>
+              );
+            })}
+            <details className={styles.add}>
+              <summary>Ajouter un enregistrement</summary>
+              <form action={addAudioTrackAction} className={styles.grid}>
+                <input type="hidden" name="hymn_id" value={id} />
+                <label className={ui.field}>
+                  <span className={ui.label}>Chemin du fichier</span>
+                  <input
+                    className={ui.input}
+                    name="storage_key"
+                    placeholder="cantiques/0037bis/melodie.mp3"
+                    required
+                  />
+                </label>
+                <label className={ui.field}>
+                  <span className={ui.label}>Version</span>
+                  <select className={ui.select} name="media_type" defaultValue="melody">
+                    {Object.entries(MEDIA_LABELS).map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className={ui.field}>
+                  <span className={ui.label}>Durée (facultative)</span>
+                  <input className={ui.input} name="duration" placeholder="3:05" />
+                </label>
+                <label className={ui.field}>
+                  <span className={ui.label}>Droits</span>
+                  <select className={ui.select} name="rights_status" defaultValue="unknown">
+                    {Object.entries(RIGHTS_LABELS).map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <SubmitButton variant="primary">Ajouter</SubmitButton>
               </form>

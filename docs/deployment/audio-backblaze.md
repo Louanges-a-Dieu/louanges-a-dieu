@@ -39,30 +39,44 @@ restera côté serveur.
 - Droits : ne publier que des enregistrements dont la diffusion est autorisée. Une piste aux droits
   « restricted » (sur la piste ou dans le registre des droits) n'est jamais publiée.
 
-## 3. Rattacher un enregistrement à un cantique
+## 3. Rattacher un enregistrement à un cantique (back-office)
 
-Le back-office n'a pas encore d'écran pour cela. En attendant, dans l'éditeur SQL du tableau de bord
-Supabase (base de développement d'abord) :
+Fiche du cantique → **Enregistrements audio** → **Ajouter un enregistrement** :
 
-```sql
-insert into public.audio_tracks (hymn_id, media_type, storage_key, duration_seconds, rights_status)
-select h.id, 'melody', 'cantiques/0006/melodie.mp3', 185, 'cleared'
-  from public.hymns h
- where h.number_label = '6';
+- **Chemin du fichier** : chemin dans le compartiment, par exemple `cantiques/0006/melodie.mp3`
+  (jamais l'adresse web complète : elle est refusée).
+- **Version** : Mélodie, Accompagnement, Chorale, Soprano, Alto, Ténor, Basse, Instrumental ou
+  Enregistrement.
+- **Durée** : facultative (« 3:05 ») ; l'app la lit sur le fichier.
+- **Droits** : un enregistrement « Restreint » n'est jamais diffusé.
+
+Si `AUDIO_BASE_URL` est configurée pour le back-office, un lecteur permet d'écouter le fichier
+directement sur la fiche (vérification du chemin).
+
+**Passages** (facultatif) : une ligne par début de passage, puis la fin.
+
+```
+0:00 Couplet 1
+0:32 Refrain
+1:05 #3
+1:40 -
+2:10 fin
 ```
 
-- `media_type` : `melody`, `accompaniment`, `choir`, `soprano`, `alto`, `tenor`, `bass`,
-  `instrumental` ou `other` (affichés « Mélodie », « Accompagnement », « Chorale »…).
-- `duration_seconds` : facultatif (l'app lit la durée sur le fichier).
-- Passages (facultatif) : `audio_segments` relie un intervalle (`start_ms`, `end_ms`) à une
-  section ; l'écran d'écoute met alors en avant les paroles chantées et permet d'y aller d'un
-  toucher. Sans passages, les paroles s'affichent dans l'ordre chanté.
+Une section se désigne par son nom (« Couplet 2 », « Refrain ») s'il est unique dans le
+cantique, sinon par « #n » (n-ième section imprimée) ; « - » marque un passage sans paroles.
+L'app met alors en avant les paroles chantées et permet d'y aller d'un toucher. Vider le texte
+retire les passages.
 
-Puis **publier une release** depuis le back-office : seuls les cantiques modifiés changent.
+Puis **publier** : l'enregistrement part avec la release suivante. Ajouter, modifier ou retirer
+un enregistrement ne repasse **pas** le cantique en brouillon (le texte n'a pas changé) ; tout
+est tracé dans le journal. Retirer un enregistrement ne supprime pas le fichier sur Backblaze.
 
 ## 4. Configurer les apps
 
-Ajouter l'adresse à la configuration de chaque environnement (`apps/mobile/config/<env>.json`) :
+Ajouter l'adresse à la configuration de chaque environnement de l'app
+(`apps/mobile/config/<env>.json`) et, pour écouter depuis le back-office, à ses variables
+(`AUDIO_BASE_URL`, voir `admin.md`) :
 
 ```json
 "AUDIO_BASE_URL": "https://f00X.backblazeb2.com/file/louanges-a-dieu-audio"
@@ -74,4 +88,4 @@ HTTPS obligatoire (l'app refuse de démarrer sinon). Reconstruire l'app.
 
 - Lecture en flux : il faut Internet ; pas d'écoute hors connexion.
 - La lecture s'arrête en quittant l'écran (pas de lecture en arrière-plan, écran verrouillé).
-- Pas encore d'écran de dépôt ni de rattachement dans le back-office.
+- Le dépôt des fichiers se fait dans le tableau de bord Backblaze (pas depuis le back-office).
