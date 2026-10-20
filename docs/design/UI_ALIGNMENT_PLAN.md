@@ -1,6 +1,6 @@
 # Plan d'alignement UI — « Le recueil vivant »
 
-Version 0.3 · 2026-10-20 · Phases 1 à 4 faites (audit, fondations, écrans, recette). Reste : audio (bloqué), essais sur appareils réels.
+Version 0.3 · 2026-10-20 · Phases 1 à 4 faites (audit, fondations, écrans, recette). Reste : enregistrements à déposer (Backblaze), écran de rattachement au back-office, essais sur appareils réels.
 Demandes du propriétaire du 2026-10-20 : photos Pexels là où le prototype montre une image ;
 créer simplement les fonctions que le prototype montre et que l'app n'a pas (§3 bis).
 
@@ -177,7 +177,7 @@ Toutes les recommandations ci-dessous sont retenues. D-8 est modifiée : photos 
 
 ### 3 bis. Fonctions à créer (demande du propriétaire, 2026-10-20)
 
-**État (2026-10-20) : ☑ toutes réalisées et testées**, sauf l'audio (bloqué) et l'heure du culte
+**État (2026-10-20) : ☑ toutes réalisées et testées**, sauf l'heure du culte
 (abandonnée).
 
 « Pour les fonctions que le prototype montre sans que l'app ne le fasse, crée-les simplement. »
@@ -193,7 +193,7 @@ phase 3.
 | Ajout au programme par numéro | Champ « N° (ex. 37bis) » + « Ajouter » dans l'éditeur, à côté du choix existant ; message si le numéro n'existe pas | G | Même enregistrement que l'ajout actuel. |
 | ~~Heure du culte~~ | **Abandonnée** (propriétaire, 2026-10-20 : « pas une donnée importante ») : aucune modification de la base | — | — |
 | Hors connexion : progression | État réel pendant la vérification (« Vérification… », indicateur sans pourcentage), puis résultat (à jour / mis à jour / hors ligne) avec l'heure | I | La synchronisation ne connaît pas d'avancement en octets : **pas de barre à pourcentage**. |
-| Écouter (audio) | **Bloqué** : aucun enregistrement n'existe ; l'hébergement des médias (R2, ADR-016) n'est pas ouvert (D-03). Tables `audio_tracks` présentes mais vides. | D | Décision du propriétaire nécessaire (enregistrements, hébergement). Bouton masqué tant qu'un cantique n'a pas d'audio. |
+| Écouter (audio) | **Fait (2026-10-20)** : vue d'écoute `/ecoute/:id` (lecture en flux, ±10 s, versions, paroles qui suivent les passages, lecteur fixé en bas) ; hébergement Backblaze B2 (ADR-016 révisé, `docs/deployment/audio-backblaze.md`) ; payload publié avec clé `audio` (migration 0019). | E | Bouton « Écouter » masqué tant que `AUDIO_BASE_URL` n'est pas configurée ou qu'un cantique n'a pas d'enregistrement publié. Restent : dépôt des fichiers (propriétaire), écran de rattachement au back-office, lecture en arrière-plan et hors connexion (non faites). |
 
 ---
 
@@ -296,3 +296,4 @@ mobile (390 px) et tablette/desktop (≥ 1024 px), mise à jour de ce fichier.
 | 2026-10-20 | Phases 3-4 | Écrans A à J (voir tableau phase 3), `reading_history.dart`, `hymn_text.dart`, `parseNumberLabel`, préférence `readerByStanza`, `sectionName` partagé ; web (programme, console), admin (aperçu) | 167 tests Flutter ✅, intégration 5 ✅, e2e 2 ✅, lint/typecheck 19/21 (2 préexistants) | Heure du culte abandonnée (propriétaire). Audio bloqué (aucun enregistrement, hébergement non ouvert). |
 | 2026-10-20 | Mode lecture | `reader_screen.dart` (une strophe à la fois, glissement et flèches, boutons Cantique précédent / suivant), `preferences.dart` et `app_fr.arb` (option « couplet par couplet » retirée), tests `reader_test`, `faithful_journey_test` | `flutter analyze` ✅ ; `flutter test --exclude-tags reseau` ✅ 170 ; intégration réseau ✅ (1er passage, compte jetable recréé) ; captures 360, 420 et 1280 px | Demande du propriétaire. Suivant s'arrête à la dernière strophe ; on change de cantique par les boutons dédiés. |
 | 2026-10-20 | Mode lecture (2) | `reader_screen.dart` (ordre chanté toujours appliqué, commandes en symboles, titre +6 pt, feuille de réglages retirée : A−/A+ restent), `more_screen.dart` (interrupteur « Répéter le refrain » déplacé dans Plus, pour la fiche), `app_fr.arb` (« Strophe précédente / suivante »), tests (jeu d'essai : cantique 2 à deux couplets) | `flutter analyze` ✅ ; `flutter test --exclude-tags reseau` ✅ 170 ; captures 360, 420 et 1280 px | Demande du propriétaire. L'ordre chanté ne s'applique qu'aux cantiques à un seul refrain et à couplets seuls (ADR-009) ; sinon l'ordre imprimé est gardé. |
+| 2026-10-20 | Écoute | migration 0019 + test pgTAP 11, contrat `AudioTrack` (+ 4 fixtures), modèle Dart, `Env.audioBaseUrl`, `features/audio/` (just_audio, audio_session), bouton « Écouter », ADR-016, guide Backblaze | `flutter test --exclude-tags reseau` ✅ 182 ; pgTAP ✅ 241 ; turbo lint/typecheck/test 19/21 (2 préexistants) ; captures 390 et 1280 px (lecteur factice) | Aucun enregistrement réel ni hébergement configuré : le bouton reste masqué dans l'app actuelle. |
