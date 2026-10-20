@@ -9,7 +9,7 @@
   gap: var(--lad-space-xs);
   min-height: 2.5rem;
   padding: 0 var(--lad-space-lg);
-  border-radius: var(--lad-radius-pill);
+  border-radius: var(--lad-radius-md);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -26,7 +26,7 @@
 .buttonPrimary {
   border: 0;
   background: var(--lad-color-gold-text);
-  color: var(--lad-color-background);
+  color: var(--lad-color-surface);
 }
 
 .buttonDanger {
@@ -58,6 +58,14 @@
 .label {
   font-size: var(--lad-type-caption-size);
   color: var(--lad-color-text-secondary);
+}
+
+.input:focus-visible,
+.select:focus-visible,
+.textarea:focus-visible {
+  outline: none;
+  border-color: var(--lad-color-gold);
+  box-shadow: 0 0 0 1px var(--lad-color-gold);
 }
 
 .input,
@@ -110,6 +118,7 @@
 }
 
 .table th {
+  background: var(--lad-color-surface-warm);
   text-align: left;
   font-weight: 500;
   font-size: var(--lad-type-caption-size);

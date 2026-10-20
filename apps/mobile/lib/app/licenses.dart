@@ -7,9 +7,6 @@ void registerFontLicenses() {
     'Cormorant Garamond': 'assets/fonts/CormorantGaramond/OFL.txt',
     'Literata': 'assets/fonts/Literata/OFL.txt',
     'Inter': 'assets/fonts/Inter/OFL.txt',
-    'Space Grotesk': 'assets/fonts/SpaceGrotesk/OFL.txt',
-    'Manrope': 'assets/fonts/Manrope/OFL.txt',
-    'IBM Plex Mono': 'assets/fonts/IBMPlexMono/OFL.txt',
   };
   LicenseRegistry.addLicense(() async* {
     for (final entry in fonts.entries) {

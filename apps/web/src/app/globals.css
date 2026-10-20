@@ -1,5 +1,31 @@
 @import '@lad/design-tokens/tokens.css';
 
+/* Polices de l'application (OFL), copiées par scripts/sync-projection-screen.mts. */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('/projection-ecran/fonts/cormorant.ttf') format('truetype');
+  font-weight: 300 700;
+}
+
+@font-face {
+  font-family: 'Literata';
+  src: url('/projection-ecran/fonts/literata.ttf') format('truetype');
+  font-weight: 200 900;
+}
+
+@font-face {
+  font-family: 'Literata';
+  src: url('/projection-ecran/fonts/literata-italic.ttf') format('truetype');
+  font-weight: 200 900;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/projection-ecran/fonts/inter.ttf') format('truetype');
+  font-weight: 100 900;
+}
+
 *,
 *::before,
 *::after {
@@ -15,4 +41,13 @@ body {
   font-family: var(--lad-font-ui);
   font-size: var(--lad-type-body-size);
   line-height: var(--lad-type-body-line-height);
+}
+
+a {
+  color: var(--lad-color-gold-text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--lad-color-gold);
+  outline-offset: 2px;
 }

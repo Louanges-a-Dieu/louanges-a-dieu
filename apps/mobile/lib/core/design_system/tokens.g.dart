@@ -8,11 +8,14 @@ final class LadPalette {
   const LadPalette({
     required this.background,
     required this.surface,
+    required this.surfaceWarm,
     required this.hairline,
     required this.text,
     required this.textSecondary,
     required this.gold,
     required this.goldText,
+    required this.goldLight,
+    required this.goldPale,
     required this.error,
     required this.success,
     required this.info,
@@ -20,50 +23,62 @@ final class LadPalette {
 
   final Color background;
   final Color surface;
+  final Color surfaceWarm;
   final Color hairline;
   final Color text;
   final Color textSecondary;
   final Color gold;
   final Color goldText;
+  final Color goldLight;
+  final Color goldPale;
   final Color error;
   final Color success;
   final Color info;
 
   static const light = LadPalette(
-    background: Color(0xFFFFFFFF),
-    surface: Color(0xFFF6F6F7),
-    hairline: Color(0xFFE4E4E7),
-    text: Color(0xFF0A0A0B),
-    textSecondary: Color(0xFF5B5B66),
-    gold: Color(0xFFA9853F),
-    goldText: Color(0xFF7D6127),
-    error: Color(0xFFB42318),
-    success: Color(0xFF067647),
-    info: Color(0xFF475467),
+    background: Color(0xFFF7F0E4),
+    surface: Color(0xFFFFFAF1),
+    surfaceWarm: Color(0xFFF0E5D2),
+    hairline: Color(0xFFE8D9BF),
+    text: Color(0xFF392A1B),
+    textSecondary: Color(0xFF76634B),
+    gold: Color(0xFFA86D13),
+    goldText: Color(0xFF89570E),
+    goldLight: Color(0xFFD7A84F),
+    goldPale: Color(0xFFE8D1A6),
+    error: Color(0xFF9B2C2C),
+    success: Color(0xFF3F6B4A),
+    info: Color(0xFF4F5F68),
   );
 
   static const dark = LadPalette(
-    background: Color(0xFF0A0A0B),
-    surface: Color(0xFF131316),
-    hairline: Color(0xFF27272A),
-    text: Color(0xFFF4F4F5),
-    textSecondary: Color(0xFFA1A1AA),
-    gold: Color(0xFFD4AE62),
-    goldText: Color(0xFFE0BE7A),
-    error: Color(0xFFF97066),
-    success: Color(0xFF47CD89),
-    info: Color(0xFF98A2B3),
+    background: Color(0xFF171F1F),
+    surface: Color(0xFF222B29),
+    surfaceWarm: Color(0xFF1C2524),
+    hairline: Color(0xFF34403D),
+    text: Color(0xFFF4EADB),
+    textSecondary: Color(0xFFB7A88F),
+    gold: Color(0xFFD7A84F),
+    goldText: Color(0xFFE0BB6E),
+    goldLight: Color(0xFFD7A84F),
+    goldPale: Color(0xFF3A3223),
+    error: Color(0xFFE8998F),
+    success: Color(0xFF8FC39C),
+    info: Color(0xFF9FB2BC),
   );
 
   static const projection = LadPalette(
-    background: Color(0xFF000000),
-    surface: Color(0xFF000000),
-    hairline: Color(0xFF262626),
-    text: Color(0xFFFFFFFF),
-    textSecondary: Color(0xFFBDBDBD),
-    gold: Color(0xFFC9A46B),
-    goldText: Color(0xFFD4B27A),
-    error: Color(0xFFE38B8B),
+    background: Color(0xFF171F1F),
+    surface: Color(0xFF171F1F),
+    surfaceWarm: Color(0xFF171F1F),
+    hairline: Color(0xFF2C3633),
+    text: Color(0xFFFFF5E5),
+    textSecondary: Color(0xFFC9BBA3),
+    gold: Color(0xFFD7A84F),
+    goldText: Color(0xFFDFC18D),
+    goldLight: Color(0xFFD7A84F),
+    goldPale: Color(0xFF3A3223),
+    error: Color(0xFFE8998F),
     success: Color(0xFF8FC39C),
     info: Color(0xFF9FB2BC),
   );
@@ -85,9 +100,10 @@ abstract final class LadSpace {
 /// Rayons (dp).
 abstract final class LadRadius {
   static const double none = 0;
-  static const double sm = 2;
-  static const double md = 4;
-  static const double lg = 6;
+  static const double sm = 8;
+  static const double md = 12;
+  static const double lg = 16;
+  static const double xl = 22;
   static const double pill = 999;
 }
 
@@ -96,6 +112,13 @@ abstract final class LadStroke {
   static const double hairline = 1;
   static const double refrainRule = 2;
   static const double accent = 2;
+}
+
+/// Ombre douce (cartes mises en avant) ; couleur : texte du thème.
+abstract final class LadShadow {
+  static const double softOffsetY = 6;
+  static const double softBlur = 20;
+  static const double softOpacity = 0.08;
 }
 
 /// Durées d'animation.
@@ -107,10 +130,10 @@ abstract final class LadDurations {
 
 /// Familles de polices de l'application.
 abstract final class LadFonts {
-  static const String display = 'Space Grotesk';
-  static const String lyrics = 'Manrope';
-  static const String ui = 'Space Grotesk';
-  static const String numeric = 'IBM Plex Mono';
+  static const String display = 'Cormorant Garamond';
+  static const String lyrics = 'Literata';
+  static const String ui = 'Inter';
+  static const String numeric = 'Cormorant Garamond';
 }
 
 /// Familles de polices de l'écran projeté.
@@ -147,40 +170,58 @@ final class LadTextSpec {
 abstract final class LadTypeScale {
   static const display = LadTextSpec(
     role: LadFontRole.display,
-    size: 34,
+    size: 40,
     height: 1.1,
     weight: FontWeight.w500,
-    letterSpacing: -0.02,
   );
 
   static const hymnNumber = LadTextSpec(
-    role: LadFontRole.numeric,
-    size: 28,
+    role: LadFontRole.display,
+    size: 32,
     height: 1.1,
-    weight: FontWeight.w500,
+    weight: FontWeight.w600,
   );
 
   static const title = LadTextSpec(
     role: LadFontRole.display,
-    size: 24,
+    size: 28,
+    height: 1.15,
+    weight: FontWeight.w600,
+  );
+
+  static const sectionTitle = LadTextSpec(
+    role: LadFontRole.display,
+    size: 23,
     height: 1.2,
-    weight: FontWeight.w500,
-    letterSpacing: -0.01,
+    weight: FontWeight.w600,
+  );
+
+  static const cardTitle = LadTextSpec(
+    role: LadFontRole.display,
+    size: 21,
+    height: 1.2,
+    weight: FontWeight.w600,
+  );
+
+  static const listTitle = LadTextSpec(
+    role: LadFontRole.display,
+    size: 19,
+    height: 1.25,
+    weight: FontWeight.w600,
   );
 
   static const listNumber = LadTextSpec(
-    role: LadFontRole.numeric,
-    size: 15,
-    height: 1.3,
-    weight: FontWeight.w500,
+    role: LadFontRole.display,
+    size: 20,
+    height: 1.2,
+    weight: FontWeight.w600,
   );
 
   static const headline = LadTextSpec(
     role: LadFontRole.ui,
-    size: 20,
+    size: 18,
     height: 1.3,
-    weight: FontWeight.w500,
-    letterSpacing: -0.01,
+    weight: FontWeight.w600,
   );
 
   static const lyrics = LadTextSpec(
@@ -212,15 +253,15 @@ abstract final class LadTypeScale {
   );
 
   static const overline = LadTextSpec(
-    role: LadFontRole.numeric,
+    role: LadFontRole.ui,
     size: 11,
     height: 1.3,
-    weight: FontWeight.w500,
-    letterSpacing: 0.12,
+    weight: FontWeight.w600,
+    letterSpacing: 0.16,
   );
 
   static const marker = LadTextSpec(
-    role: LadFontRole.numeric,
+    role: LadFontRole.ui,
     size: 13,
     height: 1.3,
     weight: FontWeight.w400,
@@ -245,8 +286,29 @@ abstract final class LadProjectionTypeScale {
 
   static const title = LadTextSpec(
     role: LadFontRole.display,
-    size: 26,
+    size: 28,
+    height: 1.15,
+    weight: FontWeight.w600,
+  );
+
+  static const sectionTitle = LadTextSpec(
+    role: LadFontRole.display,
+    size: 23,
     height: 1.2,
+    weight: FontWeight.w600,
+  );
+
+  static const cardTitle = LadTextSpec(
+    role: LadFontRole.display,
+    size: 21,
+    height: 1.2,
+    weight: FontWeight.w600,
+  );
+
+  static const listTitle = LadTextSpec(
+    role: LadFontRole.display,
+    size: 19,
+    height: 1.25,
     weight: FontWeight.w600,
   );
 
@@ -259,7 +321,7 @@ abstract final class LadProjectionTypeScale {
 
   static const headline = LadTextSpec(
     role: LadFontRole.ui,
-    size: 20,
+    size: 18,
     height: 1.3,
     weight: FontWeight.w600,
   );
@@ -267,7 +329,7 @@ abstract final class LadProjectionTypeScale {
   static const lyrics = LadTextSpec(
     role: LadFontRole.lyrics,
     size: 20,
-    height: 1.55,
+    height: 1.6,
     weight: FontWeight.w400,
   );
 
@@ -289,6 +351,21 @@ abstract final class LadProjectionTypeScale {
     role: LadFontRole.ui,
     size: 12,
     height: 1.4,
+    weight: FontWeight.w400,
+  );
+
+  static const overline = LadTextSpec(
+    role: LadFontRole.ui,
+    size: 11,
+    height: 1.3,
+    weight: FontWeight.w600,
+    letterSpacing: 0.16,
+  );
+
+  static const marker = LadTextSpec(
+    role: LadFontRole.ui,
+    size: 13,
+    height: 1.3,
     weight: FontWeight.w400,
   );
 }

@@ -3,11 +3,14 @@ import { readFileSync } from 'node:fs';
 export const PALETTE_KEYS = [
   'background',
   'surface',
+  'surfaceWarm',
   'hairline',
   'text',
   'textSecondary',
   'gold',
   'goldText',
+  'goldLight',
+  'goldPale',
   'error',
   'success',
   'info',
@@ -50,10 +53,16 @@ export interface Tokens {
   space: Record<string, number>;
   radius: Record<string, number>;
   stroke: Record<string, number>;
+  /** Ombre douce (cartes mises en avant) ; couleur : texte du thème. */
+  shadow: { softOffsetY: number; softBlur: number; softOpacity: number };
   duration: Record<string, number>;
   touchTarget: { min: number };
-  /** Direction propre à l'application mobile (remplace les valeurs de base de même nom). */
-  app: {
+  /**
+   * Direction propre à l'application mobile (remplace les valeurs de base de
+   * même nom). Facultatif : absent depuis la direction « Le recueil vivant »
+   * (2026-10-20), commune à toutes les surfaces.
+   */
+  app?: {
     color: Record<'light' | 'dark', Palette>;
     font: { family: Record<FontRole, string>; fallback: Record<FontRole, string> };
     typeScale: Record<string, TextSpec>;
@@ -68,6 +77,7 @@ export interface Tokens {
  * projeté est servi avec les tokens CSS de base).
  */
 export function appTokens(t: Tokens): Tokens {
+  if (!t.app) return t;
   return {
     ...t,
     color: { ...t.color, light: t.app.color.light, dark: t.app.color.dark },
@@ -161,11 +171,17 @@ export function validateTokens(raw: unknown): string[] {
     }
   }
 
-  const app = t.app;
-  if (!app) {
-    errors.push('app manquant');
-    return errors;
+  const shadow = t.shadow;
+  if (
+    !shadow ||
+    !(shadow.softOffsetY >= 0 && shadow.softBlur >= 0) ||
+    !(shadow.softOpacity > 0 && shadow.softOpacity <= 1)
+  ) {
+    errors.push('shadow : softOffsetY et softBlur ≥ 0, 0 < softOpacity ≤ 1');
   }
+
+  const app = t.app;
+  if (!app) return errors;
   checkPalette(errors, 'app.color.light', app.color?.light);
   checkPalette(errors, 'app.color.dark', app.color?.dark);
   checkFonts(errors, 'app.font', app.font);

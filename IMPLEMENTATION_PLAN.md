@@ -232,7 +232,7 @@ Conventions éditoriales (note liminaire du recueil) :
 | Q-05 | **Non** : pas de listes ni de programmes pour les visiteurs | Visiteur = lecture, recherche, favoris locaux. Listes et programmes exigent un compte (ils restent utilisables hors connexion une fois connecté) |
 | Q-07 | **Oui** : le refrain est répété automatiquement en projection | Séquenceur de diapositives : refrain inséré après chaque couplet (désactivable par programme) |
 | Q-08 | **Non** : Internet n'est pas fiable pendant les cultes | **La projection doit fonctionner sans Internet** : ADR-013 révisé (projection sur réseau local, sans dépendance au cloud) |
-| Q-11 | Style **pur et épuré, basé sur le blanc**. **Révisé le 2026-10-19 pour l'app mobile** : « moderne, futuriste mais minimal », direction « clair net », tout en polices modernes (paroles comprises) | Tokens de base inchangés (site, back-office, écran projeté) ; bloc `app` de `tokens.json` pour l'app mobile (§15) |
+| Q-11 | Style **pur et épuré, basé sur le blanc**. Révisé le 2026-10-19 (« clair net », app seule), puis **remplacé le 2026-10-20 par « Le recueil vivant »** (référence `docs/design/`) : ivoire, brun, or patiné, serif pour titres et paroles, **sur toutes les surfaces** ; photos Pexels pour l'accueil et la fiche | Tokens de base communs ; bloc `app` retiré (mécanisme conservé, facultatif) ; plan : `docs/design/UI_ALIGNMENT_PLAN.md` (§15) |
 | Q-12 | Proposer une typographie. Photos issues de **Pexels** | Proposition typographique en §15 (polices OFL). Photos Pexels utilisables (licence Pexels), source de chaque photo consignée dans un registre d'assets |
 | Q-15 | **Vercel** en premier lieu | `apps/admin` et `apps/web` déployés sur Vercel. Vérifier l'offre : l'offre gratuite « Hobby » est réservée à un usage personnel non commercial |
 | Q-17 | Organisation : **« Louanges à Dieu »**. E-mail du projet : **`louangesaDieu04@gmail.com`** (confirmé). Publication sur les stores via un **compte individuel**. Identifiant d'application : **`org.louangesadieu.app`** (validé, définitif après la 1ʳᵉ publication). Projet Supabase **`ssvhoqpvxvfkhwxkewwl`** = base de **développement** du backend | Voir R-06 révisé et R-16. Les projets Supabase `staging` et `prod` seront créés séparément avant la Phase 10 |
@@ -558,48 +558,23 @@ Mesures :
 ## 15. Design System
 
 - Source unique : `packages/design_tokens/tokens.json` → `tokens.g.dart` + `tokens.css`.
-- **Direction de l'app mobile « clair net » (2026-10-19, révision de Q-11 par le propriétaire)** :
-  moderne, futuriste mais minimal. Bloc `app` de `tokens.json`, appliqué **à l'app seulement**
-  (le site, le back-office et l'écran projeté gardent les valeurs de base ci-dessous ; l'aperçu
-  du pilote de projection garde les polices de l'écran projeté) :
-  - blanc pur, noir profond `#0A0A0B`, gris froids, filets de 1 px `#E4E4E7`, aucune ombre ;
-    angles nets (rayons 2 / 4 / 6) ; or `#A9853F` (graphismes) et `#7D6127` (texte) comme seul
-    accent ; thème sombre `#0A0A0B` dérivé ; contrastes vérifiés en CI (paroles AAA) ;
-  - **Space Grotesk** (interface, titres), **Manrope** (paroles), **IBM Plex Mono** (numéros
-    affichés sur trois chiffres, « 037bis », intitulés techniques en capitales espacées,
-    marqueurs « (bis) ») — toutes sous licence OFL ;
-  - Manrope n'a pas d'italique : le refrain est signalé par le filet doré, le retrait et une
-    graisse plus appuyée (plus d'italique synthétique) ;
-  - numéro affiché sur trois chiffres : purement visuel ; lecture vocale (« 37 bis »),
-    recherche et partage utilisent le numéro imprimé.
-- Valeurs de base (site, back-office, écran projeté) :
-- **Direction (Q-11)** : pur et épuré, **basé sur le blanc**. Beaucoup d'espace, filets fins,
-  aucune ombre marquée, aucun dégradé ; l'épi doré est la seule touche identitaire.
-- **Couleurs** (contrastes vérifiés automatiquement en CI) :
-
-  | Token | Valeur | Usage | Contraste sur blanc |
-  |---|---|---|---|
-  | `background` | `#FFFFFF` | fond | — |
-  | `surface` | `#FAFAF8` | cartes, barres | — |
-  | `hairline` | `#ECE8E2` | filets, séparateurs | décoratif |
-  | `text` | `#1F1A17` | paroles, titres | ≈ 17:1 (AAA) |
-  | `textSecondary` | `#6B625B` | métadonnées, libellés | ≈ 6:1 (AA) |
-  | `gold` | `#B08D57` | épi, icônes, état actif | ≈ 3:1 (graphismes uniquement, **jamais du texte**) |
-  | `goldText` | `#8A6A35` | liens/accents textuels rares | ≈ 5:1 (AA) |
-
-  Thème sombre (« veillée », fond `#121110`) et thème **projection** (texte blanc sur noir,
-  contraste maximal) dérivés des mêmes tokens.
-- **Typographie (proposition Q-12, polices sous licence libre SIL OFL)** :
-  - **Cormorant Garamond** — numéros de cantiques, titres d'écran, mot-symbole : élégance
-    classique, écho de la couverture (Baskerville) sans contrainte de licence ;
-  - **Literata** — paroles : dessinée pour la lecture longue sur écran, très lisible de 16 à 34 pt
-    et en projection ; italique soignée pour les refrains (fidèle au livre) ;
-  - **Inter** — interface (boutons, onglets, champs) : neutre et épurée, s'efface devant le texte.
-  - Échelle typographique modulaire ; taille de lecture réglable (16 à 34 pt) ; respect de la
-    taille de police système. Polices embarquées dans l'app (pas de téléchargement au runtime :
-    fonctionnement hors connexion).
+- **Direction « Le recueil vivant » (2026-10-20, remplace Q-11 et « clair net »)** — référence
+  `docs/design/REFERENCE_UX_UI_LOUANGES_A_DIEU.md`, plan et décisions D-1 à D-9 dans
+  `docs/design/UI_ALIGNMENT_PLAN.md`. Mêmes tokens pour l'app, le site, le back-office et l'écran
+  projeté :
+  - fond ivoire `#F7F0E4`, cartes `#FFFAF1`, zones secondaires `#F0E5D2`, brun `#392A1B`
+    (12:1, AAA), texte secondaire `#76634B` (5:1 ; la valeur `#89765D` de la référence échoue
+    AA), or patiné `#A86D13` (graphismes seulement), or texte et boutons `#89570E` (5,4:1 ;
+    libellé ivoire dessus 5,9:1), filets `#E8D9BF`, cartes mises en avant `#E8D1A6` ;
+  - thème sombre et projection : vert-noir `#171F1F` / `#222B29`, texte `#FFF5E5` ;
+    « Écran noir » reste noir pur ;
+  - **Cormorant Garamond** (titres, numéros tels qu'imprimés), **Literata** (paroles, italique
+    pour les refrains), **Inter** (interface) ; rayons 8 / 12 / 16 / 22, ombre douce rare ;
+  - navigation : barre inférieure sur téléphone, navigation latérale dès 840 px.
+- Historique : Q-11 « blanc pur » (2026-10-17), « clair net » pour l'app (2026-10-19 : Space
+  Grotesk, Manrope, IBM Plex Mono, numéros « 037bis ») — abandonnés.
 - **Photos** : Pexels (licence Pexels : usage libre, y compris commercial, sans attribution
-  obligatoire). Usage parcimonieux (splash, à propos). Chaque photo est consignée dans
+  obligatoire). Usage parcimonieux (héro de l'accueil, bandeau de la fiche). Chaque photo est consignée dans
   `docs/ownership/assets.md` (URL source, auteur, date).
 - **Espacements / rayons / élévations / durées** : échelles nommées uniquement.
 - **Composants** : `HymnNumber`, `HymnTitle`, `VerseBlock`, `RefrainBlock` (retrait + italique,
@@ -958,6 +933,7 @@ est accompagné d'un test de non-régression.
 | 2026-10-18 | 0.9 | Phase 7 : programmes de culte (onglet Culte, archivage), partage par lien réutilisé (0014), page publique `apps/web` ; tests avec le vrai serveur. |
 | 2026-10-18 | 1.0 | Phase 8 : projection sans Internet — diapositives Dart/TS, serveur local et pilote dans l'app, écran projeté partagé, mode ordinateur seul (PWA) ; tests en navigateur réel hors ligne. |
 | 2026-10-18 | 1.1 | Phase 9 : back-office éditorial — MFA appliquée par la base, import SQL partagé, diff et retour arrière de release, éditeur avec aperçu mobile, anomalies, journal, équipe ; parcours de bout en bout. |
+| 2026-10-20 | 1.4 | Alignement UI « Le recueil vivant » : audit et plan (`docs/design/UI_ALIGNMENT_PLAN.md`), phase 2 (tokens ivoire/or/brun communs, polices serif, thème, composants communs, navigation latérale tablette, photos Pexels). |
 | 2026-10-19 | 1.3 | App mobile restylée « clair net » (révision de Q-11) : bloc `app` des tokens, Space Grotesk / Manrope / IBM Plex Mono, thème Material entièrement dérivé des tokens, aperçu de projection fidèle à l'écran projeté. 3.11 commencée puis mise de côté. |
 | 2026-10-18 | 1.2 | Phase 10 : revue de sécurité (CSP site, test des fonctions privilégiées), observabilité sans données personnelles, sauvegarde avec restauration vérifiée, confidentialité et stores, signature, déploiement, documentation et transfert. |
 | 2026-10-18 | 0.7 | Phase 5 : écrans Flutter (accueil, recueil, recherche, fiche, lecture, favoris, réglages, à propos), aperçu web de développement (option B), polices OFL. |

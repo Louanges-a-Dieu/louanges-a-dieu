@@ -32,8 +32,12 @@ export function checkContrast(tokens: Tokens): ContrastViolation[] {
   const violations: ContrastViolation[] = [];
   const palettes = [
     ...THEMES.map((theme) => [theme, tokens.color[theme]] as const),
-    ['app.light', tokens.app.color.light] as const,
-    ['app.dark', tokens.app.color.dark] as const,
+    ...(tokens.app
+      ? ([
+          ['app.light', tokens.app.color.light],
+          ['app.dark', tokens.app.color.dark],
+        ] as const)
+      : []),
   ];
   for (const [theme, palette] of palettes) {
     for (const rule of tokens.contrast.rules) {

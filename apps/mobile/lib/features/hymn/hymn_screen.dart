@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app/providers.dart';
 import '../../app/state.dart';
 import '../../core/catalog/published_hymn.dart';
 import '../../core/catalog/sung_order.dart';
@@ -11,6 +10,7 @@ import '../../core/design_system/theme.dart';
 import '../../core/design_system/tokens.g.dart';
 import '../../core/preferences/preferences.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../favorites/favorite_button.dart';
 import '../lists/lists.dart';
 
 /// Fiche cantique (F-HYM-001/002, T-010). Aucune information absente n'est
@@ -26,23 +26,12 @@ class HymnScreen extends ConsumerWidget {
     final hymn = ref.watch(hymnProvider(hymnId));
     final prefs =
         ref.watch(preferencesProvider).value ?? const ReadingPreferences();
-    final isFavorite =
-        ref.watch(favoriteIdsProvider).value?.contains(hymnId) ?? false;
 
     return Scaffold(
       appBar: AppBar(
         actions: [
           if (hymn.value != null) ...[
-            IconButton(
-              tooltip: isFavorite ? l10n.removeFavorite : l10n.addFavorite,
-              icon: Icon(
-                isFavorite ? Icons.star : Icons.star_outline,
-                color: context.lad.gold,
-              ),
-              onPressed: () => ref
-                  .read(userDataRepositoryProvider)
-                  .setFavorite(hymnId, isFavorite: !isFavorite),
-            ),
+            FavoriteButton(hymnId: hymnId),
             IconButton(
               tooltip: l10n.addToList,
               icon: const Icon(Icons.playlist_add),

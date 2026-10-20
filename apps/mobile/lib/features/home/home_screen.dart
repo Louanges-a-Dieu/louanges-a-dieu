@@ -76,7 +76,7 @@ class HomeScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                displayNumber(daily.numberLabel),
+                                daily.numberLabel,
                                 style: LadTheme.textStyle(
                                   LadTypeScale.hymnNumber,
                                   p.goldText,
@@ -112,7 +112,7 @@ class HomeScreen extends ConsumerWidget {
               onTap: () => context.go('/culte'),
             ),
             _Shortcut(
-              icon: Icons.star_outline,
+              icon: Icons.favorite_border,
               label: l10n.openFavorites,
               onTap: () => context.go('/favoris'),
             ),

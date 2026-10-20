@@ -86,6 +86,13 @@ ${dartConstants('LadRadius', 'Rayons (dp).', tokens.radius)}
 
 ${dartConstants('LadStroke', 'Épaisseurs de trait (dp).', tokens.stroke)}
 
+/// Ombre douce (cartes mises en avant) ; couleur : texte du thème.
+abstract final class LadShadow {
+  static const double softOffsetY = ${dartNumber(tokens.shadow.softOffsetY)};
+  static const double softBlur = ${dartNumber(tokens.shadow.softBlur)};
+  static const double softOpacity = ${dartNumber(tokens.shadow.softOpacity)};
+}
+
 /// Durées d'animation.
 abstract final class LadDurations {
 ${durations}
@@ -203,6 +210,8 @@ ${px(tokens.space, 'space')}
 ${px(tokens.radius, 'radius')}
 ${px(tokens.stroke, 'stroke')}
 ${durations}
+  --lad-shadow-soft: 0 ${tokens.shadow.softOffsetY}px ${tokens.shadow.softBlur}px
+    color-mix(in srgb, var(--lad-color-text) ${Math.round(tokens.shadow.softOpacity * 100)}%, transparent);
   --lad-touch-target-min: ${tokens.touchTarget.min}px;
   --lad-lyrics-size-min: ${tokens.lyricsSize.min}px;
   --lad-lyrics-size-default: ${tokens.lyricsSize.default}px;

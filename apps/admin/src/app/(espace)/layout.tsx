@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import type { ReactNode } from 'react';
 
+import { NavLink } from '@/components/nav-link';
 import ui from '@/components/ui.module.css';
 import { requireEditor } from '@/lib/auth';
 
@@ -19,26 +19,26 @@ export default async function EditorialLayout({ children }: { children: ReactNod
         </p>
         <ul className={styles.links}>
           <li>
-            <Link href="/">Tableau de bord</Link>
+            <NavLink href="/">Tableau de bord</NavLink>
           </li>
           <li>
-            <Link href="/cantiques">Cantiques</Link>
+            <NavLink href="/cantiques">Cantiques</NavLink>
           </li>
           <li>
-            <Link href="/anomalies">Anomalies</Link>
+            <NavLink href="/anomalies">Anomalies</NavLink>
           </li>
           <li>
-            <Link href="/publication">Publication</Link>
+            <NavLink href="/publication">Publication</NavLink>
           </li>
           <li>
-            <Link href="/import">Import</Link>
+            <NavLink href="/import">Import</NavLink>
           </li>
           <li>
-            <Link href="/journal">Journal</Link>
+            <NavLink href="/journal">Journal</NavLink>
           </li>
           {editor.isSuperAdmin && (
             <li>
-              <Link href="/equipe">Équipe</Link>
+              <NavLink href="/equipe">Équipe</NavLink>
             </li>
           )}
         </ul>

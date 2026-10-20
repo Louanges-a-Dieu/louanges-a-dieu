@@ -1,6 +1,7 @@
 /**
  * Copie l'écran projeté de l'app (source unique : apps/mobile/assets/projection)
  * dans public/projection-ecran/, pour le mode « ordinateur seul » (Phase 8.4).
+ * Ses polices (OFL) servent aussi au reste du site (globals.css).
  * Lancé avant `dev` et `build` ; le dossier copié n'est pas versionné.
  */
 import { copyFileSync, mkdirSync, rmSync } from 'node:fs';
@@ -18,6 +19,7 @@ const files: Array<[string, string]> = [
   ['assets/fonts/CormorantGaramond/CormorantGaramond-VF.ttf', 'fonts/cormorant.ttf'],
   ['assets/fonts/Literata/Literata-VF.ttf', 'fonts/literata.ttf'],
   ['assets/fonts/Literata/Literata-Italic-VF.ttf', 'fonts/literata-italic.ttf'],
+  ['assets/fonts/Inter/Inter-VF.ttf', 'fonts/inter.ttf'],
 ];
 
 rmSync(out, { recursive: true, force: true });

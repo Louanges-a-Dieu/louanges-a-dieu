@@ -5,8 +5,8 @@ import 'package:louanges_a_dieu/core/design_system/theme.dart';
 import 'package:louanges_a_dieu/core/design_system/tokens.g.dart';
 
 void main() {
-  test('le thème clair a un fond blanc pur (Q-11)', () {
-    expect(LadTheme.light.scaffoldBackgroundColor, const Color(0xFFFFFFFF));
+  test('le thème clair a un fond ivoire (« Le recueil vivant »)', () {
+    expect(LadTheme.light.scaffoldBackgroundColor, const Color(0xFFF7F0E4));
   });
 
   test('chaque thème expose sa palette via LadColors', () {
@@ -39,31 +39,31 @@ void main() {
     );
   });
 
-  test(
-    'direction « clair net » : polices géométriques, numéros techniques',
-    () {
-      expect(LadFonts.ui, 'Space Grotesk');
-      expect(LadFonts.lyrics, 'Manrope');
-      expect(LadFonts.numeric, 'IBM Plex Mono');
-      expect(LadTypeScale.hymnNumber.role, LadFontRole.numeric);
-      expect(LadRadius.sm, lessThanOrEqualTo(2));
-    },
-  );
+  test('titres et paroles en serif, interface en sans-serif', () {
+    expect(LadFonts.display, 'Cormorant Garamond');
+    expect(LadFonts.lyrics, 'Literata');
+    expect(LadFonts.ui, 'Inter');
+    expect(LadTypeScale.title.role, LadFontRole.display);
+    expect(LadTypeScale.lyrics.role, LadFontRole.lyrics);
+    expect(LadRadius.lg, inInclusiveRange(12, 18));
+  });
 
-  test("l'aperçu de projection garde les polices de l'écran projeté", () {
+  test("l'aperçu de projection utilise les polices de l'écran projeté", () {
     final style = LadTheme.textStyle(
       LadProjectionTypeScale.lyrics,
       LadPalette.projection.text,
       projection: true,
     );
     expect(style.fontFamily, LadProjectionFonts.lyrics);
-    expect(LadProjectionFonts.lyrics, isNot(LadFonts.lyrics));
   });
 
-  test('numéro affiché sur trois chiffres, sans toucher au suffixe', () {
-    expect(displayNumber('7'), '007');
-    expect(displayNumber('37bis'), '037bis');
-    expect(displayNumber('1138'), '1138');
+  test('action principale : libellé ivoire sur or foncé', () {
+    final style = LadTheme.light.filledButtonTheme.style!;
+    expect(style.backgroundColor!.resolve({}), LadPalette.light.goldText);
+    expect(style.foregroundColor!.resolve({}), LadPalette.light.surface);
+  });
+
+  test('lecture vocale d’un numéro bis', () {
     expect(spokenNumber('37bis'), '37 bis');
   });
 

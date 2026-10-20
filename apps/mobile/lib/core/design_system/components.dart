@@ -18,12 +18,6 @@ String spokenNumber(String label) => label.replaceFirstMapped(
   (m) => '${m[1]} ${m[2]}',
 );
 
-/// Affichage d'un numéro en chiffres techniques, sur trois chiffres au moins :
-/// « 37bis » → « 037bis ». Purement visuel : la lecture vocale, la recherche
-/// et le partage utilisent le numéro imprimé.
-String displayNumber(String label) =>
-    label.replaceFirstMapped(RegExp(r'^\d+'), (m) => m[0]!.padLeft(3, '0'));
-
 // ----------------------------------------------------------------- l'épi
 
 /// Épi de blé stylisé, élément identitaire (provisoire, en attendant le
@@ -141,7 +135,7 @@ class AccentRule extends StatelessWidget {
   );
 }
 
-/// Petit intitulé technique en capitales espacées (« CANTIQUE DU JOUR »).
+/// Surtitre en capitales espacées, or patiné (« CANTIQUE DU JOUR »).
 class Overline extends StatelessWidget {
   const Overline(this.text, {super.key, this.color});
 
@@ -153,7 +147,7 @@ class Overline extends StatelessWidget {
     text.toUpperCase(),
     style: LadTheme.textStyle(
       LadTypeScale.overline,
-      color ?? context.lad.textSecondary,
+      color ?? context.lad.goldText,
     ),
   );
 }
@@ -177,7 +171,7 @@ class HymnHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            displayNumber(hymn.numberLabel),
+            hymn.numberLabel,
             style: LadTheme.textStyle(LadTypeScale.hymnNumber, p.goldText),
           ),
           const SizedBox(height: LadSpace.sm),
@@ -196,9 +190,8 @@ class HymnHeader extends StatelessWidget {
 // -------------------------------------------------------------- paroles
 
 /// Une section (strophe ou refrain) avec la taille de lecture choisie.
-/// Le refrain est en retrait, plus appuyé, souligné d'un filet doré (la police
-/// des paroles n'a pas d'italique). Les marqueurs « (bis) » restent visibles,
-/// plus discrets, en chiffres techniques.
+/// Le refrain est en retrait, en italique (comme dans le livre), souligné d'un
+/// filet doré. Les marqueurs « (bis) » restent visibles, plus discrets.
 class SectionBlock extends StatelessWidget {
   const SectionBlock({
     super.key,
@@ -214,11 +207,14 @@ class SectionBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.lad;
-    final weight = _isRefrain ? FontWeight.w500 : LadTypeScale.lyrics.weight;
     final base = LadTheme.textStyle(LadTypeScale.lyrics, p.text).copyWith(
       fontSize: fontSize,
-      fontWeight: weight,
-      fontVariations: LadTheme.variations(LadFonts.lyrics, weight, fontSize),
+      fontStyle: _isRefrain ? FontStyle.italic : null,
+      fontVariations: LadTheme.variations(
+        LadFonts.lyrics,
+        LadTypeScale.lyrics.weight,
+        fontSize,
+      ),
     );
     final markerSize =
         fontSize * LadTypeScale.marker.size / LadTypeScale.lyrics.size;
@@ -253,7 +249,7 @@ class SectionBlock extends StatelessWidget {
         padding: const EdgeInsets.only(left: LadSpace.lg),
         decoration: BoxDecoration(
           border: Border(
-            left: BorderSide(color: p.gold, width: LadStroke.refrainRule),
+            left: BorderSide(color: p.goldLight, width: LadStroke.refrainRule),
           ),
         ),
         child: lines,
@@ -322,7 +318,7 @@ class HymnListTile extends StatelessWidget {
                 SizedBox(
                   width: LadSpace.huge,
                   child: Text(
-                    displayNumber(hymn.numberLabel),
+                    hymn.numberLabel,
                     style: LadTheme.textStyle(
                       LadTypeScale.listNumber,
                       p.goldText,
@@ -412,7 +408,7 @@ class MessageState extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: LadTheme.textStyle(LadTypeScale.headline, p.text),
+              style: LadTheme.textStyle(LadTypeScale.sectionTitle, p.text),
             ),
             if (message != null) ...[
               const SizedBox(height: LadSpace.sm),
@@ -424,9 +420,302 @@ class MessageState extends StatelessWidget {
             ],
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: LadSpace.xl),
-              OutlinedButton(onPressed: onAction, child: Text(actionLabel!)),
+              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Chargement discret, sans faux pourcentage.
+class LoadingState extends StatelessWidget {
+  const LoadingState({super.key, this.label});
+
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Semantics(
+      liveRegion: true,
+      label: label,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox.square(
+            dimension: LadSpace.xl,
+            child: CircularProgressIndicator(strokeWidth: LadStroke.accent),
+          ),
+          if (label != null) ...[
+            const SizedBox(height: LadSpace.md),
+            Text(
+              label!,
+              style: LadTheme.textStyle(
+                LadTypeScale.caption,
+                context.lad.textSecondary,
+              ),
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
+}
+
+// ------------------------------------------------------- briques d'écran
+
+/// Numéro de cantique dans un petit bloc ivoire-or, tel qu'imprimé
+/// (« 37bis », « 1138 »). La lecture vocale est portée par le parent.
+class HymnNumberBadge extends StatelessWidget {
+  const HymnNumberBadge(this.numberLabel, {super.key});
+
+  final String numberLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.lad;
+    return ExcludeSemantics(
+      child: Container(
+        constraints: const BoxConstraints(
+          minWidth: LadSpace.xxxl + LadSpace.xs,
+          maxWidth: LadSpace.huge + LadSpace.sm,
+          minHeight: LadSpace.xxl + LadSpace.sm,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: LadSpace.xs + 2),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: p.surfaceWarm,
+          borderRadius: BorderRadius.circular(LadRadius.sm),
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            numberLabel,
+            maxLines: 1,
+            style: LadTheme.textStyle(LadTypeScale.listNumber, p.goldText),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// En-tête d'écran éditorial : surtitre doré, titre serif, sous-titre discret.
+class PageHeader extends StatelessWidget {
+  const PageHeader({
+    super.key,
+    this.eyebrow,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+  });
+
+  final String? eyebrow;
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.lad;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (eyebrow != null) ...[
+                Overline(eyebrow!),
+                const SizedBox(height: LadSpace.xs + 2),
+              ],
+              Semantics(
+                header: true,
+                child: Text(
+                  title,
+                  style: LadTheme.textStyle(LadTypeScale.title, p.text),
+                ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: LadSpace.xs),
+                Text(
+                  subtitle!,
+                  style: LadTheme.textStyle(
+                    LadTypeScale.label,
+                    p.textSecondary,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (trailing != null) ...[
+          const SizedBox(width: LadSpace.md),
+          trailing!,
+        ],
+      ],
+    );
+  }
+}
+
+/// Champ de recherche commun. Avec [onTap] et sans [controller] : simple
+/// entrée qui ouvre l'écran de recherche.
+class SearchField extends StatelessWidget {
+  const SearchField({
+    super.key,
+    required this.hint,
+    this.controller,
+    this.onTap,
+    this.onChanged,
+    this.onSubmitted,
+    this.onClear,
+    this.autofocus = false,
+  });
+
+  final String hint;
+  final TextEditingController? controller;
+  final VoidCallback? onTap;
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
+  final VoidCallback? onClear;
+  final bool autofocus;
+
+  static const _minHeight = LadTouchTarget.min + LadSpace.sm;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.lad;
+    final icon = Icon(Icons.search, color: p.gold);
+    if (controller == null) {
+      return Semantics(
+        button: true,
+        label: hint,
+        excludeSemantics: true,
+        child: Material(
+          color: p.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(LadRadius.md),
+            side: BorderSide(color: p.hairline, width: LadStroke.hairline),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: _minHeight),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: LadSpace.lg),
+                child: Row(
+                  children: [
+                    icon,
+                    const SizedBox(width: LadSpace.md),
+                    Expanded(
+                      child: Text(
+                        hint,
+                        style: LadTheme.textStyle(
+                          LadTypeScale.body,
+                          p.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: _minHeight),
+      child: TextField(
+        controller: controller,
+        autofocus: autofocus,
+        textInputAction: TextInputAction.search,
+        onChanged: onChanged,
+        onSubmitted: onSubmitted,
+        decoration: InputDecoration(
+          hintText: hint,
+          prefixIcon: icon,
+          suffixIcon: onClear == null
+              ? null
+              : ListenableBuilder(
+                  listenable: controller!,
+                  builder: (context, _) => controller!.text.isEmpty
+                      ? const SizedBox.shrink()
+                      : IconButton(
+                          tooltip: MaterialLocalizations.of(context)
+                              .deleteButtonTooltip,
+                          icon: const Icon(Icons.close),
+                          onPressed: onClear,
+                        ),
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Grande carte éditoriale sur photo chaude (accueil, fiche cantique) : voile
+/// brun pour garantir la lisibilité, contenu en clair.
+class HeroCard extends StatelessWidget {
+  const HeroCard({
+    super.key,
+    required this.image,
+    required this.child,
+    this.minHeight = 220,
+    this.imageAlignment = Alignment.center,
+    this.padding = const EdgeInsets.all(LadSpace.xl),
+  });
+
+  /// Photo embarquée (`assets/images/`, registre : docs/ownership/assets.md).
+  final String image;
+  final Widget child;
+  final double minHeight;
+  final Alignment imageAlignment;
+  final EdgeInsetsGeometry padding;
+
+  /// Couleurs du contenu, communes aux thèmes : la carte est toujours sombre.
+  static const ink = LadPalette.projection;
+
+  @override
+  Widget build(BuildContext context) {
+    final veil = LadPalette.light.text;
+    return Container(
+      constraints: BoxConstraints(minHeight: minHeight),
+      decoration: BoxDecoration(
+        color: veil,
+        borderRadius: BorderRadius.circular(LadRadius.xl),
+        boxShadow: LadTheme.softShadow(context.lad),
+        image: DecorationImage(
+          image: AssetImage(image),
+          fit: BoxFit.cover,
+          alignment: imageAlignment,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              veil.withValues(alpha: 0.92),
+              veil.withValues(alpha: 0.72),
+              veil.withValues(alpha: 0.28),
+            ],
+            stops: const [0, 0.55, 1],
+          ),
+        ),
+        child: Padding(
+          padding: padding,
+          child: DefaultTextStyle.merge(
+            style: TextStyle(color: ink.text),
+            child: IconTheme.merge(
+              data: IconThemeData(color: ink.text),
+              child: child,
+            ),
+          ),
         ),
       ),
     );

@@ -37,32 +37,15 @@ flutter:
   assets:
     - assets/catalog/
     - assets/content/
+    - assets/images/
     - assets/projection/
     - assets/fonts/CormorantGaramond/OFL.txt
     - assets/fonts/Literata/OFL.txt
     - assets/fonts/Inter/OFL.txt
-    - assets/fonts/SpaceGrotesk/OFL.txt
-    - assets/fonts/Manrope/OFL.txt
-    - assets/fonts/IBMPlexMono/OFL.txt
-  # Polices sous licence SIL OFL 1.1 (registre : docs/ownership/assets.md).
-  # App : Space Grotesk, Manrope, IBM Plex Mono. Aperçu de projection :
-  # Cormorant Garamond, Literata, Inter (mêmes polices que l'écran projeté).
+  # Polices sous licence SIL OFL 1.1 (registre : docs/ownership/assets.md) :
+  # Cormorant Garamond (titres, numéros), Literata (paroles), Inter (interface).
   # Polices variables : graisse (et taille optique) appliquées par le thème.
   fonts:
-    - family: Space Grotesk
-      fonts:
-        - asset: assets/fonts/SpaceGrotesk/SpaceGrotesk-VF.ttf
-    - family: Manrope
-      fonts:
-        - asset: assets/fonts/Manrope/Manrope-VF.ttf
-    - family: IBM Plex Mono
-      fonts:
-        - asset: assets/fonts/IBMPlexMono/IBMPlexMono-Regular.ttf
-          weight: 400
-        - asset: assets/fonts/IBMPlexMono/IBMPlexMono-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/IBMPlexMono/IBMPlexMono-SemiBold.ttf
-          weight: 600
     - family: Cormorant Garamond
       fonts:
         - asset: assets/fonts/CormorantGaramond/CormorantGaramond-VF.ttf

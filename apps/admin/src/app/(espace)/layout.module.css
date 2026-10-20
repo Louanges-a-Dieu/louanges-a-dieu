@@ -13,11 +13,13 @@
 .nav {
   padding: var(--lad-space-xl) var(--lad-space-md);
   border-right: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
-  background: var(--lad-color-surface);
+  background: var(--lad-color-surface-warm);
 }
 
 .brand {
   margin: 0 0 var(--lad-space-xl);
+  padding-bottom: var(--lad-space-lg);
+  border-bottom: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
   font-family: var(--lad-type-display-family);
   font-size: 1.4rem;
   line-height: 1.2;
@@ -50,6 +52,12 @@
 
 .links a:hover {
   background: color-mix(in srgb, var(--lad-color-gold) 12%, transparent);
+}
+
+.links a[aria-current='page'] {
+  background: var(--lad-color-gold-pale);
+  color: var(--lad-color-text);
+  font-weight: 600;
 }
 
 .account {

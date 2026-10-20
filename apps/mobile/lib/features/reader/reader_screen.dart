@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
-import '../../app/providers.dart';
 import '../../app/state.dart';
 import '../../core/catalog/catalog_models.dart';
 import '../../core/design_system/components.dart';
 import '../../core/design_system/tokens.g.dart';
 import '../../core/preferences/preferences.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../favorites/favorite_button.dart';
 import '../hymn/hymn_screen.dart';
 
 /// Mode lecture : texte seul, taille réglable, cantique précédent/suivant par
@@ -51,22 +51,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         .clamp(0, hymns.length - 1);
     _pages ??= PageController(initialPage: _index!);
     final current = hymns[_index!];
-    final isFavorite =
-        ref.watch(favoriteIdsProvider).value?.contains(current.id) ?? false;
 
     return Scaffold(
       appBar: AppBar(
         actions: [
-          IconButton(
-            tooltip: isFavorite ? l10n.removeFavorite : l10n.addFavorite,
-            icon: Icon(
-              isFavorite ? Icons.star : Icons.star_outline,
-              color: context.lad.gold,
-            ),
-            onPressed: () => ref
-                .read(userDataRepositoryProvider)
-                .setFavorite(current.id, isFavorite: !isFavorite),
-          ),
+          FavoriteButton(hymnId: current.id),
           IconButton(
             tooltip: l10n.textSize,
             icon: const Icon(Icons.format_size),

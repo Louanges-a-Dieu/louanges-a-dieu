@@ -415,7 +415,8 @@ class SlidePreview extends StatelessWidget {
       aspectRatio: 16 / 9,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: p.background,
+          // « Écran noir » : noir pur, comme l'écran projeté.
+          color: blank ? Colors.black : p.background,
           borderRadius: BorderRadius.circular(LadRadius.md),
           border: Border.all(color: context.lad.hairline),
         ),

@@ -50,8 +50,8 @@ void main() {
     await idle(tester);
 
     // Fiche : numéro, titre, vers, lien vers la mélodie du n° 37.
-    // Numéro affiché en chiffres techniques (sur trois chiffres), lu « 37 bis ».
-    expect(find.text('037bis'), findsOneWidget);
+    // Numéro affiché tel qu'imprimé, lu « 37 bis ».
+    expect(find.text('37bis'), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp('^Cantique 37 bis')), findsOneWidget);
     expect(find.text('Le jour se lève.'), findsOneWidget);
     expect(find.text('Se chante sur la mélodie du n° 37'), findsOneWidget);
@@ -106,7 +106,7 @@ void main() {
         .map((t) => t.data)
         .where((d) => d != null && RegExp(r'^\d+(bis)?$').hasMatch(d))
         .toList();
-    expect(labels, ['001', '002', '003', '030', '037', '037bis']);
+    expect(labels, ['1', '2', '3', '30', '37', '37bis']);
 
     await tester.tap(find.byTooltip('Aller au numéro'));
     await idle(tester);

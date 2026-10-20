@@ -56,7 +56,7 @@
   "textSize": "Taille du texte",
   "sungOrderOption": "Répéter le refrain après chaque couplet",
   "favoritesEmptyTitle": "Aucun favori",
-  "favoritesEmptyMessage": "Touchez l’étoile d’un cantique pour le retrouver ici, même hors connexion.",
+  "favoritesEmptyMessage": "Touchez le cœur d’un cantique pour le retrouver ici, même hors connexion.",
   "settings": "Réglages",
   "theme": "Apparence",
   "themeSystem": "Automatique",

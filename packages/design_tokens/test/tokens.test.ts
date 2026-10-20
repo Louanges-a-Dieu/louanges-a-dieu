@@ -27,7 +27,7 @@ describe('tokens.json', () => {
     expect(checkContrast(tokens)).toEqual([]);
   });
 
-  it('garantit le niveau AAA pour le texte des paroles sur fond blanc', () => {
+  it('garantit le niveau AAA pour le texte des paroles sur le fond ivoire', () => {
     expect(contrastRatio(tokens.color.light.text, tokens.color.light.background)).toBeGreaterThan(
       7,
     );
@@ -37,50 +37,71 @@ describe('tokens.json', () => {
     expect(contrastRatio(tokens.color.light.gold, tokens.color.light.background)).toBeLessThan(4.5);
   });
 
-  it('a un fond blanc pur en thème clair (décision Q-11)', () => {
-    expect(tokens.color.light.background).toBe('#FFFFFF');
+  it('suit la direction « Le recueil vivant » (2026-10-20) : ivoire, brun, or, serif', () => {
+    expect(tokens.color.light.background).toBe('#F7F0E4');
+    expect(tokens.color.light.text).toBe('#392A1B');
+    expect(tokens.color.light.gold).toBe('#A86D13');
+    expect(tokens.color.projection.background).toBe('#171F1F');
+    expect(tokens.font.family.display).toBe('Cormorant Garamond');
+    expect(tokens.font.family.lyrics).toBe('Literata');
+    expect(tokens.font.family.ui).toBe('Inter');
+  });
+
+  it('libellés blancs (surface) lisibles sur les boutons dorés (AA)', () => {
+    expect(
+      contrastRatio(tokens.color.light.surface, tokens.color.light.goldText),
+    ).toBeGreaterThanOrEqual(4.5);
   });
 });
 
-describe('direction de l’application (bloc « app »)', () => {
-  const app = appTokens(tokens);
-
-  it('remplace les palettes claire et sombre, garde la projection de base', () => {
-    expect(app.color.light).toEqual(tokens.app.color.light);
-    expect(app.color.dark).toEqual(tokens.app.color.dark);
-    expect(app.color.projection).toEqual(tokens.color.projection);
-    expect(app.color.light.background).toBe('#FFFFFF');
+describe('bloc facultatif « app »', () => {
+  it('absent : l’application reçoit exactement les valeurs de base', () => {
+    expect(tokens.app).toBeUndefined();
+    expect(appTokens(tokens)).toBe(tokens);
   });
 
-  it('définit tous les styles typographiques de base (les composants en dépendent)', () => {
-    for (const name of Object.keys(tokens.typeScale)) expect(app.typeScale[name]).toBeDefined();
+  const withApp = (): typeof tokens => {
+    const t = structuredClone(tokens);
+    t.app = {
+      color: { light: { ...t.color.light }, dark: { ...t.color.dark } },
+      font: { family: { ...t.font.family }, fallback: { ...t.font.fallback } },
+      typeScale: structuredClone(t.typeScale),
+      radius: {},
+      stroke: {},
+    };
+    return t;
+  };
+
+  it('présent : remplace les palettes claire et sombre, garde la projection de base', () => {
+    const t = withApp();
+    t.app!.color.light.background = '#FFFFFF';
+    const app = appTokens(t);
+    expect(app.color.light.background).toBe('#FFFFFF');
+    expect(app.color.projection).toEqual(t.color.projection);
   });
 
   it('signale un style de base absent du bloc « app »', () => {
-    const broken = structuredClone(tokens);
-    delete broken.app.typeScale.lyrics;
+    const broken = withApp();
+    delete broken.app!.typeScale.lyrics;
     expect(validateTokens(broken)).toContain('app.typeScale.lyrics manquant');
   });
 
   it('vérifie aussi les contrastes des palettes de l’application', () => {
-    const broken = structuredClone(tokens);
-    broken.app.color.light.textSecondary = '#BBBBBB';
+    const broken = withApp();
+    broken.app!.color.light.textSecondary = '#BBBBBB';
     expect(checkContrast(broken).map((v) => v.theme)).toContain('app.light');
   });
 
-  it('Dart : polices de l’app, polices et échelle de base pour l’aperçu de projection', () => {
+  it('Dart et CSS : mêmes polices pour l’app, le web et l’écran projeté', () => {
     const dart = generateDart(tokens);
-    expect(dart).toContain("static const String lyrics = 'Manrope';");
-    expect(dart).toContain('abstract final class LadProjectionFonts');
     expect(dart).toContain("static const String lyrics = 'Literata';");
+    expect(dart).toContain('abstract final class LadProjectionFonts');
     expect(dart).toContain('abstract final class LadProjectionTypeScale');
-    expect(dart).toContain('letterSpacing: 0.12,');
-  });
-
-  it('CSS (site, back-office, écran projeté) : inchangé, polices de base', () => {
+    expect(dart).toContain('letterSpacing: 0.16,');
+    expect(dart).toContain('abstract final class LadShadow');
     const css = generateCss(tokens);
     expect(css).toContain("--lad-font-lyrics: 'Literata', Georgia, serif;");
-    expect(css).not.toContain('Manrope');
+    expect(css).toContain('--lad-shadow-soft:');
   });
 });
 
@@ -90,6 +111,14 @@ describe('validateTokens', () => {
     broken.color.dark.text = 'blue';
     expect(validateTokens(broken)).toContain(
       'color.dark.text doit être une couleur #RRGGBB en majuscules',
+    );
+  });
+
+  it('détecte une ombre incohérente', () => {
+    const broken = structuredClone(tokens);
+    broken.shadow.softOpacity = 2;
+    expect(validateTokens(broken)).toContain(
+      'shadow : softOffsetY et softBlur ≥ 0, 0 < softOpacity ≤ 1',
     );
   });
 
@@ -108,13 +137,14 @@ describe('générateurs', () => {
     expect(dart).toContain('static const light = LadPalette(');
     expect(dart).toContain('static const dark = LadPalette(');
     expect(dart).toContain('static const projection = LadPalette(');
-    expect(dart).toContain('background: Color(0xFFFFFFFF),');
+    expect(dart).toContain('background: Color(0xFFF7F0E4),');
     expect(dart).toContain('weight: FontWeight.w400,');
   });
 
   it('produit les variables CSS et le mode sombre automatique', () => {
     const css = generateCss(tokens);
-    expect(css).toContain('--lad-color-text-secondary: #6B625B;');
+    expect(css).toContain('--lad-color-text-secondary: #76634B;');
+    expect(css).toContain('--lad-color-gold-pale: #E8D1A6;');
     expect(css).toContain("--lad-font-lyrics: 'Literata', Georgia, serif;");
     expect(css).toContain("[data-theme='projection']");
     expect(css).toContain('@media (prefers-color-scheme: dark)');
