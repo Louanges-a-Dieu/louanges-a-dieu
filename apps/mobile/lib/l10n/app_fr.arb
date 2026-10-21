@@ -839,5 +839,13 @@
   "reviewModerationHint": "Votre avis est relu par l’équipe avant d’être publié, sans votre nom ni votre adresse.",
   "send": "Envoyer",
   "shareStats": "Statistiques anonymes",
-  "shareStatsHint": "Compter, sans vous identifier, les cantiques consultés, écoutés et projetés, pour améliorer le recueil."
+  "shareStatsHint": "Compter, sans vous identifier, les cantiques consultés, écoutés et projetés, pour améliorer le recueil.",
+  "karaokeOnTv": "Afficher sur la TV",
+  "karaokeTvWaiting": "En attente de la TV…",
+  "karaokeTvAddress": "Adresse",
+  "karaokeTvStop": "Arrêter",
+  "karaokeTvUnavailable": "Affichage sur la TV impossible : vérifiez que le Wi-Fi est activé.",
+  "connectTvStep1": "Reliez la TV (ou l’ordinateur branché à la TV) au même Wi-Fi que ce téléphone. Internet n’est pas nécessaire.",
+  "connectTvStep2": "Dans le navigateur de la TV, ouvrez l’adresse ci-dessous (ou scannez le code).",
+  "connectTvStep3": "Le son reste sur ce téléphone : montez le volume ou reliez-le à une enceinte. Gardez cet écran ouvert pendant le chant."
 }

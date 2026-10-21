@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:louanges_a_dieu/app/providers.dart';
 import 'package:louanges_a_dieu/core/catalog/published_hymn.dart';
 import 'package:louanges_a_dieu/core/preferences/preferences.dart';
 import 'package:louanges_a_dieu/features/audio/audio_downloads.dart';
@@ -10,6 +11,7 @@ import 'package:louanges_a_dieu/features/audio/audio_player.dart';
 
 import '../support/app_harness.dart';
 import '../support/catalog_fixtures.dart';
+import '../support/fake_services.dart';
 import 'faithful_journey_test.dart' show idle, search;
 
 /// Lecteur factice : enregistre les ordres reçus, sans réseau ni greffon.
@@ -214,9 +216,11 @@ Future<void> openHymn(WidgetTester tester, String query, String title) async {
 void main() {
   late FakePlayer player;
   late FakeDownloads downloads;
+  late FakeProjectionHost tv;
   setUp(() {
     player = FakePlayer();
     downloads = FakeDownloads();
+    tv = FakeProjectionHost();
   });
   final fakes = [
     audioPlayerProvider.overrideWith((ref) => player),
@@ -575,5 +579,55 @@ void main() {
     hymns: hymnsWithAudio(),
     env: _audioEnv,
     overrides: fakes,
+  );
+
+  testApp(
+    'karaoké sur la TV : adresse, vers et horloge envoyés à l’écran',
+    (tester, _) async {
+      await openHymn(tester, '2', 'L’Éternel est mon berger');
+      await tester.tap(find.text('Chanter'));
+      await idle(tester);
+      await tester.tap(find.text('Afficher sur la TV'));
+      await idle(tester);
+      expect(
+        find.text('http://192.168.43.1:47100/s/k7mx2qpa/'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('navigateur de la TV'), findsOneWidget);
+      expect(find.textContaining('Écran retour'), findsNothing);
+      await tester.tapAt(const Offset(10, 10));
+      await idle(tester);
+
+      final first = tv.last;
+      expect(first['type'], 'karaoke');
+      expect(first['numberLabel'], '2');
+      expect((first['lines']! as List).length, 6);
+      expect((first['lines']! as List).first, containsPair('start', 2000));
+      expect(first['playing'], isFalse);
+
+      // Lecture, puis saut : l'écran reçoit aussitôt la nouvelle horloge.
+      await player.play();
+      await tester.pump();
+      expect(tv.last['playing'], isTrue);
+      await player.seek(const Duration(seconds: 21));
+      await tester.pump();
+      expect(tv.last['position'], 21000);
+
+      tv.connectScreens(1);
+      await idle(tester);
+      expect(find.text('1 écran connecté'), findsOneWidget);
+      await tester.tap(find.text('Arrêter'));
+      await idle(tester);
+      expect(tv.stoppedWithEndSession, isTrue);
+      expect(find.text('Afficher sur la TV'), findsOneWidget);
+    },
+    hymns: hymnsWithKaraoke(),
+    env: _audioEnv,
+    overrides: [
+      ...fakes,
+      projectionHostFactoryProvider.overrideWithValue(
+        ({token, port}) async => tv,
+      ),
+    ],
   );
 }

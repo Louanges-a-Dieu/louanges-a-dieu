@@ -138,6 +138,134 @@
     fit(content, built.max * scale);
   }
 
+
+  // ------------------------------------------------------------- karaoké
+  // Le téléphone envoie tous les vers et leurs instants, avec l'horloge de
+  // lecture ; l'écran fait avancer l'horloge entre deux messages pour que
+  // le vers se remplisse sans à-coups (son sur le téléphone).
+  var karaoke = null;
+  var karaokeKey = null;
+  var karaokeFrame = null;
+
+  function karaokePosition() {
+    var k = karaoke;
+    return k.message.position + (k.message.playing ? performance.now() - k.receivedAt : 0);
+  }
+
+  function seconds(ms) {
+    return Math.ceil(ms / 1000);
+  }
+
+  function karaokeLine(text, className) {
+    return el('p', className, text);
+  }
+
+  // Phase courante : vers chanté, prochain vers, comptes à rebours.
+  function karaokePhase(lines, pos) {
+    var current = -1;
+    for (var i = 0; i < lines.length; i++) {
+      if (pos >= lines[i].start && pos < lines[i].end) current = i;
+    }
+    var upcoming = current;
+    if (current < 0) {
+      upcoming = -1;
+      for (var j = 0; j < lines.length; j++) {
+        if (lines[j].start > pos) {
+          upcoming = j;
+          break;
+        }
+      }
+    }
+    return { current: current, upcoming: upcoming };
+  }
+
+  // Ce qui est affiché à l'instant pos ; la clé change quand le contenu
+  // doit être reconstruit (autre vers, compte à rebours).
+  function karaokeView(message, pos) {
+    var lines = message.lines || [];
+    var phase = karaokePhase(lines, pos);
+    if (lines.length === 0 || (phase.current < 0 && phase.upcoming === 0)) {
+      var wait = lines.length ? lines[0].start - pos : 0;
+      return { kind: 'intro', phase: phase, wait: wait, key: 'intro|' + (wait > 0 ? seconds(wait) : 0) };
+    }
+    if (phase.upcoming < 0) return { kind: 'end', phase: phase, key: 'end' };
+    var rest = phase.current < 0 ? lines[phase.upcoming].start - pos : 0;
+    return {
+      kind: 'line',
+      phase: phase,
+      rest: rest,
+      key: 'line|' + phase.upcoming + '|' + (phase.current >= 0) + '|' + (rest >= 1000 ? seconds(rest) : 0),
+    };
+  }
+
+  function buildKaraoke(message, view) {
+    var lines = message.lines || [];
+    var box = el('div', 'content karaoke');
+    if (view.kind === 'intro') {
+      box.appendChild(el('p', 'number', message.numberLabel));
+      box.appendChild(el('p', 'title', message.title));
+      if (view.wait > 0) box.appendChild(el('p', 'k-wait', 'Début dans ' + seconds(view.wait) + ' s'));
+      if (lines.length) box.appendChild(karaokeLine(lines[0].text, 'k-line'));
+    } else if (view.kind === 'end') {
+      box.appendChild(el('p', 'brand', 'Louanges à Dieu'));
+      box.appendChild(karaokeLine(lines[lines.length - 1].text, 'k-line'));
+    } else {
+      var i = view.phase.upcoming;
+      if (i > 0) box.appendChild(karaokeLine(lines[i - 1].text, 'k-line'));
+      if (view.rest >= 1000) box.appendChild(el('p', 'k-wait', '♪ Reprise dans ' + seconds(view.rest) + ' s'));
+      if (i === 0 || lines[i].section !== lines[i - 1].section) {
+        box.appendChild(el('p', 'section-name', lines[i].sectionName));
+      }
+      var sung = el('p', 'k-sung');
+      sung.appendChild(el('span', view.phase.current >= 0 ? 'k-fill' : null, lines[i].text));
+      box.appendChild(sung);
+      for (var n = i + 1; n <= i + 2 && n < lines.length; n++) {
+        box.appendChild(karaokeLine(lines[n].text, 'k-line'));
+      }
+    }
+    return box;
+  }
+
+  // Une image : reconstruit le contenu s'il change, sinon fait seulement
+  // avancer le remplissage du vers chanté.
+  function karaokeTick() {
+    karaokeFrame = null;
+    if (!karaoke) return;
+    var message = karaoke.message;
+    var pos = karaokePosition();
+    var view = karaokeView(message, pos);
+    if (view.key !== karaokeKey) {
+      karaokeKey = view.key;
+      var node = buildKaraoke(message, view);
+      stage.replaceChild(node, content);
+      content = node;
+    }
+    var fill = content.querySelector('.k-fill');
+    if (fill && view.phase.current >= 0) {
+      var line = message.lines[view.phase.current];
+      var f = Math.min(1, Math.max(0, (pos - line.start) / Math.max(1, line.end - line.start)));
+      fill.style.setProperty('--fill', (f * 100).toFixed(2) + '%');
+    }
+    karaokeFrame = requestAnimationFrame(karaokeTick);
+  }
+
+  function renderKaraoke(message) {
+    document.body.classList.remove('blank', 'photo');
+    document.body.classList.add('karaoke-mode');
+    document.documentElement.setAttribute('data-theme', 'projection');
+    karaoke = { message: message, receivedAt: performance.now() };
+    karaokeKey = null;
+    if (karaokeFrame === null) karaokeFrame = requestAnimationFrame(karaokeTick);
+  }
+
+  function stopKaraoke() {
+    karaoke = null;
+    karaokeKey = null;
+    document.body.classList.remove('karaoke-mode');
+    if (karaokeFrame !== null) cancelAnimationFrame(karaokeFrame);
+    karaokeFrame = null;
+  }
+
   function save(state) {
     try {
       sessionStorage.setItem(storageKey, JSON.stringify(state));
@@ -156,10 +284,14 @@
   }
 
   function handle(message) {
-    if (message && message.type === 'state') {
+    if (message && message.type === 'karaoke') {
+      renderKaraoke(message);
+    } else if (message && message.type === 'state') {
+      stopKaraoke();
       render(message);
       save(message);
     } else if (message && message.type === 'end') {
+      stopKaraoke();
       render({ blank: false, slide: null });
       save({ blank: false, slide: null });
     }
@@ -224,7 +356,7 @@
   }
 
   window.addEventListener('resize', function () {
-    if (lastState) render(lastState);
+    if (!karaoke && lastState) render(lastState);
   });
 
   // Plein écran : clic ou touche F (les navigateurs l'exigent d'un geste).

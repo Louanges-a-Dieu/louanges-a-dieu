@@ -275,6 +275,88 @@ void main() {
           "!document.body.classList.contains('photo') && document.body.innerText.includes('Refrain, vers 1')",
         );
 
+        // Karaoké en famille : l'écran fait avancer l'horloge lui-même ; le
+        // vers chanté se remplit sans nouveau message.
+        server.publish({
+          'type': 'karaoke',
+          'v': 1,
+          'numberLabel': '12',
+          'title': 'Cantique A',
+          'position': 1000,
+          'playing': true,
+          'lines': [
+            for (final (i, text) in [
+              'Premier vers',
+              'Deuxième vers',
+              'Troisième vers',
+            ].indexed)
+              {
+                'text': text,
+                'start': i * 4000,
+                'end': i * 4000 + 4000,
+                'section': 's1',
+                'sectionName': 'Couplet 1',
+              },
+          ],
+        });
+        await cdp.waitFor(
+          "document.querySelector('.k-sung')?.innerText === 'Premier vers'",
+        );
+        final fill = await cdp.eval(
+          "parseFloat(document.querySelector('.k-fill').style.getPropertyValue('--fill'))",
+        ) as num;
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+        final later = await cdp.eval(
+          "parseFloat(document.querySelector('.k-fill').style.getPropertyValue('--fill'))",
+        ) as num;
+        expect(later, greaterThan(fill), reason: 'remplissage continu');
+        if (Platform.environment['KARAOKE_SHOT'] case final out?) {
+          final shot = await cdp.send('Page.captureScreenshot', {
+            'format': 'png',
+          });
+          File(out).writeAsBytesSync(
+            base64Decode((shot['result']! as Map)['data']! as String),
+          );
+        }
+        expect(
+          await cdp.eval("document.body.innerText.includes('Deuxième vers')"),
+          isTrue,
+          reason: 'vers suivants visibles',
+        );
+        // Pause : l'horloge s'arrête.
+        server.publish({
+          'type': 'karaoke',
+          'v': 1,
+          'numberLabel': '12',
+          'title': 'Cantique A',
+          'position': 4500,
+          'playing': false,
+          'lines': [
+            {
+              'text': 'Premier vers',
+              'start': 0,
+              'end': 4000,
+              'section': 's1',
+              'sectionName': 'Couplet 1',
+            },
+            {
+              'text': 'Deuxième vers',
+              'start': 4000,
+              'end': 8000,
+              'section': 's1',
+              'sectionName': 'Couplet 1',
+            },
+          ],
+        });
+        await cdp.waitFor(
+          "document.querySelector('.k-sung')?.innerText === 'Deuxième vers'",
+        );
+        // Retour à la projection classique.
+        server.publish(state.toMessage());
+        await cdp.waitFor(
+          "document.querySelector('.karaoke') === null && document.body.innerText.includes('Refrain, vers 1')",
+        );
+
         // Coupure : la dernière diapositive reste affichée, « Reconnexion… ».
         await server.stop(endSession: false);
         await cdp.waitFor("!document.getElementById('status').hidden");

@@ -77,6 +77,12 @@ Planche 5 (2026-10-21), champs facultatifs (un écran plus ancien les ignore) :
   options d'un programme ajoutées par l'app après la découpe partagée (`withProgramExtras`),
   hors du contrat TypeScript.
 
+Karaoké sur la TV (2026-10-21) : message `{ "type": "karaoke", "v": 1, numberLabel, title,
+position, playing, lines: [{ text, start, end, section, sectionName }] }` (instants en ms). Le
+téléphone l'envoie à la lecture, à la pause, à chaque saut et au moins chaque seconde ; l'écran
+fait avancer l'horloge entre deux messages et remplit le vers chanté en continu. Le son reste
+sur le téléphone. Un message `state` ou `end` rend l'écran à la projection habituelle.
+
 ## Liste de contrôle sur appareils réels (propriétaire, avant la Phase 10)
 
 À faire avec un téléphone Android, un iPhone et l'ordinateur habituel du projecteur.

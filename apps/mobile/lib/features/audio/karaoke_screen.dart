@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/env.dart';
+import '../../app/providers.dart';
 import '../../app/state.dart';
 import '../../core/catalog/published_hymn.dart';
 import '../../core/design_system/components.dart';
@@ -10,8 +13,10 @@ import '../../core/design_system/theme.dart';
 import '../../core/design_system/tokens.g.dart';
 import '../../core/preferences/preferences.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../projection/projection_screen.dart';
 import 'audio_player.dart';
 import 'audio_screen.dart';
+import 'karaoke_projection.dart';
 
 /// Karaoké (en plus de l'écoute) : sur une piste synchronisée ligne par
 /// ligne, le vers chanté s'affiche en grand et se remplit au rythme du chant ;
@@ -131,6 +136,12 @@ class _KaraokeState extends ConsumerState<_Karaoke> {
   late List<KaraokeLine> _lines = karaokeLines(widget.hymn, _track);
   Duration? _dragging;
 
+  /// Affichage sur la TV (ou un autre écran) ; null s'il est arrêté.
+  KaraokeCaster? _caster;
+  StreamSubscription<int>? _screensSub;
+  int _screens = 0;
+  bool _starting = false;
+
   @override
   void initState() {
     super.initState();
@@ -139,8 +150,68 @@ class _KaraokeState extends ConsumerState<_Karaoke> {
 
   @override
   void dispose() {
+    unawaited(_screensSub?.cancel());
+    unawaited(_caster?.stop());
     _player.release(this);
     super.dispose();
+  }
+
+  /// Démarre le serveur local et montre l'adresse à ouvrir sur la TV.
+  Future<void> _startTv() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _starting = true);
+    try {
+      final host = await ref.read(projectionHostFactoryProvider)();
+      if (!mounted) {
+        await host.stop();
+        return;
+      }
+      _screensSub = host.screenCountChanges.listen((count) {
+        if (mounted) setState(() => _screens = count);
+      });
+      setState(() {
+        _caster = KaraokeCaster(
+          host: host,
+          player: _player,
+          hymn: widget.hymn,
+          lines: _lines,
+        );
+        _screens = host.screens;
+      });
+      await _showAddress();
+    } on Object {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.karaokeTvUnavailable)),
+      );
+    } finally {
+      if (mounted) setState(() => _starting = false);
+    }
+  }
+
+  Future<void> _showAddress() async {
+    final caster = _caster;
+    if (caster == null) return;
+    final urls = await caster.host.screenUrls();
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (_) => ScreenConnectSheet(urls: urls, tv: true),
+    );
+  }
+
+  Future<void> _stopTv() async {
+    final caster = _caster;
+    final screens = _screensSub;
+    setState(() {
+      _caster = null;
+      _screensSub = null;
+      _screens = 0;
+    });
+    unawaited(screens?.cancel());
+    await caster?.stop();
   }
 
   Future<void> _open() async {
@@ -156,6 +227,7 @@ class _KaraokeState extends ConsumerState<_Karaoke> {
       _track = track;
       _lines = karaokeLines(widget.hymn, track);
     });
+    _caster?.setLines(widget.hymn, _lines);
     _open();
   }
 
@@ -169,6 +241,14 @@ class _KaraokeState extends ConsumerState<_Karaoke> {
         final position = _dragging ?? state.position;
         return Column(
           children: [
+            _TvBar(
+              casting: _caster != null,
+              starting: _starting,
+              screens: _screens,
+              onStart: _startTv,
+              onAddress: _showAddress,
+              onStop: _stopTv,
+            ),
             if (_tracks.length > 1)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: LadSpace.lg),
@@ -210,6 +290,74 @@ class _KaraokeState extends ConsumerState<_Karaoke> {
           ],
         );
       },
+    );
+  }
+}
+
+/// Karaoké sur la TV : démarrer, adresse à ouvrir, écrans connectés, arrêt.
+/// Le son reste sur le téléphone (ou une enceinte qui lui est reliée).
+class _TvBar extends StatelessWidget {
+  const _TvBar({
+    required this.casting,
+    required this.starting,
+    required this.screens,
+    required this.onStart,
+    required this.onAddress,
+    required this.onStop,
+  });
+
+  final bool casting;
+  final bool starting;
+  final int screens;
+  final VoidCallback onStart;
+  final VoidCallback onAddress;
+  final VoidCallback onStop;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final p = context.lad;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        LadSpace.lg,
+        0,
+        LadSpace.lg,
+        LadSpace.sm,
+      ),
+      child: casting
+          ? Row(
+              children: [
+                Icon(
+                  screens > 0 ? Icons.cast_connected : Icons.cast,
+                  color: screens > 0 ? p.success : p.goldText,
+                ),
+                const SizedBox(width: LadSpace.sm),
+                Expanded(
+                  child: Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      screens > 0
+                          ? l10n.screensConnected(screens)
+                          : l10n.karaokeTvWaiting,
+                      style: LadTheme.textStyle(LadTypeScale.label, p.text),
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: onAddress,
+                  child: Text(l10n.karaokeTvAddress),
+                ),
+                TextButton(onPressed: onStop, child: Text(l10n.karaokeTvStop)),
+              ],
+            )
+          : Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.tv),
+                label: Text(l10n.karaokeOnTv),
+                onPressed: starting ? null : onStart,
+              ),
+            ),
     );
   }
 }

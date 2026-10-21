@@ -384,7 +384,7 @@ class _ProjectionScreenState extends ConsumerState<ProjectionScreen>
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (_) => _ConnectSheet(urls: urls),
+      builder: (_) => ScreenConnectSheet(urls: urls),
     );
   }
 }
@@ -972,10 +972,13 @@ class SlideView extends StatelessWidget {
       };
 }
 
-class _ConnectSheet extends StatelessWidget {
-  const _ConnectSheet({required this.urls});
+/// Connexion d'un écran : adresse, code à scanner, étapes ; [tv] : textes
+/// pour un téléviseur (karaoké en famille), sans écran retour.
+class ScreenConnectSheet extends StatelessWidget {
+  const ScreenConnectSheet({super.key, required this.urls, this.tv = false});
 
   final List<Uri> urls;
+  final bool tv;
 
   @override
   Widget build(BuildContext context) {
@@ -999,9 +1002,15 @@ class _ConnectSheet extends StatelessWidget {
               style: LadTheme.textStyle(LadTypeScale.headline, p.text),
             ),
             const SizedBox(height: LadSpace.md),
-            Text('1. ${l10n.connectStep1}', style: step),
+            Text(
+              '1. ${tv ? l10n.connectTvStep1 : l10n.connectStep1}',
+              style: step,
+            ),
             const SizedBox(height: LadSpace.sm),
-            Text('2. ${l10n.connectStep2}', style: step),
+            Text(
+              '2. ${tv ? l10n.connectTvStep2 : l10n.connectStep2}',
+              style: step,
+            ),
             const SizedBox(height: LadSpace.lg),
             if (main == null)
               Text(
@@ -1045,8 +1054,11 @@ class _ConnectSheet extends StatelessWidget {
               ],
             ],
             const SizedBox(height: LadSpace.lg),
-            Text('3. ${l10n.connectStep3}', style: step),
-            if (main != null) ...[
+            Text(
+              '3. ${tv ? l10n.connectTvStep3 : l10n.connectStep3}',
+              style: step,
+            ),
+            if (main != null && !tv) ...[
               const SizedBox(height: LadSpace.xl),
               Text(
                 l10n.returnScreen,
