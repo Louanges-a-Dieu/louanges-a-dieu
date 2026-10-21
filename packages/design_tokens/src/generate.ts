@@ -140,6 +140,15 @@ abstract final class LadLyricsSize {
 abstract final class LadTouchTarget {
   static const double min = ${dartNumber(tokens.touchTarget.min)};
 }
+
+/// Couleurs proposées pour les listes (pastille sous une icône blanche).
+abstract final class LadListColors {
+  static const Map<String, Color> all = {
+${Object.entries(tokens.listColors)
+  .map(([name, hex]) => `    '${name}': Color(0xFF${hex.slice(1)}),`)
+  .join('\n')}
+  };
+}
 `;
 }
 

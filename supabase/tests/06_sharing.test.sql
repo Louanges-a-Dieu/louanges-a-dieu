@@ -55,8 +55,8 @@ select set_config('test.view', public.get_shared_program(current_setting('test.t
 select is(current_setting('test.view')::jsonb ->> 'title', 'Culte de Pâques', 'le lien public affiche le programme publié');
 select set_eq(
   $$ select jsonb_object_keys(current_setting('test.view')::jsonb) $$,
-  array['title', 'serviceDate', 'items'],
-  'seuls titre, date et éléments sont exposés'
+  array['title', 'serviceDate', 'location', 'description', 'items'],
+  'seuls titre, date, lieu, description et éléments sont exposés'
 );
 select ok(
   position('11111111-1111-4111-8111-111111111111' in current_setting('test.view')) = 0

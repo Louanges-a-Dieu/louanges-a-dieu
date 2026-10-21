@@ -17,6 +17,9 @@ Future<void> idle(WidgetTester tester) async {
 }
 
 Future<void> tapText(WidgetTester tester, String text) async {
+  // Bouton au bas d'un formulaire : on y fait défiler, comme l'utilisateur.
+  await tester.ensureVisible(find.text(text).last);
+  await idle(tester);
   await tester.tap(find.text(text).last);
   await idle(tester);
 }
@@ -40,7 +43,10 @@ Future<void> signIn(WidgetTester tester) async {
 Future<void> newProgram(WidgetTester tester, String title) async {
   await tapText(tester, 'Culte');
   await tapText(tester, 'Nouveau programme');
-  await tester.enterText(find.byType(TextField), title);
+  await tester.enterText(
+    find.widgetWithText(TextField, 'Titre du programme'),
+    title,
+  );
   await tapText(tester, 'Créer');
 }
 
@@ -220,6 +226,7 @@ void main() {
 
       await tester.tap(find.byTooltip('Partager'));
       await idle(tester);
+      await tapText(tester, 'Lien en ligne');
       const first =
           'https://louanges.exemple.org/programme/jeton000000000000000000000000001';
       expect(find.text(first), findsOneWidget);
@@ -235,6 +242,7 @@ void main() {
       await idle(tester);
       await tester.tap(find.byTooltip('Partager'));
       await idle(tester);
+      await tapText(tester, 'Lien en ligne');
       expect(find.text(first), findsOneWidget);
 
       // Désactiver puis recréer : nouveau lien.
@@ -258,6 +266,7 @@ void main() {
       remote.offline = true;
       await tester.tap(find.byTooltip('Partager'));
       await idle(tester);
+      await tapText(tester, 'Lien en ligne');
       expect(
         find.text('Le partage nécessite une connexion Internet.'),
         findsOneWidget,
@@ -282,6 +291,7 @@ void main() {
         findsOneWidget,
       );
       await back(tester);
+      await tapText(tester, 'Historique');
       expect(find.text('ARCHIVÉS'), findsOneWidget);
       expect(find.textContaining('Archivé'), findsWidgets);
 

@@ -114,6 +114,8 @@ class UserSync {
             id: p.id,
             name: p.name,
             description: p.description,
+            icon: p.icon,
+            color: p.color,
             deleted: p.deleted,
             hymnIds: hymnIds,
           ),
@@ -140,6 +142,11 @@ class UserSync {
             title: w.title,
             serviceDate: w.serviceDate,
             status: w.status,
+            location: w.location,
+            description: w.description,
+            cover: w.cover,
+            isTemplate: w.isTemplate,
+            options: ProgramOptions.rawJson(w.options),
             deleted: w.deleted,
             items: [
               for (final i in items)

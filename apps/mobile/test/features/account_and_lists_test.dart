@@ -64,11 +64,16 @@ Future<void> addToList(
   if (find.text(listName).evaluate().isEmpty) {
     await tester.tap(find.text('Nouvelle liste'));
     await idle(tester);
-    await tester.enterText(find.byType(TextField), listName);
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Nom de la liste'),
+      listName,
+    );
     await tester.tap(find.text('Créer'));
   } else {
     await tester.tap(find.text(listName));
   }
+  await idle(tester);
+  await tester.tap(find.text('Valider'));
   await idle(tester);
   expect(find.text('Ajouté à « $listName »'), findsOneWidget);
   await back(tester);

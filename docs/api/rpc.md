@@ -18,7 +18,7 @@ texte **verbatim** et, si un marqueur de fin de ligne est reconnu, `repeat: { co
 
 | Fonction | Entrée | Sortie |
 |---|---|---|
-| `get_shared_program(p_token)` | jeton du lien | `{ title, serviceDate, items: [{ position, label, notes, hymn }] }` ou `null` |
+| `get_shared_program(p_token)` | jeton du lien | `{ title, serviceDate, location, description, items: [{ position, label, notes, hymn }] }` ou `null` |
 
 `hymn` vaut `{ id, numberLabel, title }` (version publiée), `{ unavailable: true }` si le
 cantique n'est pas publié, ou `null` pour une section libre. Lien inconnu, révoqué, expiré ou
@@ -31,8 +31,8 @@ indisponible ».
 | Fonction | Rôle |
 |---|---|
 | `sync_push_favorites(p_changes)` | `[{ hymnId, deleted? }]` — ajout / pierre tombale |
-| `sync_push_playlist(p_playlist)` | `{ id, name, description?, deleted?, items: [{ hymnId, order }] }` — éléments remplacés en bloc |
-| `sync_push_worship_service(p_service)` | `{ id, title, serviceDate?, status?, deleted?, items: [{ id?, hymnId?, label?, notes?, order }] }` |
+| `sync_push_playlist(p_playlist)` | `{ id, name, description?, icon?, color?, deleted?, items: [{ hymnId, order }] }` — éléments remplacés en bloc ; `icon` et `color` absents : inchangés (0022) |
+| `sync_push_worship_service(p_service)` | `{ id, title, serviceDate?, status?, location?, description?, cover?, isTemplate?, options?, deleted?, items: [{ id?, hymnId?, label?, notes?, order }] }` ; champs ajoutés en 0022 absents : inchangés. `cover` : nom d'une photo de l'app ; `options` : objet (options de projection) |
 | `sync_pull(p_since)` | `{ revision, favorites, playlists, worshipServices }` modifiés depuis `p_since` |
 | `ensure_share_link(p_service_id)` | renvoie le lien actif (non révoqué, non expiré) ou en crée un — partager deux fois donne le **même** lien (0014) |
 | `create_share_link(p_service_id, p_expires_at?)` | crée un **nouveau** lien (l'ancien cesse de fonctionner), renvoie le jeton |

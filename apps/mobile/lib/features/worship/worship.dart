@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,14 +15,17 @@ import '../../core/catalog/catalog_models.dart';
 import '../../core/database/app_database.dart';
 import '../../core/design_system/components.dart';
 import '../../core/design_system/dialogs.dart';
+import '../../core/design_system/photos.dart';
 import '../../core/design_system/theme.dart';
 import '../../core/design_system/tokens.g.dart';
 import '../../core/search/normalize.dart';
 import '../../core/sync/user_sync.dart';
 import '../../core/user_data/user_data_models.dart';
 import '../../l10n/generated/app_localizations.dart';
+import 'program_details.dart';
 
-/// Programmes de culte (F-WOR-001/002) : liés au compte (Q-05, Q-06).
+/// Programmes de culte (F-WOR-001/002, planche 4) : à venir, historique
+/// (passés et archivés), modèles. Liés au compte (Q-05, Q-06).
 class WorshipTab extends ConsumerWidget {
   const WorshipTab({super.key});
 
@@ -31,90 +35,150 @@ class WorshipTab extends ConsumerWidget {
     final signedIn = ref.watch(currentUserProvider).value != null;
     final services =
         ref.watch(worshipServicesProvider).value ?? const <WorshipServiceRow>[];
-    return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: kToolbarHeight + LadSpace.md,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.worshipTitle),
-            Text(
-              l10n.worshipLead,
-              style: LadTheme.textStyle(
-                LadTypeScale.caption,
-                context.lad.textSecondary,
-              ),
+    final today = DateUtils.dateOnly(ref.watch(todayProvider));
+    bool past(WorshipServiceRow s) =>
+        s.serviceDate != null && DateTime.parse(s.serviceDate!).isBefore(today);
+    final upcoming = [
+      for (final s in services.reversed)
+        if (!s.isTemplate && s.status != 'archived' && !past(s)) s,
+    ];
+    final history = [
+      for (final s in services)
+        if (!s.isTemplate && s.status != 'archived' && past(s)) s,
+    ];
+    final archived = [
+      for (final s in services)
+        if (!s.isTemplate && s.status == 'archived') s,
+    ];
+    final templates = [
+      for (final s in services)
+        if (s.isTemplate) s,
+    ];
+
+    Widget list(List<Widget> rows, String emptyTitle, String emptyMessage) =>
+        rows.isEmpty
+        ? MessageState(title: emptyTitle, message: emptyMessage)
+        : ListView(
+            padding: const EdgeInsets.only(
+              top: LadSpace.xs,
+              bottom: LadSpace.huge + LadSpace.xl,
             ),
-          ],
+            children: [for (final row in rows) ReadableWidth(child: row)],
+          );
+
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          toolbarHeight: kToolbarHeight + LadSpace.md,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.worshipTitle),
+              Text(
+                l10n.worshipLead,
+                style: LadTheme.textStyle(
+                  LadTypeScale.caption,
+                  context.lad.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          bottom: signedIn
+              ? PillTabBar(tabs: [l10n.upcoming, l10n.history, l10n.templates])
+              : null,
         ),
-      ),
-      floatingActionButton: signedIn
-          ? FloatingActionButton.extended(
-              icon: const Icon(Icons.add),
-              label: Text(l10n.newProgram),
-              onPressed: () async {
-                final title = await textInputDialog(
-                  context,
-                  title: l10n.newProgram,
-                  label: l10n.programTitle,
-                  action: l10n.create,
-                );
-                if (title == null) return;
-                final id = await ref
-                    .read(userDataRepositoryProvider)
-                    .createWorshipService(title);
-                if (context.mounted) await context.push('/culte/$id');
-              },
-            )
-          : null,
-      body: !signedIn
-          ? MessageState(
-              title: l10n.worshipNeedAccountTitle,
-              message: l10n.worshipNeedAccountMessage,
-              actionLabel: l10n.signIn,
-              onAction: () => context.push('/compte'),
-            )
-          : services.isEmpty
-          ? MessageState(
-              title: l10n.worshipEmptyTitle,
-              message: l10n.worshipEmptyMessage,
-            )
-          : ListView(
-              padding: const EdgeInsets.only(
-                top: LadSpace.xs,
-                bottom: LadSpace.huge + LadSpace.xl,
+        floatingActionButton: signedIn
+            ? FloatingActionButton.extended(
+                icon: const Icon(Icons.add),
+                label: Text(l10n.newProgram),
+                onPressed: () => createProgram(context, ref),
+              )
+            : null,
+        body: !signedIn
+            ? MessageState(
+                title: l10n.worshipNeedAccountTitle,
+                message: l10n.worshipNeedAccountMessage,
+                actionLabel: l10n.signIn,
+                onAction: () => context.push('/compte'),
+              )
+            : TabBarView(
+                children: [
+                  list(
+                    [for (final s in upcoming) _ServiceTile(service: s)],
+                    l10n.worshipEmptyTitle,
+                    l10n.worshipEmptyMessage,
+                  ),
+                  list(
+                    [
+                      for (final s in history) _ServiceTile(service: s),
+                      if (archived.isNotEmpty) ...[
+                        ListSectionHeader(l10n.archivedSection),
+                        for (final s in archived) _ServiceTile(service: s),
+                      ],
+                    ],
+                    l10n.historyEmptyTitle,
+                    l10n.historyEmptyMessage,
+                  ),
+                  list(
+                    [
+                      for (final s in templates)
+                        _ServiceTile(service: s, template: true),
+                    ],
+                    l10n.templatesEmptyTitle,
+                    l10n.templatesEmptyMessage,
+                  ),
+                ],
               ),
-              children: [
-                for (final row in [
-                  for (final s in services.where((s) => s.status != 'archived'))
-                    _ServiceTile(service: s),
-                  if (services.any((s) => s.status == 'archived')) ...[
-                    ListSectionHeader(l10n.archivedSection),
-                    for (final s in services.where(
-                      (s) => s.status == 'archived',
-                    ))
-                      _ServiceTile(service: s),
-                  ],
-                ])
-                  ReadableWidth(child: row),
-              ],
-            ),
+      ),
     );
   }
 }
 
-class _ServiceTile extends StatelessWidget {
-  const _ServiceTile({required this.service});
+/// Nouveau programme : formulaire, puis ouverture de l'éditeur.
+Future<void> createProgram(BuildContext context, WidgetRef ref) async {
+  final values = await showProgramForm(context);
+  if (values == null) return;
+  final id = await ref
+      .read(userDataRepositoryProvider)
+      .createWorshipService(
+        values.title,
+        serviceDate: values.serviceDate,
+        location: values.location,
+        description: values.description,
+        cover: values.cover,
+      );
+  if (context.mounted) await context.push('/culte/$id');
+}
+
+/// Carte d'un programme : photo, titre, date et lieu, nombre de cantiques,
+/// statut ; pour un modèle, « Utiliser ».
+class _ServiceTile extends ConsumerWidget {
+  const _ServiceTile({required this.service, this.template = false});
 
   final WorshipServiceRow service;
+  final bool template;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final p = context.lad;
+    final count = ref.watch(worshipHymnCountsProvider).value?[service.id] ?? 0;
+    final cover = photoAsset(service.cover);
     return _Card(
       child: ListTile(
         minTileHeight: LadTouchTarget.min + LadSpace.lg,
-        leading: Icon(Icons.event_note_outlined, color: p.gold),
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(LadRadius.sm),
+          child: cover == null
+              ? Container(
+                  width: 52,
+                  height: 52,
+                  color: p.surfaceWarm,
+                  child: Icon(Icons.event_note_outlined, color: p.gold),
+                )
+              : Image.asset(cover, width: 52, height: 52, fit: BoxFit.cover),
+        ),
         title: Text(
           service.title,
           style: LadTheme.textStyle(LadTypeScale.listTitle, p.text),
@@ -125,16 +189,36 @@ class _ServiceTile extends StatelessWidget {
             spacing: LadSpace.sm,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text(formatServiceDate(context, service.serviceDate)),
-              StatusPill(status: service.status),
+              if (!template)
+                Text(formatServiceDate(context, service.serviceDate)),
+              if (service.location != null) Text(service.location!),
+              Text(l10n.hymnCount(count)),
+              if (!template) StatusPill(status: service.status),
             ],
           ),
         ),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: template
+            ? TextButton(
+                onPressed: () => useTemplate(context, ref, service),
+                child: Text(l10n.useTemplate),
+              )
+            : const Icon(Icons.chevron_right),
         onTap: () => context.push('/culte/${service.id}'),
       ),
     );
   }
+}
+
+/// Nouveau programme depuis un modèle : même contenu, date à choisir.
+Future<void> useTemplate(
+  BuildContext context,
+  WidgetRef ref,
+  WorshipServiceRow template,
+) async {
+  final id = await ref
+      .read(userDataRepositoryProvider)
+      .duplicateWorshipService(template.id, title: template.title);
+  if (context.mounted) await context.push('/culte/$id');
 }
 
 String statusLabel(AppLocalizations l10n, String status) => switch (status) {
@@ -213,6 +297,7 @@ class WorshipEditorScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final p = context.lad;
     final repo = ref.read(userDataRepositoryProvider);
+    final messenger = ScaffoldMessenger.of(context);
     final service =
         (ref.watch(worshipServicesProvider).value ??
                 const <WorshipServiceRow>[])
@@ -240,66 +325,120 @@ class WorshipEditorScreen extends ConsumerWidget {
     Future<void> save(List<WorshipItemDto> next) =>
         repo.setWorshipServiceItems(serviceId, next);
 
+    List<ProgramLine> lines() => [
+      for (final i in items)
+        (
+          hymn: i.hymnId == null ? null : hymns[i.hymnId],
+          label: i.label,
+          notes: i.notes,
+        ),
+    ];
+    final firstHymn = items.where((i) => hymns[i.hymnId] != null).firstOrNull;
+    final options = ProgramOptions.decode(service.options);
+
+    Future<void> menu(String action) async {
+      switch (action) {
+        case 'edit':
+          final values = await showProgramForm(context, initial: service);
+          if (values == null) return;
+          await repo.updateWorshipService(
+            serviceId,
+            title: values.title,
+            serviceDate: values.serviceDate,
+            location: Value(values.location),
+            description: Value(values.description),
+            cover: Value(values.cover),
+          );
+        case 'options':
+          final next = await showProgramOptions(context, options);
+          if (next != null) {
+            await repo.updateWorshipService(serviceId, options: next);
+          }
+        case 'read':
+          await context.push(
+            '/lecture/${firstHymn!.hymnId}?programme=$serviceId',
+          );
+        case 'present':
+          await context.push('/presentation?programme=$serviceId');
+        case 'template':
+          await repo.duplicateWorshipService(
+            serviceId,
+            title: service.title,
+            isTemplate: true,
+          );
+          messenger.showSnackBar(SnackBar(content: Text(l10n.savedAsTemplate)));
+        case 'use':
+          if (context.mounted) await useTemplate(context, ref, service);
+        case 'duplicate':
+          final id = await repo.duplicateWorshipService(
+            serviceId,
+            title: l10n.copyOf(service.title),
+          );
+          if (context.mounted) context.pushReplacement('/culte/$id');
+        case 'archive':
+          await repo.updateWorshipService(serviceId, status: 'archived');
+        case 'unarchive':
+          await repo.updateWorshipService(serviceId, status: 'draft');
+        case 'delete':
+          if (await confirmDialog(
+            context,
+            title: l10n.deleteProgramTitle,
+            action: l10n.delete,
+            destructive: true,
+          )) {
+            await repo.deleteWorshipService(serviceId);
+            if (context.mounted) context.pop();
+          }
+      }
+    }
+
+    final template = service.isTemplate;
     return Scaffold(
       appBar: AppBar(
         title: Text(service.title),
         actions: [
-          IconButton(
-            tooltip: l10n.project,
-            icon: const Icon(Icons.cast),
-            onPressed: () => context.push('/projection?programme=$serviceId'),
-          ),
-          IconButton(
-            tooltip: l10n.share,
-            icon: const Icon(Icons.ios_share),
-            onPressed: () => shareProgram(context, ref, service),
-          ),
+          if (!template)
+            IconButton(
+              tooltip: l10n.project,
+              icon: const Icon(Icons.cast),
+              onPressed: () => context.push('/projection?programme=$serviceId'),
+            ),
+          if (!template)
+            IconButton(
+              tooltip: l10n.share,
+              icon: const Icon(Icons.ios_share),
+              onPressed: () => showProgramShareChoice(
+                context,
+                service: service,
+                lines: lines(),
+                onLink: () => shareProgram(context, ref, service),
+              ),
+            ),
           PopupMenuButton<String>(
-            onSelected: (action) async {
-              switch (action) {
-                case 'rename':
-                  final title = await textInputDialog(
-                    context,
-                    title: l10n.rename,
-                    label: l10n.programTitle,
-                    action: l10n.save,
-                    initial: service.title,
-                  );
-                  if (title != null) {
-                    await repo.updateWorshipService(serviceId, title: title);
-                  }
-                case 'duplicate':
-                  final id = await repo.duplicateWorshipService(
-                    serviceId,
-                    title: l10n.copyOf(service.title),
-                  );
-                  if (context.mounted) context.pushReplacement('/culte/$id');
-                case 'archive':
-                  await repo.updateWorshipService(
-                    serviceId,
-                    status: 'archived',
-                  );
-                case 'unarchive':
-                  await repo.updateWorshipService(serviceId, status: 'draft');
-                case 'delete':
-                  if (await confirmDialog(
-                    context,
-                    title: l10n.deleteProgramTitle,
-                    action: l10n.delete,
-                    destructive: true,
-                  )) {
-                    await repo.deleteWorshipService(serviceId);
-                    if (context.mounted) context.pop();
-                  }
-              }
-            },
+            onSelected: menu,
             itemBuilder: (_) => [
-              PopupMenuItem(value: 'rename', child: Text(l10n.rename)),
-              PopupMenuItem(value: 'duplicate', child: Text(l10n.duplicate)),
-              if (service.status == 'archived')
-                PopupMenuItem(value: 'unarchive', child: Text(l10n.unarchive))
+              PopupMenuItem(value: 'edit', child: Text(l10n.editProgram)),
+              PopupMenuItem(
+                value: 'options',
+                child: Text(l10n.projectionOptions),
+              ),
+              if (firstHymn != null && !template) ...[
+                PopupMenuItem(value: 'read', child: Text(l10n.readProgram)),
+                PopupMenuItem(value: 'present', child: Text(l10n.fullScreen)),
+              ],
+              if (template)
+                PopupMenuItem(value: 'use', child: Text(l10n.useTemplate))
               else
-                PopupMenuItem(value: 'archive', child: Text(l10n.archive)),
+                PopupMenuItem(
+                  value: 'template',
+                  child: Text(l10n.saveAsTemplate),
+                ),
+              PopupMenuItem(value: 'duplicate', child: Text(l10n.duplicate)),
+              if (!template)
+                if (service.status == 'archived')
+                  PopupMenuItem(value: 'unarchive', child: Text(l10n.unarchive))
+                else
+                  PopupMenuItem(value: 'archive', child: Text(l10n.archive)),
               PopupMenuItem(value: 'delete', child: Text(l10n.delete)),
             ],
           ),
@@ -307,57 +446,68 @@ class WorshipEditorScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          ReadableWidth(
-            child: _Card(
-              color: p.surfaceWarm,
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: Icon(Icons.calendar_today_outlined, color: p.gold),
-                    title: Text(l10n.programDate),
-                    subtitle: Text(
-                      formatServiceDate(context, service.serviceDate),
-                    ),
-                    onTap: () async {
-                      final initial =
-                          DateTime.tryParse(service.serviceDate ?? '') ??
-                          DateTime.now();
-                      final date = await showDatePicker(
-                        context: context,
-                        initialDate: initial,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                      );
-                      if (date != null) {
-                        await repo.updateWorshipService(
-                          serviceId,
-                          serviceDate: date.toIso8601String().substring(0, 10),
-                        );
-                      }
-                    },
-                  ),
-                  if (service.status == 'archived')
+          ReadableWidth(child: _ProgramHeader(service: service)),
+          if (!template)
+            ReadableWidth(
+              child: _Card(
+                color: p.surfaceWarm,
+                child: Column(
+                  children: [
                     ListTile(
                       leading: Icon(
-                        Icons.archive_outlined,
-                        color: p.textSecondary,
+                        Icons.calendar_today_outlined,
+                        color: p.gold,
                       ),
-                      title: Text(l10n.archivedInfo),
-                    )
-                  else
-                    SwitchListTile(
-                      secondary: Icon(Icons.visibility_outlined, color: p.gold),
-                      title: Text(l10n.published),
-                      value: service.status == 'published',
-                      onChanged: (v) => repo.updateWorshipService(
-                        serviceId,
-                        status: v ? 'published' : 'draft',
+                      title: Text(l10n.programDate),
+                      subtitle: Text(
+                        formatServiceDate(context, service.serviceDate),
                       ),
+                      onTap: () async {
+                        final initial =
+                            DateTime.tryParse(service.serviceDate ?? '') ??
+                            DateTime.now();
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: initial,
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+                        if (date != null) {
+                          await repo.updateWorshipService(
+                            serviceId,
+                            serviceDate: date.toIso8601String().substring(
+                              0,
+                              10,
+                            ),
+                          );
+                        }
+                      },
                     ),
-                ],
+                    if (service.status == 'archived')
+                      ListTile(
+                        leading: Icon(
+                          Icons.archive_outlined,
+                          color: p.textSecondary,
+                        ),
+                        title: Text(l10n.archivedInfo),
+                      )
+                    else
+                      SwitchListTile(
+                        secondary: Icon(
+                          Icons.visibility_outlined,
+                          color: p.gold,
+                        ),
+                        title: Text(l10n.published),
+                        value: service.status == 'published',
+                        onChanged: (v) => repo.updateWorshipService(
+                          serviceId,
+                          status: v ? 'published' : 'draft',
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
           Expanded(
             child: items.isEmpty
                 ? MessageState(
@@ -500,6 +650,64 @@ class WorshipEditorScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// En-tête d'un programme : photo, lieu et description quand ils existent ;
+/// « Modèle » pour un modèle.
+class _ProgramHeader extends StatelessWidget {
+  const _ProgramHeader({required this.service});
+
+  final WorshipServiceRow service;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final p = context.lad;
+    final cover = photoAsset(service.cover);
+    final details = [
+      if (service.isTemplate) l10n.templateLabel,
+      ?service.location,
+    ].join(' · ');
+    if (cover == null && details.isEmpty && service.description == null) {
+      return const SizedBox.shrink();
+    }
+    const ink = HeroCard.ink;
+    final text = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (details.isNotEmpty)
+          Text(
+            details,
+            style: LadTheme.textStyle(
+              LadTypeScale.label,
+              cover == null ? p.goldText : ink.goldText,
+            ),
+          ),
+        if (service.description != null)
+          Text(
+            service.description!,
+            style: LadTheme.textStyle(
+              LadTypeScale.body,
+              cover == null ? p.textSecondary : ink.text,
+            ),
+          ),
+      ],
+    );
+    return Padding(
+      padding: HymnListTile.defaultMargin,
+      child: cover == null
+          ? Padding(
+              padding: const EdgeInsets.symmetric(horizontal: LadSpace.sm),
+              child: text,
+            )
+          : HeroCard(
+              image: cover,
+              minHeight: 96,
+              padding: const EdgeInsets.all(LadSpace.lg),
+              child: Align(alignment: Alignment.bottomLeft, child: text),
+            ),
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 
 /// Formats d'échange avec le serveur (RPC sync_*, voir docs/api/rpc.md).
@@ -31,6 +33,8 @@ final class PlaylistDto {
     required this.description,
     required this.deleted,
     required this.hymnIds,
+    this.icon,
+    this.color,
     this.revision = 0,
   });
 
@@ -44,6 +48,8 @@ final class PlaylistDto {
       id: json['id']! as String,
       name: json['name']! as String,
       description: json['description'] as String?,
+      icon: json['icon'] as String?,
+      color: json['color'] as String?,
       deleted: json['deleted'] == true,
       hymnIds: List.unmodifiable(items.map((i) => i['hymnId']! as String)),
       revision: (json['revision'] as int?) ?? 0,
@@ -53,6 +59,10 @@ final class PlaylistDto {
   final String id;
   final String name;
   final String? description;
+
+  /// Icône et couleur choisies (planche 4), ou null.
+  final String? icon;
+  final String? color;
   final bool deleted;
 
   /// Cantiques dans l'ordre de la liste.
@@ -63,6 +73,8 @@ final class PlaylistDto {
     'id': id,
     'name': name,
     'description': description,
+    'icon': icon,
+    'color': color,
     'deleted': deleted,
     'items': [
       for (var i = 0; i < hymnIds.length; i++)
@@ -97,6 +109,11 @@ final class WorshipServiceDto {
     required this.status,
     required this.deleted,
     required this.items,
+    this.location,
+    this.description,
+    this.cover,
+    this.isTemplate = false,
+    this.options = const {},
     this.revision = 0,
   });
 
@@ -111,6 +128,14 @@ final class WorshipServiceDto {
       title: json['title']! as String,
       serviceDate: json['serviceDate'] as String?,
       status: json['status']! as String,
+      location: json['location'] as String?,
+      description: json['description'] as String?,
+      cover: json['cover'] as String?,
+      isTemplate: json['isTemplate'] == true,
+      options: switch (json['options']) {
+        final Map<String, Object?> o => Map.unmodifiable(o),
+        _ => const {},
+      },
       deleted: json['deleted'] == true,
       items: List.unmodifiable(
         items.map(
@@ -134,6 +159,17 @@ final class WorshipServiceDto {
 
   /// draft | published | archived
   final String status;
+
+  /// Lieu, description, photo de l'app (planche 4), ou null.
+  final String? location;
+  final String? description;
+  final String? cover;
+
+  /// Modèle réutilisable.
+  final bool isTemplate;
+
+  /// Options de projection ([ProgramOptions]).
+  final Map<String, Object?> options;
   final bool deleted;
   final List<WorshipItemDto> items;
   final int revision;
@@ -143,6 +179,11 @@ final class WorshipServiceDto {
     'title': title,
     'serviceDate': serviceDate,
     'status': status,
+    'location': location,
+    'description': description,
+    'cover': cover,
+    'isTemplate': isTemplate,
+    'options': options,
     'deleted': deleted,
     'items': [
       for (var i = 0; i < items.length; i++)
@@ -187,4 +228,81 @@ final class UserChanges {
   final List<FavoriteChange> favorites;
   final List<PlaylistDto> playlists;
   final List<WorshipServiceDto> worshipServices;
+}
+
+/// Options de projection d'un programme (planche 4, écran 10 ; planche 5) :
+/// conservées en JSON sur le programme et synchronisées.
+@immutable
+final class ProgramOptions {
+  const ProgramOptions({
+    this.repeatRefrain = true,
+    this.showNumbers = true,
+    this.transitions = false,
+    this.background = 'dark',
+    this.endMessage,
+  });
+
+  factory ProgramOptions.fromJson(Map<String, Object?> json) => ProgramOptions(
+    repeatRefrain: json['repeatRefrain'] != false,
+    showNumbers: json['showNumbers'] != false,
+    transitions: json['transitions'] == true,
+    background: json['background'] is String
+        ? json['background']! as String
+        : 'dark',
+    endMessage: json['endMessage'] as String?,
+  );
+
+  factory ProgramOptions.decode(String? text) =>
+      ProgramOptions.fromJson(rawJson(text));
+
+  /// Objet JSON stocké (clés inconnues comprises, pour les renvoyer telles
+  /// quelles au serveur) ; vide s'il est absent ou illisible.
+  static Map<String, Object?> rawJson(String? text) {
+    if (text == null || text.isEmpty) return const {};
+    try {
+      final json = jsonDecode(text);
+      return json is Map<String, Object?> ? json : const {};
+    } on FormatException {
+      return const {};
+    }
+  }
+
+  /// Refrain répété après chaque couplet (Q-07, désactivable par programme).
+  final bool repeatRefrain;
+
+  /// Numéro du cantique sur les diapositives.
+  final bool showNumbers;
+
+  /// Diapositive de transition (logo) entre deux cantiques.
+  final bool transitions;
+
+  /// Fond de l'écran projeté : `dark`, `light` ou `image:<photo>`.
+  final String background;
+
+  /// Message de fin de programme, ou null (pas de diapositive de fin).
+  final String? endMessage;
+
+  ProgramOptions copyWith({
+    bool? repeatRefrain,
+    bool? showNumbers,
+    bool? transitions,
+    String? background,
+    String? Function()? endMessage,
+  }) => ProgramOptions(
+    repeatRefrain: repeatRefrain ?? this.repeatRefrain,
+    showNumbers: showNumbers ?? this.showNumbers,
+    transitions: transitions ?? this.transitions,
+    background: background ?? this.background,
+    endMessage: endMessage == null ? this.endMessage : endMessage(),
+  );
+
+  Map<String, Object?> toJson() => {
+    'repeatRefrain': repeatRefrain,
+    'showNumbers': showNumbers,
+    'transitions': transitions,
+    'background': background,
+    if (endMessage != null) 'endMessage': endMessage,
+  };
+
+  String encode() => jsonEncode(toJson());
 }

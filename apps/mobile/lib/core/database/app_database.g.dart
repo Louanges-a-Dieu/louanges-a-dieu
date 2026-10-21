@@ -1161,6 +1161,24 @@ class $PlaylistsTable extends Playlists
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  @override
+  late final GeneratedColumn<String> color = GeneratedColumn<String>(
+    'color',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _deletedMeta = const VerificationMeta(
     'deleted',
   );
@@ -1204,6 +1222,8 @@ class $PlaylistsTable extends Playlists
     id,
     name,
     description,
+    icon,
+    color,
     deleted,
     updatedAt,
     serverRevision,
@@ -1240,6 +1260,18 @@ class $PlaylistsTable extends Playlists
           data['description']!,
           _descriptionMeta,
         ),
+      );
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
+    }
+    if (data.containsKey('color')) {
+      context.handle(
+        _colorMeta,
+        color.isAcceptableOrUnknown(data['color']!, _colorMeta),
       );
     }
     if (data.containsKey('deleted')) {
@@ -1286,6 +1318,14 @@ class $PlaylistsTable extends Playlists
         DriftSqlType.string,
         data['${effectivePrefix}description'],
       ),
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      ),
+      color: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}color'],
+      ),
       deleted: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}deleted'],
@@ -1311,6 +1351,10 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
   final String id;
   final String name;
   final String? description;
+
+  /// Icône et couleur choisies (noms de [ListIcon] et [ListColor]), ou null.
+  final String? icon;
+  final String? color;
   final bool deleted;
   final DateTime updatedAt;
   final int serverRevision;
@@ -1318,6 +1362,8 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
     required this.id,
     required this.name,
     this.description,
+    this.icon,
+    this.color,
     required this.deleted,
     required this.updatedAt,
     required this.serverRevision,
@@ -1329,6 +1375,12 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
+    }
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<String>(icon);
+    }
+    if (!nullToAbsent || color != null) {
+      map['color'] = Variable<String>(color);
     }
     map['deleted'] = Variable<bool>(deleted);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -1343,6 +1395,10 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
       description: description == null && nullToAbsent
           ? const Value.absent()
           : Value(description),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
+      color: color == null && nullToAbsent
+          ? const Value.absent()
+          : Value(color),
       deleted: Value(deleted),
       updatedAt: Value(updatedAt),
       serverRevision: Value(serverRevision),
@@ -1358,6 +1414,8 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       description: serializer.fromJson<String?>(json['description']),
+      icon: serializer.fromJson<String?>(json['icon']),
+      color: serializer.fromJson<String?>(json['color']),
       deleted: serializer.fromJson<bool>(json['deleted']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       serverRevision: serializer.fromJson<int>(json['serverRevision']),
@@ -1370,6 +1428,8 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'description': serializer.toJson<String?>(description),
+      'icon': serializer.toJson<String?>(icon),
+      'color': serializer.toJson<String?>(color),
       'deleted': serializer.toJson<bool>(deleted),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'serverRevision': serializer.toJson<int>(serverRevision),
@@ -1380,6 +1440,8 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
     String? id,
     String? name,
     Value<String?> description = const Value.absent(),
+    Value<String?> icon = const Value.absent(),
+    Value<String?> color = const Value.absent(),
     bool? deleted,
     DateTime? updatedAt,
     int? serverRevision,
@@ -1387,6 +1449,8 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
     id: id ?? this.id,
     name: name ?? this.name,
     description: description.present ? description.value : this.description,
+    icon: icon.present ? icon.value : this.icon,
+    color: color.present ? color.value : this.color,
     deleted: deleted ?? this.deleted,
     updatedAt: updatedAt ?? this.updatedAt,
     serverRevision: serverRevision ?? this.serverRevision,
@@ -1398,6 +1462,8 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
       description: data.description.present
           ? data.description.value
           : this.description,
+      icon: data.icon.present ? data.icon.value : this.icon,
+      color: data.color.present ? data.color.value : this.color,
       deleted: data.deleted.present ? data.deleted.value : this.deleted,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       serverRevision: data.serverRevision.present
@@ -1412,6 +1478,8 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('description: $description, ')
+          ..write('icon: $icon, ')
+          ..write('color: $color, ')
           ..write('deleted: $deleted, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('serverRevision: $serverRevision')
@@ -1420,8 +1488,16 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, description, deleted, updatedAt, serverRevision);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    description,
+    icon,
+    color,
+    deleted,
+    updatedAt,
+    serverRevision,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1429,6 +1505,8 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
           other.id == this.id &&
           other.name == this.name &&
           other.description == this.description &&
+          other.icon == this.icon &&
+          other.color == this.color &&
           other.deleted == this.deleted &&
           other.updatedAt == this.updatedAt &&
           other.serverRevision == this.serverRevision);
@@ -1438,6 +1516,8 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
   final Value<String> id;
   final Value<String> name;
   final Value<String?> description;
+  final Value<String?> icon;
+  final Value<String?> color;
   final Value<bool> deleted;
   final Value<DateTime> updatedAt;
   final Value<int> serverRevision;
@@ -1446,6 +1526,8 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.description = const Value.absent(),
+    this.icon = const Value.absent(),
+    this.color = const Value.absent(),
     this.deleted = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.serverRevision = const Value.absent(),
@@ -1455,6 +1537,8 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     required String id,
     required String name,
     this.description = const Value.absent(),
+    this.icon = const Value.absent(),
+    this.color = const Value.absent(),
     this.deleted = const Value.absent(),
     required DateTime updatedAt,
     this.serverRevision = const Value.absent(),
@@ -1466,6 +1550,8 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? description,
+    Expression<String>? icon,
+    Expression<String>? color,
     Expression<bool>? deleted,
     Expression<DateTime>? updatedAt,
     Expression<int>? serverRevision,
@@ -1475,6 +1561,8 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (description != null) 'description': description,
+      if (icon != null) 'icon': icon,
+      if (color != null) 'color': color,
       if (deleted != null) 'deleted': deleted,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (serverRevision != null) 'server_revision': serverRevision,
@@ -1486,6 +1574,8 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     Value<String>? id,
     Value<String>? name,
     Value<String?>? description,
+    Value<String?>? icon,
+    Value<String?>? color,
     Value<bool>? deleted,
     Value<DateTime>? updatedAt,
     Value<int>? serverRevision,
@@ -1495,6 +1585,8 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
+      icon: icon ?? this.icon,
+      color: color ?? this.color,
       deleted: deleted ?? this.deleted,
       updatedAt: updatedAt ?? this.updatedAt,
       serverRevision: serverRevision ?? this.serverRevision,
@@ -1513,6 +1605,12 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     }
     if (description.present) {
       map['description'] = Variable<String>(description.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
+    }
+    if (color.present) {
+      map['color'] = Variable<String>(color.value);
     }
     if (deleted.present) {
       map['deleted'] = Variable<bool>(deleted.value);
@@ -1535,6 +1633,8 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('description: $description, ')
+          ..write('icon: $icon, ')
+          ..write('color: $color, ')
           ..write('deleted: $deleted, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('serverRevision: $serverRevision, ')
@@ -1861,6 +1961,64 @@ class $WorshipServicesTable extends WorshipServices
     requiredDuringInsert: false,
     defaultValue: const Constant('draft'),
   );
+  static const VerificationMeta _locationMeta = const VerificationMeta(
+    'location',
+  );
+  @override
+  late final GeneratedColumn<String> location = GeneratedColumn<String>(
+    'location',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coverMeta = const VerificationMeta('cover');
+  @override
+  late final GeneratedColumn<String> cover = GeneratedColumn<String>(
+    'cover',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isTemplateMeta = const VerificationMeta(
+    'isTemplate',
+  );
+  @override
+  late final GeneratedColumn<bool> isTemplate = GeneratedColumn<bool>(
+    'is_template',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_template" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _optionsMeta = const VerificationMeta(
+    'options',
+  );
+  @override
+  late final GeneratedColumn<String> options = GeneratedColumn<String>(
+    'options',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
   static const VerificationMeta _deletedMeta = const VerificationMeta(
     'deleted',
   );
@@ -1905,6 +2063,11 @@ class $WorshipServicesTable extends WorshipServices
     title,
     serviceDate,
     status,
+    location,
+    description,
+    cover,
+    isTemplate,
+    options,
     deleted,
     updatedAt,
     serverRevision,
@@ -1947,6 +2110,39 @@ class $WorshipServicesTable extends WorshipServices
       context.handle(
         _statusMeta,
         status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('location')) {
+      context.handle(
+        _locationMeta,
+        location.isAcceptableOrUnknown(data['location']!, _locationMeta),
+      );
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cover')) {
+      context.handle(
+        _coverMeta,
+        cover.isAcceptableOrUnknown(data['cover']!, _coverMeta),
+      );
+    }
+    if (data.containsKey('is_template')) {
+      context.handle(
+        _isTemplateMeta,
+        isTemplate.isAcceptableOrUnknown(data['is_template']!, _isTemplateMeta),
+      );
+    }
+    if (data.containsKey('options')) {
+      context.handle(
+        _optionsMeta,
+        options.isAcceptableOrUnknown(data['options']!, _optionsMeta),
       );
     }
     if (data.containsKey('deleted')) {
@@ -1997,6 +2193,26 @@ class $WorshipServicesTable extends WorshipServices
         DriftSqlType.string,
         data['${effectivePrefix}status'],
       )!,
+      location: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}location'],
+      ),
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      cover: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cover'],
+      ),
+      isTemplate: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_template'],
+      )!,
+      options: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}options'],
+      )!,
       deleted: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}deleted'],
@@ -2028,6 +2244,18 @@ class WorshipServiceRow extends DataClass
 
   /// draft | published | archived
   final String status;
+
+  /// Lieu, description, image d'illustration (photo de l'app) ; null si
+  /// absents.
+  final String? location;
+  final String? description;
+  final String? cover;
+
+  /// Modèle réutilisable (hors des listes « À venir » et « Historique »).
+  final bool isTemplate;
+
+  /// Options de projection du programme (JSON, [ProgramOptions]).
+  final String options;
   final bool deleted;
   final DateTime updatedAt;
   final int serverRevision;
@@ -2036,6 +2264,11 @@ class WorshipServiceRow extends DataClass
     required this.title,
     this.serviceDate,
     required this.status,
+    this.location,
+    this.description,
+    this.cover,
+    required this.isTemplate,
+    required this.options,
     required this.deleted,
     required this.updatedAt,
     required this.serverRevision,
@@ -2049,6 +2282,17 @@ class WorshipServiceRow extends DataClass
       map['service_date'] = Variable<String>(serviceDate);
     }
     map['status'] = Variable<String>(status);
+    if (!nullToAbsent || location != null) {
+      map['location'] = Variable<String>(location);
+    }
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    if (!nullToAbsent || cover != null) {
+      map['cover'] = Variable<String>(cover);
+    }
+    map['is_template'] = Variable<bool>(isTemplate);
+    map['options'] = Variable<String>(options);
     map['deleted'] = Variable<bool>(deleted);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['server_revision'] = Variable<int>(serverRevision);
@@ -2063,6 +2307,17 @@ class WorshipServiceRow extends DataClass
           ? const Value.absent()
           : Value(serviceDate),
       status: Value(status),
+      location: location == null && nullToAbsent
+          ? const Value.absent()
+          : Value(location),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      cover: cover == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cover),
+      isTemplate: Value(isTemplate),
+      options: Value(options),
       deleted: Value(deleted),
       updatedAt: Value(updatedAt),
       serverRevision: Value(serverRevision),
@@ -2079,6 +2334,11 @@ class WorshipServiceRow extends DataClass
       title: serializer.fromJson<String>(json['title']),
       serviceDate: serializer.fromJson<String?>(json['serviceDate']),
       status: serializer.fromJson<String>(json['status']),
+      location: serializer.fromJson<String?>(json['location']),
+      description: serializer.fromJson<String?>(json['description']),
+      cover: serializer.fromJson<String?>(json['cover']),
+      isTemplate: serializer.fromJson<bool>(json['isTemplate']),
+      options: serializer.fromJson<String>(json['options']),
       deleted: serializer.fromJson<bool>(json['deleted']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       serverRevision: serializer.fromJson<int>(json['serverRevision']),
@@ -2092,6 +2352,11 @@ class WorshipServiceRow extends DataClass
       'title': serializer.toJson<String>(title),
       'serviceDate': serializer.toJson<String?>(serviceDate),
       'status': serializer.toJson<String>(status),
+      'location': serializer.toJson<String?>(location),
+      'description': serializer.toJson<String?>(description),
+      'cover': serializer.toJson<String?>(cover),
+      'isTemplate': serializer.toJson<bool>(isTemplate),
+      'options': serializer.toJson<String>(options),
       'deleted': serializer.toJson<bool>(deleted),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'serverRevision': serializer.toJson<int>(serverRevision),
@@ -2103,6 +2368,11 @@ class WorshipServiceRow extends DataClass
     String? title,
     Value<String?> serviceDate = const Value.absent(),
     String? status,
+    Value<String?> location = const Value.absent(),
+    Value<String?> description = const Value.absent(),
+    Value<String?> cover = const Value.absent(),
+    bool? isTemplate,
+    String? options,
     bool? deleted,
     DateTime? updatedAt,
     int? serverRevision,
@@ -2111,6 +2381,11 @@ class WorshipServiceRow extends DataClass
     title: title ?? this.title,
     serviceDate: serviceDate.present ? serviceDate.value : this.serviceDate,
     status: status ?? this.status,
+    location: location.present ? location.value : this.location,
+    description: description.present ? description.value : this.description,
+    cover: cover.present ? cover.value : this.cover,
+    isTemplate: isTemplate ?? this.isTemplate,
+    options: options ?? this.options,
     deleted: deleted ?? this.deleted,
     updatedAt: updatedAt ?? this.updatedAt,
     serverRevision: serverRevision ?? this.serverRevision,
@@ -2123,6 +2398,15 @@ class WorshipServiceRow extends DataClass
           ? data.serviceDate.value
           : this.serviceDate,
       status: data.status.present ? data.status.value : this.status,
+      location: data.location.present ? data.location.value : this.location,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      cover: data.cover.present ? data.cover.value : this.cover,
+      isTemplate: data.isTemplate.present
+          ? data.isTemplate.value
+          : this.isTemplate,
+      options: data.options.present ? data.options.value : this.options,
       deleted: data.deleted.present ? data.deleted.value : this.deleted,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       serverRevision: data.serverRevision.present
@@ -2138,6 +2422,11 @@ class WorshipServiceRow extends DataClass
           ..write('title: $title, ')
           ..write('serviceDate: $serviceDate, ')
           ..write('status: $status, ')
+          ..write('location: $location, ')
+          ..write('description: $description, ')
+          ..write('cover: $cover, ')
+          ..write('isTemplate: $isTemplate, ')
+          ..write('options: $options, ')
           ..write('deleted: $deleted, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('serverRevision: $serverRevision')
@@ -2151,6 +2440,11 @@ class WorshipServiceRow extends DataClass
     title,
     serviceDate,
     status,
+    location,
+    description,
+    cover,
+    isTemplate,
+    options,
     deleted,
     updatedAt,
     serverRevision,
@@ -2163,6 +2457,11 @@ class WorshipServiceRow extends DataClass
           other.title == this.title &&
           other.serviceDate == this.serviceDate &&
           other.status == this.status &&
+          other.location == this.location &&
+          other.description == this.description &&
+          other.cover == this.cover &&
+          other.isTemplate == this.isTemplate &&
+          other.options == this.options &&
           other.deleted == this.deleted &&
           other.updatedAt == this.updatedAt &&
           other.serverRevision == this.serverRevision);
@@ -2173,6 +2472,11 @@ class WorshipServicesCompanion extends UpdateCompanion<WorshipServiceRow> {
   final Value<String> title;
   final Value<String?> serviceDate;
   final Value<String> status;
+  final Value<String?> location;
+  final Value<String?> description;
+  final Value<String?> cover;
+  final Value<bool> isTemplate;
+  final Value<String> options;
   final Value<bool> deleted;
   final Value<DateTime> updatedAt;
   final Value<int> serverRevision;
@@ -2182,6 +2486,11 @@ class WorshipServicesCompanion extends UpdateCompanion<WorshipServiceRow> {
     this.title = const Value.absent(),
     this.serviceDate = const Value.absent(),
     this.status = const Value.absent(),
+    this.location = const Value.absent(),
+    this.description = const Value.absent(),
+    this.cover = const Value.absent(),
+    this.isTemplate = const Value.absent(),
+    this.options = const Value.absent(),
     this.deleted = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.serverRevision = const Value.absent(),
@@ -2192,6 +2501,11 @@ class WorshipServicesCompanion extends UpdateCompanion<WorshipServiceRow> {
     required String title,
     this.serviceDate = const Value.absent(),
     this.status = const Value.absent(),
+    this.location = const Value.absent(),
+    this.description = const Value.absent(),
+    this.cover = const Value.absent(),
+    this.isTemplate = const Value.absent(),
+    this.options = const Value.absent(),
     this.deleted = const Value.absent(),
     required DateTime updatedAt,
     this.serverRevision = const Value.absent(),
@@ -2204,6 +2518,11 @@ class WorshipServicesCompanion extends UpdateCompanion<WorshipServiceRow> {
     Expression<String>? title,
     Expression<String>? serviceDate,
     Expression<String>? status,
+    Expression<String>? location,
+    Expression<String>? description,
+    Expression<String>? cover,
+    Expression<bool>? isTemplate,
+    Expression<String>? options,
     Expression<bool>? deleted,
     Expression<DateTime>? updatedAt,
     Expression<int>? serverRevision,
@@ -2214,6 +2533,11 @@ class WorshipServicesCompanion extends UpdateCompanion<WorshipServiceRow> {
       if (title != null) 'title': title,
       if (serviceDate != null) 'service_date': serviceDate,
       if (status != null) 'status': status,
+      if (location != null) 'location': location,
+      if (description != null) 'description': description,
+      if (cover != null) 'cover': cover,
+      if (isTemplate != null) 'is_template': isTemplate,
+      if (options != null) 'options': options,
       if (deleted != null) 'deleted': deleted,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (serverRevision != null) 'server_revision': serverRevision,
@@ -2226,6 +2550,11 @@ class WorshipServicesCompanion extends UpdateCompanion<WorshipServiceRow> {
     Value<String>? title,
     Value<String?>? serviceDate,
     Value<String>? status,
+    Value<String?>? location,
+    Value<String?>? description,
+    Value<String?>? cover,
+    Value<bool>? isTemplate,
+    Value<String>? options,
     Value<bool>? deleted,
     Value<DateTime>? updatedAt,
     Value<int>? serverRevision,
@@ -2236,6 +2565,11 @@ class WorshipServicesCompanion extends UpdateCompanion<WorshipServiceRow> {
       title: title ?? this.title,
       serviceDate: serviceDate ?? this.serviceDate,
       status: status ?? this.status,
+      location: location ?? this.location,
+      description: description ?? this.description,
+      cover: cover ?? this.cover,
+      isTemplate: isTemplate ?? this.isTemplate,
+      options: options ?? this.options,
       deleted: deleted ?? this.deleted,
       updatedAt: updatedAt ?? this.updatedAt,
       serverRevision: serverRevision ?? this.serverRevision,
@@ -2257,6 +2591,21 @@ class WorshipServicesCompanion extends UpdateCompanion<WorshipServiceRow> {
     }
     if (status.present) {
       map['status'] = Variable<String>(status.value);
+    }
+    if (location.present) {
+      map['location'] = Variable<String>(location.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (cover.present) {
+      map['cover'] = Variable<String>(cover.value);
+    }
+    if (isTemplate.present) {
+      map['is_template'] = Variable<bool>(isTemplate.value);
+    }
+    if (options.present) {
+      map['options'] = Variable<String>(options.value);
     }
     if (deleted.present) {
       map['deleted'] = Variable<bool>(deleted.value);
@@ -2280,6 +2629,11 @@ class WorshipServicesCompanion extends UpdateCompanion<WorshipServiceRow> {
           ..write('title: $title, ')
           ..write('serviceDate: $serviceDate, ')
           ..write('status: $status, ')
+          ..write('location: $location, ')
+          ..write('description: $description, ')
+          ..write('cover: $cover, ')
+          ..write('isTemplate: $isTemplate, ')
+          ..write('options: $options, ')
           ..write('deleted: $deleted, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('serverRevision: $serverRevision, ')
@@ -4053,6 +4407,8 @@ typedef $$PlaylistsTableCreateCompanionBuilder = PlaylistsCompanion Function({
   required String id,
   required String name,
   Value<String?> description,
+  Value<String?> icon,
+  Value<String?> color,
   Value<bool> deleted,
   required DateTime updatedAt,
   Value<int> serverRevision,
@@ -4062,6 +4418,8 @@ typedef $$PlaylistsTableUpdateCompanionBuilder = PlaylistsCompanion Function({
   Value<String> id,
   Value<String> name,
   Value<String?> description,
+  Value<String?> icon,
+  Value<String?> color,
   Value<bool> deleted,
   Value<DateTime> updatedAt,
   Value<int> serverRevision,
@@ -4112,6 +4470,16 @@ class $$PlaylistsTableFilterComposer
 
   ColumnFilters<String> get description => $composableBuilder(
     column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get color => $composableBuilder(
+    column: $table.color,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4180,6 +4548,16 @@ class $$PlaylistsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get deleted => $composableBuilder(
     column: $table.deleted,
     builder: (column) => ColumnOrderings(column),
@@ -4215,6 +4593,12 @@ class $$PlaylistsTableAnnotationComposer
     column: $table.description,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+
+  GeneratedColumn<String> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
 
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
@@ -4284,6 +4668,8 @@ class $$PlaylistsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> description = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
+                Value<String?> color = const Value.absent(),
                 Value<bool> deleted = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> serverRevision = const Value.absent(),
@@ -4292,6 +4678,8 @@ class $$PlaylistsTableTableManager
                 id: id,
                 name: name,
                 description: description,
+                icon: icon,
+                color: color,
                 deleted: deleted,
                 updatedAt: updatedAt,
                 serverRevision: serverRevision,
@@ -4302,6 +4690,8 @@ class $$PlaylistsTableTableManager
                 required String id,
                 required String name,
                 Value<String?> description = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
+                Value<String?> color = const Value.absent(),
                 Value<bool> deleted = const Value.absent(),
                 required DateTime updatedAt,
                 Value<int> serverRevision = const Value.absent(),
@@ -4310,6 +4700,8 @@ class $$PlaylistsTableTableManager
                 id: id,
                 name: name,
                 description: description,
+                icon: icon,
+                color: color,
                 deleted: deleted,
                 updatedAt: updatedAt,
                 serverRevision: serverRevision,
@@ -4661,6 +5053,11 @@ typedef $$WorshipServicesTableCreateCompanionBuilder =
       required String title,
       Value<String?> serviceDate,
       Value<String> status,
+      Value<String?> location,
+      Value<String?> description,
+      Value<String?> cover,
+      Value<bool> isTemplate,
+      Value<String> options,
       Value<bool> deleted,
       required DateTime updatedAt,
       Value<int> serverRevision,
@@ -4672,6 +5069,11 @@ typedef $$WorshipServicesTableUpdateCompanionBuilder =
       Value<String> title,
       Value<String?> serviceDate,
       Value<String> status,
+      Value<String?> location,
+      Value<String?> description,
+      Value<String?> cover,
+      Value<bool> isTemplate,
+      Value<String> options,
       Value<bool> deleted,
       Value<DateTime> updatedAt,
       Value<int> serverRevision,
@@ -4745,6 +5147,31 @@ class $$WorshipServicesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get location => $composableBuilder(
+    column: $table.location,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cover => $composableBuilder(
+    column: $table.cover,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isTemplate => $composableBuilder(
+    column: $table.isTemplate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get options => $composableBuilder(
+    column: $table.options,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<bool> get deleted => $composableBuilder(
     column: $table.deleted,
     builder: (column) => ColumnFilters(column),
@@ -4815,6 +5242,31 @@ class $$WorshipServicesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get location => $composableBuilder(
+    column: $table.location,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cover => $composableBuilder(
+    column: $table.cover,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isTemplate => $composableBuilder(
+    column: $table.isTemplate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get options => $composableBuilder(
+    column: $table.options,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get deleted => $composableBuilder(
     column: $table.deleted,
     builder: (column) => ColumnOrderings(column),
@@ -4853,6 +5305,25 @@ class $$WorshipServicesTableAnnotationComposer
 
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get location =>
+      $composableBuilder(column: $table.location, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get cover =>
+      $composableBuilder(column: $table.cover, builder: (column) => column);
+
+  GeneratedColumn<bool> get isTemplate => $composableBuilder(
+    column: $table.isTemplate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get options =>
+      $composableBuilder(column: $table.options, builder: (column) => column);
 
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
@@ -4926,6 +5397,11 @@ class $$WorshipServicesTableTableManager
                 Value<String> title = const Value.absent(),
                 Value<String?> serviceDate = const Value.absent(),
                 Value<String> status = const Value.absent(),
+                Value<String?> location = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String?> cover = const Value.absent(),
+                Value<bool> isTemplate = const Value.absent(),
+                Value<String> options = const Value.absent(),
                 Value<bool> deleted = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> serverRevision = const Value.absent(),
@@ -4935,6 +5411,11 @@ class $$WorshipServicesTableTableManager
                 title: title,
                 serviceDate: serviceDate,
                 status: status,
+                location: location,
+                description: description,
+                cover: cover,
+                isTemplate: isTemplate,
+                options: options,
                 deleted: deleted,
                 updatedAt: updatedAt,
                 serverRevision: serverRevision,
@@ -4946,6 +5427,11 @@ class $$WorshipServicesTableTableManager
                 required String title,
                 Value<String?> serviceDate = const Value.absent(),
                 Value<String> status = const Value.absent(),
+                Value<String?> location = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String?> cover = const Value.absent(),
+                Value<bool> isTemplate = const Value.absent(),
+                Value<String> options = const Value.absent(),
                 Value<bool> deleted = const Value.absent(),
                 required DateTime updatedAt,
                 Value<int> serverRevision = const Value.absent(),
@@ -4955,6 +5441,11 @@ class $$WorshipServicesTableTableManager
                 title: title,
                 serviceDate: serviceDate,
                 status: status,
+                location: location,
+                description: description,
+                cover: cover,
+                isTemplate: isTemplate,
+                options: options,
                 deleted: deleted,
                 updatedAt: updatedAt,
                 serverRevision: serverRevision,

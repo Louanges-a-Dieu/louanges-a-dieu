@@ -524,36 +524,48 @@ class MessageState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.lad;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(LadSpace.xxl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const WheatEar(size: 36),
-            const SizedBox(height: LadSpace.lg),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: LadTheme.textStyle(LadTypeScale.sectionTitle, p.text),
-            ),
-            if (message != null) ...[
-              const SizedBox(height: LadSpace.sm),
-              Text(
-                message!,
-                textAlign: TextAlign.center,
-                style: LadTheme.textStyle(LadTypeScale.body, p.textSecondary),
-              ),
-            ],
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: LadSpace.xl),
-              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
-            ],
-          ],
+    // Défile quand la place manque (petit écran, grand texte, onglets).
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: constraints.maxHeight.isFinite
+                ? constraints.maxHeight
+                : 0,
+          ),
+          child: Center(child: _content(p)),
         ),
       ),
     );
   }
+
+  Widget _content(LadPalette p) => Padding(
+    padding: const EdgeInsets.all(LadSpace.xxl),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const WheatEar(size: 36),
+        const SizedBox(height: LadSpace.lg),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: LadTheme.textStyle(LadTypeScale.sectionTitle, p.text),
+        ),
+        if (message != null) ...[
+          const SizedBox(height: LadSpace.sm),
+          Text(
+            message!,
+            textAlign: TextAlign.center,
+            style: LadTheme.textStyle(LadTypeScale.body, p.textSecondary),
+          ),
+        ],
+        if (actionLabel != null && onAction != null) ...[
+          const SizedBox(height: LadSpace.xl),
+          FilledButton(onPressed: onAction, child: Text(actionLabel!)),
+        ],
+      ],
+    ),
+  );
 }
 
 /// Chargement discret, sans faux pourcentage.

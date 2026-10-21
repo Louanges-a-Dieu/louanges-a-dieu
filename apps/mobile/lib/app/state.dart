@@ -118,6 +118,22 @@ final playlistsProvider = StreamProvider<List<PlaylistRow>>(
   (ref) => ref.watch(userDataRepositoryProvider).watchPlaylists(),
 );
 
+final playlistCountsProvider = StreamProvider<Map<String, int>>(
+  (ref) => ref.watch(userDataRepositoryProvider).watchPlaylistCounts(),
+);
+
+final playlistsContainingProvider = StreamProvider.autoDispose
+    .family<Set<String>, String>(
+      (ref, hymnId) => ref
+          .watch(userDataRepositoryProvider)
+          .watchPlaylistsContaining(hymnId),
+    );
+
+/// Favoris du plus récent au plus ancien.
+final recentFavoriteIdsProvider = StreamProvider<List<String>>(
+  (ref) => ref.watch(userDataRepositoryProvider).watchRecentFavoriteIds(),
+);
+
 final playlistHymnIdsProvider = StreamProvider.autoDispose
     .family<List<String>, String>(
       (ref, id) =>
@@ -126,6 +142,10 @@ final playlistHymnIdsProvider = StreamProvider.autoDispose
 
 final worshipServicesProvider = StreamProvider<List<WorshipServiceRow>>(
   (ref) => ref.watch(userDataRepositoryProvider).watchWorshipServices(),
+);
+
+final worshipHymnCountsProvider = StreamProvider<Map<String, int>>(
+  (ref) => ref.watch(userDataRepositoryProvider).watchWorshipHymnCounts(),
 );
 
 final worshipItemsProvider = StreamProvider.autoDispose

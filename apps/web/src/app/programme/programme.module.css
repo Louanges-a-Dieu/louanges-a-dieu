@@ -41,6 +41,17 @@
   text-transform: uppercase;
 }
 
+.location {
+  margin: var(--lad-space-xs) 0 0;
+  color: var(--lad-color-gold-text);
+}
+
+.description {
+  margin: var(--lad-space-md) 0 0;
+  color: var(--lad-color-text-secondary);
+  white-space: pre-line;
+}
+
 .items {
   display: grid;
   gap: var(--lad-space-sm);

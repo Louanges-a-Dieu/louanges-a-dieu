@@ -11,6 +11,8 @@ export function ProgramView({ program }: { program: SharedProgram }) {
         <p className={styles.brand}>Louanges à Dieu</p>
         <h1 className={styles.title}>{program.title}</h1>
         {date && <p className={styles.date}>{date}</p>}
+        {program.location && <p className={styles.location}>{program.location}</p>}
+        {program.description && <p className={styles.description}>{program.description}</p>}
       </header>
       {program.items.length === 0 ? (
         <p className={styles.muted}>Ce programme ne contient encore aucun élément.</p>

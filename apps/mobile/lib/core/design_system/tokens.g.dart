@@ -398,3 +398,16 @@ abstract final class LadLyricsSize {
 abstract final class LadTouchTarget {
   static const double min = 48;
 }
+
+/// Couleurs proposées pour les listes (pastille sous une icône blanche).
+abstract final class LadListColors {
+  static const Map<String, Color> all = {
+    'gold': Color(0xFF9A6210),
+    'red': Color(0xFFA3362D),
+    'ochre': Color(0xFF8A5A2E),
+    'green': Color(0xFF3F6B4A),
+    'teal': Color(0xFF2C6A6E),
+    'blue': Color(0xFF3B5B8C),
+    'violet': Color(0xFF6A4C8C),
+  };
+}

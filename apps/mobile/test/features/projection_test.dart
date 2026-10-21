@@ -20,6 +20,9 @@ Future<void> idle(WidgetTester tester) async {
 }
 
 Future<void> tapText(WidgetTester tester, String text) async {
+  // Bouton au bas d'un formulaire : on y fait défiler, comme l'utilisateur.
+  await tester.ensureVisible(find.text(text).last);
+  await idle(tester);
   await tester.tap(find.text(text).last);
   await idle(tester);
 }
@@ -194,7 +197,10 @@ void main() {
       await idle(tester);
       await tapText(tester, 'Culte');
       await tapText(tester, 'Nouveau programme');
-      await tester.enterText(find.byType(TextField), 'Culte du soir');
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Titre du programme'),
+        'Culte du soir',
+      );
       await tapText(tester, 'Créer');
       await tapText(tester, 'Ajouter un moment');
       // Boîte de dialogue : le champ « N° » de l'éditeur est aussi présent.

@@ -48,6 +48,8 @@ describe('parseSharedProgram', () => {
     expect(program).toEqual({
       title: 'Culte de Pâques',
       serviceDate: '2026-04-05',
+      location: null,
+      description: null,
       items: [
         { position: 0, label: 'Accueil', notes: null, hymn: null },
         {
@@ -59,6 +61,18 @@ describe('parseSharedProgram', () => {
         { position: 2, label: null, notes: null, hymn: { unavailable: true } },
       ],
     });
+  });
+
+  it('lit le lieu et la description', () => {
+    const program = parseSharedProgram({
+      title: 'Culte',
+      serviceDate: null,
+      location: 'Temple central',
+      description: 'Louange et adoration.',
+      items: [],
+    });
+    expect(program?.location).toBe('Temple central');
+    expect(program?.description).toBe('Louange et adoration.');
   });
 
   it('null signifie « lien indisponible »', () => {

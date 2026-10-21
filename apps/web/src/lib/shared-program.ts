@@ -22,6 +22,9 @@ export interface SharedProgram {
   title: string;
   /** Date ISO `AAAA-MM-JJ`, ou null si le programme n'est pas daté. */
   serviceDate: string | null;
+  /** Lieu et description du culte (planche 4), null s'ils sont absents. */
+  location: string | null;
+  description: string | null;
   items: SharedItem[];
 }
 
@@ -91,6 +94,8 @@ export function parseSharedProgram(json: unknown): SharedProgram | null {
   return {
     title: json.title,
     serviceDate: optionalString(json.serviceDate),
+    location: optionalString(json.location),
+    description: optionalString(json.description),
     items: items.sort((a, b) => a.position - b.position),
   };
 }

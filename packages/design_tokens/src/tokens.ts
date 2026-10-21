@@ -1,5 +1,7 @@
 import { readFileSync } from 'node:fs';
 
+import { contrastRatio } from './contrast.ts';
+
 export const PALETTE_KEYS = [
   'background',
   'surface',
@@ -43,6 +45,12 @@ export interface ContrastRule {
 export interface Tokens {
   color: Record<ThemeName, Palette>;
   contrast: { rules: ContrastRule[] };
+  /**
+   * Couleurs que l'utilisateur choisit pour ses listes (planche 4) : fond
+   * d'une pastille portant une icône blanche (contraste ≥ 4,5 vérifié), dans
+   * tous les thèmes.
+   */
+  listColors: Record<string, string>;
   font: {
     family: Record<FontRole, string>;
     fallback: Record<FontRole, string>;
@@ -168,6 +176,16 @@ export function validateTokens(raw: unknown): string[] {
   for (const group of ['space', 'radius', 'stroke', 'duration'] as const) {
     for (const name of Object.keys(t[group] ?? {})) {
       if (!NAME.test(name)) errors.push(`${group}.${name} : nom invalide (camelCase attendu)`);
+    }
+  }
+
+  const listColors = Object.entries(t.listColors ?? {});
+  if (listColors.length === 0) errors.push('listColors manquant');
+  for (const [name, value] of listColors) {
+    if (!NAME.test(name)) errors.push(`listColors.${name} : nom invalide (camelCase attendu)`);
+    if (!HEX.test(value)) errors.push(`listColors.${name} : couleur #RRGGBB attendue`);
+    else if (contrastRatio('#FFFFFF', value) < 4.5) {
+      errors.push(`listColors.${name} : contraste insuffisant avec une icône blanche`);
     }
   }
 

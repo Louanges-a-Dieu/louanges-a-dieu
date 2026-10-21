@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:drift/drift.dart';
@@ -30,6 +31,14 @@ class UserDataRepository {
 
   // ------------------------------------------------------------------ favoris
 
+  /// Favoris du plus récent au plus ancien (onglet « Récents »).
+  Stream<List<String>> watchRecentFavoriteIds() =>
+      (_db.select(_db.favorites)
+            ..where((f) => f.isFavorite.equals(true))
+            ..orderBy([(f) => OrderingTerm.desc(f.updatedAt)]))
+          .watch()
+          .map((rows) => [for (final r in rows) r.hymnId]);
+
   Stream<Set<String>> watchFavoriteIds() =>
       (_db.select(_db.favorites)..where((f) => f.isFavorite.equals(true)))
           .watch()
@@ -57,7 +66,12 @@ class UserDataRepository {
             ..orderBy([(p) => OrderingTerm.asc(p.name)]))
           .watch();
 
-  Future<String> createPlaylist(String name, {String? description}) async {
+  Future<String> createPlaylist(
+    String name, {
+    String? description,
+    String? icon,
+    String? color,
+  }) async {
     final id = _newId();
     await _write(() async {
       await _db
@@ -67,6 +81,8 @@ class UserDataRepository {
               id: id,
               name: _required(name, 'Nom de liste'),
               description: Value(_optional(description)),
+              icon: Value(icon),
+              color: Value(color),
               updatedAt: _now(),
             ),
           );
@@ -75,10 +91,28 @@ class UserDataRepository {
     return id;
   }
 
-  Future<void> renamePlaylist(String id, String name) => _write(() async {
+  Future<void> renamePlaylist(String id, String name) =>
+      updatePlaylist(id, name: name);
+
+  /// Modifie une liste ; les champs absents ne changent pas (`Value(null)`
+  /// efface la description, l'icône ou la couleur).
+  Future<void> updatePlaylist(
+    String id, {
+    String? name,
+    Value<String?> description = const Value.absent(),
+    Value<String?> icon = const Value.absent(),
+    Value<String?> color = const Value.absent(),
+  }) => _write(() async {
     await (_db.update(_db.playlists)..where((p) => p.id.equals(id))).write(
       PlaylistsCompanion(
-        name: Value(_required(name, 'Nom de liste')),
+        name: name == null
+            ? const Value.absent()
+            : Value(_required(name, 'Nom de liste')),
+        description: description.present
+            ? Value(_optional(description.value))
+            : const Value.absent(),
+        icon: icon,
+        color: color,
         updatedAt: Value(_now()),
       ),
     );
@@ -91,6 +125,26 @@ class UserDataRepository {
     );
     await _enqueue(playlist, id);
   });
+
+  /// Nombre de cantiques de chaque liste.
+  Stream<Map<String, int>> watchPlaylistCounts() => _db
+      .customSelect(
+        'SELECT playlist_id, COUNT(*) AS n FROM playlist_items '
+        'GROUP BY playlist_id',
+        readsFrom: {_db.playlistItems},
+      )
+      .watch()
+      .map(
+        (rows) => {
+          for (final r in rows) r.read<String>('playlist_id'): r.read<int>('n'),
+        },
+      );
+
+  /// Listes qui contiennent [hymnId].
+  Stream<Set<String>> watchPlaylistsContaining(String hymnId) =>
+      (_db.select(_db.playlistItems)..where((i) => i.hymnId.equals(hymnId)))
+          .watch()
+          .map((rows) => {for (final r in rows) r.playlistId});
 
   /// Contenu ordonné d'une liste, mis à jour en continu.
   Stream<List<String>> watchPlaylistHymnIds(String playlistId) =>
@@ -148,6 +202,11 @@ class UserDataRepository {
   Future<String> createWorshipService(
     String title, {
     String? serviceDate,
+    String? location,
+    String? description,
+    String? cover,
+    bool isTemplate = false,
+    String? options,
   }) async {
     final id = _newId();
     await _write(() async {
@@ -158,6 +217,11 @@ class UserDataRepository {
               id: id,
               title: _required(title, 'Titre du programme'),
               serviceDate: Value(serviceDate),
+              location: Value(_optional(location)),
+              description: Value(_optional(description)),
+              cover: Value(cover),
+              isTemplate: Value(isTemplate),
+              options: options == null ? const Value.absent() : Value(options),
               updatedAt: _now(),
             ),
           );
@@ -166,11 +230,18 @@ class UserDataRepository {
     return id;
   }
 
+  /// Modifie un programme ; les champs absents ne changent pas
+  /// (`Value(null)` efface le lieu, la description ou l'image).
   Future<void> updateWorshipService(
     String id, {
     String? title,
     String? serviceDate,
     String? status,
+    Value<String?> location = const Value.absent(),
+    Value<String?> description = const Value.absent(),
+    Value<String?> cover = const Value.absent(),
+    bool? isTemplate,
+    ProgramOptions? options,
   }) => _write(() async {
     await (_db.update(
       _db.worshipServices,
@@ -183,6 +254,19 @@ class UserDataRepository {
             ? const Value.absent()
             : Value(serviceDate),
         status: status == null ? const Value.absent() : Value(status),
+        location: location.present
+            ? Value(_optional(location.value))
+            : const Value.absent(),
+        description: description.present
+            ? Value(_optional(description.value))
+            : const Value.absent(),
+        cover: cover,
+        isTemplate: isTemplate == null
+            ? const Value.absent()
+            : Value(isTemplate),
+        options: options == null
+            ? const Value.absent()
+            : Value(options.encode()),
         updatedAt: Value(_now()),
       ),
     );
@@ -201,6 +285,20 @@ class UserDataRepository {
     await _enqueue(worshipService, id);
   });
 
+  /// Nombre de cantiques de chaque programme (moments libres exclus).
+  Stream<Map<String, int>> watchWorshipHymnCounts() => _db
+      .customSelect(
+        'SELECT service_id, COUNT(*) AS n FROM worship_service_items '
+        'WHERE hymn_id IS NOT NULL GROUP BY service_id',
+        readsFrom: {_db.worshipServiceItems},
+      )
+      .watch()
+      .map(
+        (rows) => {
+          for (final r in rows) r.read<String>('service_id'): r.read<int>('n'),
+        },
+      );
+
   /// Éléments ordonnés d'un programme, mis à jour en continu.
   Stream<List<WorshipServiceItemRow>> watchWorshipServiceItems(
     String serviceId,
@@ -213,10 +311,14 @@ class UserDataRepository {
   /// Identifiant d'un nouvel élément de programme (créé hors connexion).
   String newItemId() => _newId();
 
-  /// Copie un programme (titre fourni, même date, mêmes éléments, en brouillon).
+  /// Copie un programme (titre fourni, même date, mêmes éléments, en
+  /// brouillon) ; [isTemplate] : enregistrer comme modèle, ou créer un
+  /// programme depuis un modèle ([serviceDate] remplace alors la date).
   Future<String> duplicateWorshipService(
     String sourceId, {
     required String title,
+    bool isTemplate = false,
+    String? serviceDate,
   }) async {
     final source = await (_db.select(
       _db.worshipServices,
@@ -224,7 +326,12 @@ class UserDataRepository {
     final items = await worshipServiceItems(sourceId);
     final id = await createWorshipService(
       title,
-      serviceDate: source.serviceDate,
+      serviceDate: isTemplate ? null : serviceDate ?? source.serviceDate,
+      location: source.location,
+      description: source.description,
+      cover: source.cover,
+      isTemplate: isTemplate,
+      options: source.options,
     );
     await setWorshipServiceItems(id, [
       for (final i in items)
@@ -297,6 +404,8 @@ class UserDataRepository {
             id: p.id,
             name: p.name,
             description: Value(p.description),
+            icon: Value(p.icon),
+            color: Value(p.color),
             deleted: Value(p.deleted),
             updatedAt: _now(),
             serverRevision: Value(p.revision),
@@ -314,6 +423,11 @@ class UserDataRepository {
             title: w.title,
             serviceDate: Value(w.serviceDate),
             status: Value(w.status),
+            location: Value(w.location),
+            description: Value(w.description),
+            cover: Value(w.cover),
+            isTemplate: Value(w.isTemplate),
+            options: Value(jsonEncode(w.options)),
             deleted: Value(w.deleted),
             updatedAt: _now(),
             serverRevision: Value(w.revision),

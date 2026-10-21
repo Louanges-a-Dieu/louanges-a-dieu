@@ -629,5 +629,88 @@
   "faqShareQ": "Comment partager un programme ?",
   "faqShareA": "Dans le programme, touchez « Partager » : lien vers une page en ligne, image ou texte, par la messagerie de votre choix.",
   "faqDeleteQ": "Comment supprimer mon compte ?",
-  "faqDeleteA": "Plus → Mon compte → Supprimer mon compte. Vos listes et programmes sont effacés du serveur ; vous pouvez garder vos favoris sur l'appareil."
+  "faqDeleteA": "Plus → Mon compte → Supprimer mon compte. Vos listes et programmes sont effacés du serveur ; vous pouvez garder vos favoris sur l'appareil.",
+  "colorGold": "Or",
+  "colorRed": "Rouge",
+  "colorOchre": "Ocre",
+  "colorGreen": "Vert",
+  "colorTeal": "Bleu-vert",
+  "colorBlue": "Bleu",
+  "colorViolet": "Violet",
+  "iconHeart": "Cœur",
+  "iconPrayer": "Prière",
+  "iconChurch": "Église",
+  "iconBook": "Livre",
+  "iconMusic": "Musique",
+  "iconStar": "Étoile",
+  "iconCelebration": "Fête",
+  "editList": "Modifier la liste",
+  "descriptionOptional": "Description (facultatif)",
+  "icon": "Icône",
+  "color": "Couleur",
+  "sharedFrom": "Partagé depuis l'app Louanges à Dieu",
+  "addHymns": "Ajouter des cantiques",
+  "readList": "Lire la liste",
+  "recent": "Récents",
+  "alreadyInThisList": "Déjà dans la liste",
+  "addCount": "{count, plural, =0{Ajouter} other{Ajouter ({count})}}",
+  "@addCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addedToLists": "Ajouté à {count} listes",
+  "@addedToLists": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listsUpdated": "Listes mises à jour",
+  "validate": "Valider",
+  "upcoming": "À venir",
+  "history": "Historique",
+  "templates": "Modèles",
+  "historyEmptyTitle": "Aucun culte passé",
+  "historyEmptyMessage": "Les programmes dont la date est passée, et ceux archivés, apparaîtront ici.",
+  "templatesEmptyTitle": "Aucun modèle",
+  "templatesEmptyMessage": "Dans un programme, « Enregistrer comme modèle » le garde ici pour le réutiliser.",
+  "useTemplate": "Utiliser",
+  "editProgram": "Modifier le programme",
+  "chooseDate": "Choisir la date",
+  "locationOptional": "Lieu (facultatif)",
+  "imageOptional": "Image (facultatif)",
+  "noImage": "Aucune",
+  "photoNumber": "Photo {number}",
+  "@photoNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "projectionOptions": "Options de projection",
+  "showNumbers": "Afficher les numéros",
+  "transitions": "Transitions entre les cantiques",
+  "transitionsHint": "Un écran avec le logo entre deux cantiques.",
+  "projectionBackground": "Fond de l'écran projeté",
+  "backgroundDark": "Sombre",
+  "backgroundLight": "Clair",
+  "endMessage": "Message de fin (facultatif)",
+  "endMessageHint": "Merci pour ce temps de louange !",
+  "shareProgram": "Partager le programme",
+  "shareLinkOption": "Lien en ligne",
+  "shareLinkOptionSubtitle": "Une page web à ouvrir sans l'app ; demande Internet.",
+  "shareProgramImageSubtitle": "Photo, informations et cantiques du programme.",
+  "shareProgramTextSubtitle": "Liste des cantiques, à coller dans un message.",
+  "copyText": "Copier le texte",
+  "copyTextSubtitle": "Dans le presse-papiers.",
+  "textCopied": "Texte copié.",
+  "readProgram": "Lire le programme",
+  "saveAsTemplate": "Enregistrer comme modèle",
+  "savedAsTemplate": "Enregistré dans les modèles.",
+  "templateLabel": "Modèle"
 }

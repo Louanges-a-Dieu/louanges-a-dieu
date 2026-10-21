@@ -98,6 +98,8 @@ describe.skipIf(!available)('programme partagé — serveur réel', () => {
     expect(program).toEqual({
       title: 'Essai de partage (test d’intégration)',
       serviceDate: '2026-04-05',
+      location: null,
+      description: null,
       items: [
         { position: 0, label: 'Accueil', notes: 'Debout', hymn: null },
         {

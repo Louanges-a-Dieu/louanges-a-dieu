@@ -94,6 +94,8 @@ describe('programmes préparés', () => {
   const shared = {
     title: 'Culte du dimanche',
     serviceDate: '2026-10-25',
+    location: null,
+    description: null,
     items: [
       { position: 0, label: 'Accueil', notes: 'Debout', hymn: null },
       {

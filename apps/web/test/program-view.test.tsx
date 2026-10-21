@@ -4,12 +4,14 @@ import { describe, expect, it } from 'vitest';
 import { ProgramView, UnavailableView } from '../src/app/programme/program-view';
 
 describe('ProgramView', () => {
-  it('affiche titre, date, numéros, titres, moments et notes — rien d’autre', () => {
+  it('affiche titre, date, lieu, description, numéros, titres, moments et notes — rien d’autre', () => {
     const html = renderToStaticMarkup(
       <ProgramView
         program={{
           title: 'Culte de Pâques',
           serviceDate: '2026-04-05',
+          location: 'Temple central',
+          description: 'Louange et adoration.',
           items: [
             { position: 0, label: 'Accueil', notes: null, hymn: null },
             {
@@ -26,6 +28,8 @@ describe('ProgramView', () => {
     expect(html).toContain('<h1');
     expect(html).toContain('Culte de Pâques');
     expect(html).toContain('dimanche 5 avril 2026');
+    expect(html).toContain('Temple central');
+    expect(html).toContain('Louange et adoration.');
     expect(html).toContain('Accueil');
     expect(html).toContain('37 bis');
     expect(html).toContain('Au matin');
@@ -38,7 +42,15 @@ describe('ProgramView', () => {
 
   it('sans date ni élément : aucun champ vide affiché', () => {
     const html = renderToStaticMarkup(
-      <ProgramView program={{ title: 'Culte', serviceDate: null, items: [] }} />,
+      <ProgramView
+        program={{
+          title: 'Culte',
+          serviceDate: null,
+          location: null,
+          description: null,
+          items: [],
+        }}
+      />,
     );
     expect(html).toContain('aucun élément');
     expect(html).not.toMatch(/<p[^>]*><\/p>/);

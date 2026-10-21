@@ -38,7 +38,7 @@ données masqués, barre du bas inchangée).
 | Lot | Contenu | État |
 | --- | ------- | ---- |
 | A | Lecture : thème sépia, réglages de lecture, plein écran sur l'appareil avec défilement automatique, cantique suivant, lecture d'une liste ou d'un programme ; audio : vitesse, boucle ; paramètres regroupés (apparence, lecture, audio, confidentialité, aide, à propos) | fait |
-| B | Favoris (récents), listes (icône, couleur, description, ajout multiple, cases à cocher), programmes (lieu, description, image, à venir / historique, modèles, options de projection, partage en image) | à faire |
+| B | Favoris (récents), listes (icône, couleur, description, ajout multiple, cases à cocher, lecture à la suite, partage), programmes (lieu, description, image, à venir / historique, modèles, options de projection, lecture et plein écran, partage lien / image / texte) ; migration 0022, base locale v2, page publique avec lieu et description | fait |
 | C | Projection : choix de la projection, apparence (fond clair / sombre / image, numéro, titre, taille), masquer, relancer, mode automatique, transitions, message de fin, écran retour, télécommande tablette | à faire |
 | D | Hors connexion (vue d'ensemble, téléchargements audio choisis, place occupée, mode avion), compte | à faire |
 | E | Statistiques anonymes et commentaires (base, app, back-office) ; back-office : tableau de bord, thèmes et auteurs, utilisateurs, paramètres de l'app, notes de version | à faire |

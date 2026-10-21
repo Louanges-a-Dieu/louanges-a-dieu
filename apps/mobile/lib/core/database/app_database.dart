@@ -27,7 +27,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// Version du schéma local. Toute modification de table impose de
   /// l'incrémenter et d'écrire une migration (test/drift/).
-  static const currentSchemaVersion = 1;
+  static const currentSchemaVersion = 2;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -35,6 +35,19 @@ class AppDatabase extends _$AppDatabase {
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      // v2 (planche 4) : icône et couleur des listes ; lieu, description,
+      // image, modèle et options de projection des programmes.
+      if (from < 2) {
+        await m.addColumn(playlists, playlists.icon);
+        await m.addColumn(playlists, playlists.color);
+        await m.addColumn(worshipServices, worshipServices.location);
+        await m.addColumn(worshipServices, worshipServices.description);
+        await m.addColumn(worshipServices, worshipServices.cover);
+        await m.addColumn(worshipServices, worshipServices.isTemplate);
+        await m.addColumn(worshipServices, worshipServices.options);
+      }
+    },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
@@ -77,6 +90,10 @@ class Playlists extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get description => text().nullable()();
+
+  /// Icône et couleur choisies (noms de [ListIcon] et [ListColor]), ou null.
+  TextColumn get icon => text().nullable()();
+  TextColumn get color => text().nullable()();
   BoolColumn get deleted => boolean().withDefault(const Constant(false))();
   DateTimeColumn get updatedAt => dateTime()();
   IntColumn get serverRevision => integer().withDefault(const Constant(0))();
@@ -106,6 +123,18 @@ class WorshipServices extends Table {
 
   /// draft | published | archived
   TextColumn get status => text().withDefault(const Constant('draft'))();
+
+  /// Lieu, description, image d'illustration (photo de l'app) ; null si
+  /// absents.
+  TextColumn get location => text().nullable()();
+  TextColumn get description => text().nullable()();
+  TextColumn get cover => text().nullable()();
+
+  /// Modèle réutilisable (hors des listes « À venir » et « Historique »).
+  BoolColumn get isTemplate => boolean().withDefault(const Constant(false))();
+
+  /// Options de projection du programme (JSON, [ProgramOptions]).
+  TextColumn get options => text().withDefault(const Constant('{}'))();
   BoolColumn get deleted => boolean().withDefault(const Constant(false))();
   DateTimeColumn get updatedAt => dateTime()();
   IntColumn get serverRevision => integer().withDefault(const Constant(0))();

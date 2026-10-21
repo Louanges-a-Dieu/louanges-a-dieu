@@ -105,6 +105,14 @@ final routerProvider = Provider<GoRouter>(
         parentNavigatorKey: _rootKey,
         builder: (_, state) =>
             PlaylistScreen(playlistId: state.pathParameters['id']!),
+        routes: [
+          GoRoute(
+            path: 'ajouter',
+            parentNavigatorKey: _rootKey,
+            builder: (_, state) =>
+                AddHymnsScreen(playlistId: state.pathParameters['id']!),
+          ),
+        ],
       ),
       GoRoute(
         path: '/culte/:id',
