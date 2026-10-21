@@ -189,6 +189,8 @@ void main() {
     (tester, _) async {
       await tester.tap(find.text('Plus').last);
       await idle(tester);
+      await tester.tap(find.text('À propos'));
+      await idle(tester);
       await tester.tap(find.text('À propos du recueil'));
       await idle(tester);
       expect(find.text('Note sur l’utilisation du recueil'), findsOneWidget);

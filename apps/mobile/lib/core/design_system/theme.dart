@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../preferences/preferences.dart';
 import 'tokens.g.dart';
 
 /// Couleurs du design system accessibles depuis les widgets :
@@ -29,8 +30,27 @@ final class LadColors extends ThemeExtension<LadColors> {
 abstract final class LadTheme {
   static ThemeData get light => _build(LadPalette.light, Brightness.light);
   static ThemeData get dark => _build(LadPalette.dark, Brightness.dark);
+  static ThemeData get sepia => _build(LadPalette.sepia, Brightness.light);
   static ThemeData get projection =>
       _build(LadPalette.projection, Brightness.dark);
+
+  /// Thème d'une apparence choisie ; `system` : [platform] (clair ou sombre).
+  static ThemeData forAppearance(
+    LadAppearance appearance,
+    Brightness platform,
+  ) => switch (appearance) {
+    LadAppearance.light => light,
+    LadAppearance.dark => dark,
+    LadAppearance.sepia => sepia,
+    LadAppearance.system => platform == Brightness.dark ? dark : light,
+  };
+
+  /// Famille de la police des paroles choisie.
+  static String lyricsFamily(LyricsFont font) => switch (font) {
+    LyricsFont.classic => LadFonts.lyrics,
+    LyricsFont.modern => LadFonts.ui,
+    LyricsFont.editorial => LadFonts.display,
+  };
 
   /// Ombre douce des cartes mises en avant (héro, cantique du jour).
   static List<BoxShadow> softShadow(LadPalette p) => [

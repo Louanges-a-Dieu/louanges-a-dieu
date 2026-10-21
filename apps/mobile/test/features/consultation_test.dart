@@ -131,6 +131,6 @@ void main() {
       Brightness.dark,
     );
     final prefs = await settle(tester, PreferencesRepository(db).load());
-    expect(prefs.readerTheme, ThemeMode.dark);
+    expect(prefs.readerTheme, LadAppearance.dark);
   });
 }

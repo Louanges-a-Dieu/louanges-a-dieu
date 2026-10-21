@@ -133,3 +133,30 @@ final worshipItemsProvider = StreamProvider.autoDispose
       (ref, id) =>
           ref.watch(userDataRepositoryProvider).watchWorshipServiceItems(id),
     );
+
+/// Cantiques parcourus par le mode lecture : le recueil par numéro, ou ceux
+/// d'une liste ou d'un programme (« Lire la liste »), dans leur ordre.
+final readerSequenceProvider = Provider.autoDispose
+    .family<
+      AsyncValue<List<HymnSummary>>,
+      ({String? listId, String? serviceId})
+    >((ref, context) {
+      final all = ref.watch(hymnsByNumberProvider);
+      final ids = switch (context) {
+        (listId: final String id, serviceId: _) => ref.watch(
+          playlistHymnIdsProvider(id),
+        ),
+        (listId: null, serviceId: final String id) =>
+          ref
+              .watch(worshipItemsProvider(id))
+              .whenData((items) => [for (final i in items) ?i.hymnId]),
+        _ => null,
+      };
+      if (ids == null) return all;
+      final byId = {
+        for (final h in all.value ?? const <HymnSummary>[]) h.id: h,
+      };
+      return all.hasValue
+          ? ids.whenData((ids) => [for (final id in ids) ?byId[id]])
+          : const AsyncLoading();
+    });

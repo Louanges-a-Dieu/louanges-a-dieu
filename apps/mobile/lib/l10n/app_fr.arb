@@ -267,7 +267,7 @@
   "nothingToProject": "Rien à projeter",
   "nothingToProjectMessage": "Ce programme ne contient aucun cantique ni moment.",
   "allSlides": "Toutes les diapositives",
-  "privacyPolicy": "Confidentialité",
+  "privacyPolicy": "Politique de confidentialité",
   "linkOpenFailed": "Impossible d’ouvrir le lien.",
   "homeEyebrow": "Le recueil vivant",
   "heroTitle": "Que chaque chant devienne une prière.",
@@ -512,5 +512,122 @@
       }
     }
   },
-  "goToRefrain": "Aller au refrain"
+  "goToRefrain": "Aller au refrain",
+  "audioSpeed": "Vitesse",
+  "audioSpeedValue": "Vitesse {speed}",
+  "@audioSpeedValue": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "audioLoop": "Écouter en boucle",
+  "readingSettings": "Réglages de lecture",
+  "lyricsFont": "Police",
+  "fontClassic": "Classique",
+  "fontModern": "Moderne",
+  "fontEditorial": "Éditorial",
+  "readerAppearance": "Apparence de la lecture",
+  "appearanceAuto": "Auto",
+  "themeSepia": "Sépia",
+  "lineSpacing": "Interligne",
+  "lineSpacingValue": "Interligne {value}",
+  "@lineSpacingValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "margins": "Marges",
+  "marginsStandard": "Standard",
+  "marginsWide": "Larges",
+  "orientation": "Orientation",
+  "orientationPortrait": "Portrait",
+  "orientationLandscape": "Paysage",
+  "showNumber": "Afficher le numéro",
+  "showTitle": "Afficher le titre",
+  "showReferences": "Afficher les références bibliques",
+  "keepScreenOn": "Garder l'écran allumé",
+  "resetReading": "Réinitialiser",
+  "fullScreen": "Plein écran",
+  "nextInList": "Ensuite dans la liste",
+  "nextHymns": "Cantiques suivants",
+  "readHymn": "Lire le cantique {number}",
+  "@readHymn": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "autoAdvanceStart": "Défilement auto",
+  "autoAdvanceStop": "Pause",
+  "close": "Fermer",
+  "appearance": "Apparence",
+  "reading": "Lecture",
+  "audioSettings": "Audio",
+  "privacy": "Confidentialité",
+  "helpAndInfo": "Aide et informations",
+  "help": "Aide et support",
+  "about": "À propos",
+  "preview": "Aperçu",
+  "autoAdvanceDelay": "Défilement automatique",
+  "autoAdvanceHint": "Délai entre deux strophes en plein écran et en projection.",
+  "seconds": "{count} s",
+  "@seconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "privacyDataTitle": "Vos données",
+  "privacyDataText": "Les cantiques, vos réglages et vos favoris restent sur cet appareil. Avec un compte, vos favoris, listes et programmes sont aussi enregistrés sur notre serveur pour les retrouver sur vos autres appareils. Aucune publicité, aucun traçage.",
+  "accountAndDeletion": "Compte et suppression du compte",
+  "helpSearchHint": "Rechercher une réponse…",
+  "faqTitle": "Questions fréquentes",
+  "helpNoAnswer": "Aucune réponse ne correspond. Écrivez-nous, nous répondrons.",
+  "contactUs": "Nous contacter",
+  "reportProblem": "Signaler un problème",
+  "reportProblemHint": "Un courriel prérempli s'ouvre.",
+  "reportProblemBody": "\n\n—\nVersion : {version}\nSystème : {platform}",
+  "@reportProblemBody": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
+  "appTagline": "Le recueil numérique",
+  "versionLabel": "Version {version}",
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "faqOfflineQ": "Faut-il Internet pour lire les cantiques ?",
+  "faqOfflineA": "Non. Tout le recueil est dans l'app : recherche, lecture, favoris, listes et programmes marchent sans connexion. Internet sert seulement aux mises à jour, à la synchronisation du compte et à l'écoute non téléchargée.",
+  "faqFindQ": "Comment trouver un cantique ?",
+  "faqFindA": "Tapez son numéro, son titre ou quelques mots des paroles dans la recherche. Le recueil se parcourt aussi par numéro ou de A à Z.",
+  "faqAccountQ": "À quoi sert un compte ?",
+  "faqAccountA": "Les favoris marchent sans compte. Le compte permet de créer des listes et des programmes de culte, et de les retrouver sur tous vos appareils. La connexion se fait par un code reçu par courriel, sans mot de passe.",
+  "faqProjectQ": "Comment projeter les paroles ?",
+  "faqProjectA": "Ouvrez un cantique ou un programme, puis « Projeter ». Sur l'ordinateur relié au projecteur, connecté au même Wi-Fi, ouvrez l'adresse affichée (ou scannez le code). Internet n'est pas nécessaire.",
+  "faqTextSizeQ": "Comment agrandir le texte ?",
+  "faqTextSizeA": "En mode lecture, touchez « Réglages de lecture » (Aa). Les mêmes réglages sont dans Plus → Lecture : taille, police, interligne, apparence.",
+  "faqRefrainQ": "Le refrain est-il répété ?",
+  "faqRefrainA": "En mode lecture et en projection, le refrain revient après chaque couplet. Sur la fiche, le texte suit le livre ; l'option est dans Plus → Lecture.",
+  "faqListenQ": "Comment écouter sans Internet ?",
+  "faqListenA": "Sur l'écran d'écoute d'un cantique, téléchargez l'enregistrement. Les fichiers téléchargés se gèrent dans Plus → Hors connexion.",
+  "faqShareQ": "Comment partager un programme ?",
+  "faqShareA": "Dans le programme, touchez « Partager » : lien vers une page en ligne, image ou texte, par la messagerie de votre choix.",
+  "faqDeleteQ": "Comment supprimer mon compte ?",
+  "faqDeleteA": "Plus → Mon compte → Supprimer mon compte. Vos listes et programmes sont effacés du serveur ; vous pouvez garder vos favoris sur l'appareil."
 }

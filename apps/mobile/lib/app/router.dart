@@ -12,8 +12,10 @@ import '../features/hymnal/hymnal_screen.dart';
 import '../features/lists/lists.dart';
 import '../features/more/more_screen.dart';
 import '../features/projection/projection_screen.dart';
+import '../features/reader/presentation_screen.dart';
 import '../features/reader/reader_screen.dart';
 import '../features/search/search_screen.dart';
+import '../features/settings/settings_screens.dart';
 import '../features/shell/app_shell.dart';
 import '../features/worship/worship.dart';
 
@@ -66,8 +68,27 @@ final routerProvider = Provider<GoRouter>(
                   GoRoute(
                     path: 'a-propos',
                     parentNavigatorKey: _rootKey,
-                    builder: (_, _) => const AboutScreen(),
+                    builder: (_, _) => const AppAboutScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'recueil',
+                        parentNavigatorKey: _rootKey,
+                        builder: (_, _) => const AboutScreen(),
+                      ),
+                    ],
                   ),
+                  for (final (path, screen) in const [
+                    ('apparence', AppearanceScreen()),
+                    ('lecture', ReadingSettingsScreen()),
+                    ('audio', AudioSettingsScreen()),
+                    ('confidentialite', PrivacyScreen()),
+                    ('aide', HelpScreen()),
+                  ])
+                    GoRoute(
+                      path: path,
+                      parentNavigatorKey: _rootKey,
+                      builder: (_, _) => screen,
+                    ),
                 ],
               ),
             ],
@@ -132,8 +153,23 @@ final routerProvider = Provider<GoRouter>(
       GoRoute(
         path: '/lecture/:id',
         parentNavigatorKey: _rootKey,
-        builder: (_, state) =>
-            ReaderScreen(hymnId: state.pathParameters['id']!),
+        builder: (_, state) => ReaderScreen(
+          hymnId: state.pathParameters['id']!,
+          listId: state.uri.queryParameters['liste'],
+          serviceId: state.uri.queryParameters['programme'],
+        ),
+      ),
+      GoRoute(
+        path: '/presentation',
+        parentNavigatorKey: _rootKey,
+        builder: (_, state) {
+          final params = state.uri.queryParameters;
+          final programme = params['programme'];
+          return PresentationScreen(
+            hymnId: programme == null ? params['cantique'] ?? '' : null,
+            serviceId: programme,
+          );
+        },
       ),
     ],
   ),

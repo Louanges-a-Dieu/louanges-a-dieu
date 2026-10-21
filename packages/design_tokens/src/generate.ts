@@ -198,6 +198,11 @@ ${cssColors(tokens.color.dark, '    ')}
 ${cssColors(tokens.color.dark, '  ')}
 }
 
+[data-theme='sepia'] {
+  color-scheme: light;
+${cssColors(tokens.color.sepia, '  ')}
+}
+
 [data-theme='projection'] {
   color-scheme: dark;
 ${cssColors(tokens.color.projection, '  ')}

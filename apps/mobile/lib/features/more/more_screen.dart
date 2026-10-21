@@ -5,14 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/env.dart';
 import '../../app/state.dart';
 import '../../core/design_system/components.dart';
 import '../../core/design_system/theme.dart';
 import '../../core/design_system/tokens.g.dart';
-import '../../core/preferences/preferences.dart';
 import '../../core/sync/catalog_sync.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../audio/audio_downloads.dart';
@@ -24,104 +22,55 @@ class MoreScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final prefs =
-        ref.watch(preferencesProvider).value ?? const ReadingPreferences();
-    final notifier = ref.read(preferencesProvider.notifier);
+    final p = context.lad;
+    final hasAudio = ref.watch(envProvider).hasAudio;
+    Widget entry(IconData icon, String title, String route) => ListTile(
+      minTileHeight: LadTouchTarget.min + LadSpace.sm,
+      leading: Icon(icon, color: p.gold),
+      title: Text(title),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => context.push(route),
+    );
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navMore)),
       body: ListView(
         children: [
-          ListTile(
-            leading: const Icon(Icons.account_circle_outlined),
-            title: Text(l10n.account),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/compte'),
-          ),
-          ListSectionHeader(l10n.settings),
-          ListTile(
-            title: Text(l10n.theme),
-            trailing: DropdownButton<ThemeMode>(
-              value: prefs.themeMode,
-              underline: const SizedBox.shrink(),
-              onChanged: (m) => m == null
-                  ? null
-                  : notifier.change((p) => p.copyWith(themeMode: m)),
-              items: [
-                DropdownMenuItem(
-                  value: ThemeMode.system,
-                  child: Text(l10n.themeSystem),
+          ReadableWidth(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                entry(Icons.account_circle_outlined, l10n.account, '/compte'),
+                ListSectionHeader(l10n.settings),
+                entry(
+                  Icons.palette_outlined,
+                  l10n.appearance,
+                  '/plus/apparence',
                 ),
-                DropdownMenuItem(
-                  value: ThemeMode.light,
-                  child: Text(l10n.themeLight),
+                entry(
+                  Icons.chrome_reader_mode_outlined,
+                  l10n.reading,
+                  '/plus/lecture',
                 ),
-                DropdownMenuItem(
-                  value: ThemeMode.dark,
-                  child: Text(l10n.themeDark),
+                if (hasAudio)
+                  entry(
+                    Icons.headphones_outlined,
+                    l10n.audioSettings,
+                    '/plus/audio',
+                  ),
+                entry(
+                  Icons.cloud_off_outlined,
+                  l10n.offlineTitle,
+                  '/plus/hors-connexion',
                 ),
+                entry(
+                  Icons.shield_outlined,
+                  l10n.privacy,
+                  '/plus/confidentialite',
+                ),
+                ListSectionHeader(l10n.helpAndInfo),
+                entry(Icons.help_outline, l10n.help, '/plus/aide'),
+                entry(Icons.info_outline, l10n.about, '/plus/a-propos'),
               ],
-            ),
-          ),
-          ListTile(
-            title: Text(l10n.textSize),
-            subtitle: Slider(
-              value: prefs.lyricsSize,
-              min: LadLyricsSize.min,
-              max: LadLyricsSize.max,
-              divisions:
-                  ((LadLyricsSize.max - LadLyricsSize.min) / LadLyricsSize.step)
-                      .round(),
-              label: prefs.lyricsSize.round().toString(),
-              onChanged: (v) =>
-                  notifier.change((p) => p.copyWith(lyricsSize: v)),
-            ),
-          ),
-          SwitchListTile(
-            title: Text(l10n.sungOrderOption),
-            subtitle: Text(l10n.sungOrderHint),
-            value: prefs.sungOrder,
-            onChanged: (v) => notifier.change((p) => p.copyWith(sungOrder: v)),
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.cloud_off_outlined),
-            title: Text(l10n.offlineTitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/plus/hors-connexion'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: Text(l10n.aboutHymnal),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/plus/a-propos'),
-          ),
-          if (ref.watch(envProvider).publicWebUrl.isNotEmpty)
-            ListTile(
-              leading: const Icon(Icons.privacy_tip_outlined),
-              title: Text(l10n.privacyPolicy),
-              trailing: const Icon(Icons.open_in_new),
-              onTap: () async {
-                final messenger = ScaffoldMessenger.of(context);
-                final url = Uri.parse(
-                  '${ref.read(envProvider).publicWebUrl}/confidentialite',
-                );
-                if (!await launchUrl(
-                  url,
-                  mode: LaunchMode.externalApplication,
-                )) {
-                  messenger.showSnackBar(
-                    SnackBar(content: Text(l10n.linkOpenFailed)),
-                  );
-                }
-              },
-            ),
-          ListTile(
-            leading: const Icon(Icons.description_outlined),
-            title: Text(l10n.licenses),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => showLicensePage(
-              context: context,
-              applicationName: l10n.appTitle,
             ),
           ),
         ],

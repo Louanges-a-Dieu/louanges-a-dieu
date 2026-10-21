@@ -22,7 +22,7 @@ void main() {
     db,
   ) async {
     await openReader(tester, '37', 'Au matin');
-    await tester.tap(find.byTooltip('Taille du texte'));
+    await tester.tap(find.byTooltip('Réglages de lecture'));
     await idle(tester);
     await tester.tap(find.byTooltip('Agrandir le texte'));
     await idle(tester);

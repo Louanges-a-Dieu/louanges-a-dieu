@@ -67,6 +67,22 @@ final class LadPalette {
     info: Color(0xFF9FB2BC),
   );
 
+  static const sepia = LadPalette(
+    background: Color(0xFFF1E4CA),
+    surface: Color(0xFFF7ECD6),
+    surfaceWarm: Color(0xFFE9D9B8),
+    hairline: Color(0xFFDCC79F),
+    text: Color(0xFF3A2814),
+    textSecondary: Color(0xFF6A5233),
+    gold: Color(0xFF9A6210),
+    goldText: Color(0xFF7A4C0A),
+    goldLight: Color(0xFFC9973F),
+    goldPale: Color(0xFFE2C690),
+    error: Color(0xFF932A22),
+    success: Color(0xFF3A6241),
+    info: Color(0xFF47565C),
+  );
+
   static const projection = LadPalette(
     background: Color(0xFF171F1F),
     surface: Color(0xFF171F1F),

@@ -199,10 +199,16 @@ class SectionBlock extends StatelessWidget {
     required this.section,
     required this.fontSize,
     this.showName = false,
+    this.fontFamily = LadFonts.lyrics,
+    this.lineSpacing = 1.0,
   });
 
   final HymnSection section;
   final double fontSize;
+
+  /// Police des paroles (réglage de lecture) et interligne relatif.
+  final String fontFamily;
+  final double lineSpacing;
 
   /// Affiche le nom de la section au-dessus (« Refrain », « Couplet 2 ») ;
   /// un couplet sans numéro imprimé n'est pas étiqueté (pas de « Couplet »
@@ -220,10 +226,12 @@ class SectionBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.lad;
     final base = LadTheme.textStyle(LadTypeScale.lyrics, p.text).copyWith(
+      fontFamily: fontFamily,
       fontSize: fontSize,
+      height: LadTypeScale.lyrics.height * lineSpacing,
       fontStyle: _isRefrain ? FontStyle.italic : null,
       fontVariations: LadTheme.variations(
-        LadFonts.lyrics,
+        fontFamily,
         LadTypeScale.lyrics.weight,
         fontSize,
       ),

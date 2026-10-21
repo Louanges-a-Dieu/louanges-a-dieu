@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../app/env.dart';
 import '../../app/state.dart';
@@ -168,6 +169,10 @@ class _ListeningState extends ConsumerState<_Listening> {
     final source = await audioSourceFor(ref, widget.hymn, track);
     if (!mounted || track.id != _track.id) return;
     await _player.open(source, owner: this);
+    final prefs =
+        ref.read(preferencesProvider).value ?? const ReadingPreferences();
+    await _player.setSpeed(prefs.audioSpeed);
+    await _player.setLoop(prefs.audioLoop);
   }
 
   void _choose(AudioTrack track) {
@@ -215,6 +220,13 @@ class _ListeningState extends ConsumerState<_Listening> {
     final hymn = widget.hymn;
     final prefs =
         ref.watch(preferencesProvider).value ?? const ReadingPreferences();
+    ref.listen(preferencesProvider, (before, after) {
+      final was = before?.value;
+      final now = after.value;
+      if (now == null) return;
+      if (was?.audioSpeed != now.audioSpeed) _player.setSpeed(now.audioSpeed);
+      if (was?.audioLoop != now.audioLoop) _player.setLoop(now.audioLoop);
+    });
     final compact = MediaQuery.sizeOf(context).width < 600;
     final sectionsById = {for (final s in hymn.sections) s.id: s};
 
@@ -250,6 +262,8 @@ class _ListeningState extends ConsumerState<_Listening> {
                       onSelected: _choose,
                     ),
                   ],
+                  const SizedBox(height: LadSpace.lg),
+                  const ListeningOptions(),
                   const SizedBox(height: LadSpace.xl),
                   Semantics(
                     header: true,
@@ -730,6 +744,53 @@ class TrackChoice extends StatelessWidget {
     );
   }
 }
+
+/// Vitesse d'écoute et lecture en boucle (préférences conservées).
+class ListeningOptions extends ConsumerWidget {
+  const ListeningOptions({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final p = context.lad;
+    final prefs =
+        ref.watch(preferencesProvider).value ?? const ReadingPreferences();
+    final notifier = ref.read(preferencesProvider.notifier);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.audioSpeed,
+          style: LadTheme.textStyle(LadTypeScale.label, p.textSecondary),
+        ),
+        const SizedBox(height: LadSpace.sm),
+        Wrap(
+          spacing: LadSpace.sm,
+          runSpacing: LadSpace.sm,
+          children: [
+            for (final speed in ReadingPreferences.audioSpeeds)
+              ChoiceChip(
+                label: Text(formatSpeed(speed)),
+                tooltip: l10n.audioSpeedValue(formatSpeed(speed)),
+                selected: prefs.audioSpeed == speed,
+                onSelected: (_) =>
+                    notifier.change((p) => p.copyWith(audioSpeed: speed)),
+              ),
+          ],
+        ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.audioLoop),
+          value: prefs.audioLoop,
+          onChanged: (v) => notifier.change((p) => p.copyWith(audioLoop: v)),
+        ),
+      ],
+    );
+  }
+}
+
+/// « 0,75 », « 1 », « 1,25 » (virgule décimale française).
+String formatSpeed(double speed) => NumberFormat('0.##', 'fr').format(speed);
 
 /// Une section des paroles ; mise en avant quand elle est chantée, et
 /// touchable pour y aller quand l'enregistrement la repère.

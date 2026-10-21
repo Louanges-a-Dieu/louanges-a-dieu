@@ -73,6 +73,11 @@ abstract interface class HymnAudioPlayer {
   Future<void> pause();
   Future<void> seek(Duration position);
 
+  /// Vitesse de lecture (1 : normale) et lecture en boucle (réglages
+  /// d'écoute, planches 3 et 7).
+  Future<void> setSpeed(double speed);
+  Future<void> setLoop(bool loop);
+
   /// Arrête la lecture en quittant l'écran [owner] ; sans effet si un autre
   /// écran (karaoké ↔ écoute) a déjà pris le lecteur.
   Future<void> release(Object owner);
@@ -181,6 +186,13 @@ final class JustAudioHymnPlayer implements HymnAudioPlayer {
 
   @override
   Future<void> seek(Duration position) => _player.seek(position);
+
+  @override
+  Future<void> setSpeed(double speed) => _player.setSpeed(speed);
+
+  @override
+  Future<void> setLoop(bool loop) =>
+      _player.setLoopMode(loop ? LoopMode.one : LoopMode.off);
 
   @override
   Future<void> release(Object owner) async {

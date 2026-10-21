@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:louanges_a_dieu/core/catalog/published_hymn.dart';
+import 'package:louanges_a_dieu/core/preferences/preferences.dart';
 import 'package:louanges_a_dieu/features/audio/audio_downloads.dart';
 import 'package:louanges_a_dieu/features/audio/audio_player.dart';
 
@@ -39,6 +40,15 @@ final class FakePlayer implements HymnAudioPlayer {
           );
     failNextOpen = false;
   }
+
+  double speed = 1;
+  bool loop = false;
+
+  @override
+  Future<void> setSpeed(double speed) async => this.speed = speed;
+
+  @override
+  Future<void> setLoop(bool loop) async => this.loop = loop;
 
   @override
   Future<void> play() async =>
@@ -265,6 +275,7 @@ void main() {
 
       // Toucher le second couplet : la lecture y va.
       await tester.ensureVisible(find.text('Il me fait reposer'));
+      await tester.pump();
       await idle(tester);
       await tester.tap(find.text('Il me fait reposer'));
       await idle(tester);
@@ -283,6 +294,7 @@ void main() {
 
       // Autre version : la chorale est préparée à son tour.
       await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Chorale'));
+      await tester.pump();
       await idle(tester);
       await tester.tap(find.widgetWithText(ChoiceChip, 'Chorale'));
       await idle(tester);
@@ -385,6 +397,7 @@ void main() {
       await tester.tap(find.text('Hors connexion'));
       await idle(tester);
       await tester.ensureVisible(find.text('Supprimer les enregistrements'));
+      await tester.pump();
       await idle(tester);
       expect(
         find.text('1 enregistrement sur cet appareil (3,0 Mo).'),
@@ -495,6 +508,7 @@ void main() {
       await tester.ensureVisible(
         find.widgetWithText(ChoiceChip, 'Accompagnement'),
       );
+      await tester.pump();
       await idle(tester);
       await tester.tap(find.widgetWithText(ChoiceChip, 'Accompagnement'));
       await idle(tester);
@@ -509,12 +523,37 @@ void main() {
       await player.seek(const Duration(seconds: 15));
       await idle(tester);
       await tester.ensureVisible(find.text('Chantons Son Nom.'));
+      await tester.pump();
       await idle(tester);
       await tester.tap(find.text('Chantons Son Nom.'));
       await idle(tester);
       expect(player.seeks.last, const Duration(seconds: 10));
     },
     hymns: hymnsWithKaraoke(),
+    env: _audioEnv,
+    overrides: fakes,
+  );
+
+  testApp(
+    'écoute : vitesse et boucle appliquées au lecteur et conservées',
+    (tester, db) async {
+      await openHymn(tester, '2', 'L’Éternel est mon berger');
+      await tester.tap(find.text('Écouter'));
+      await idle(tester);
+      expect(player.speed, 1);
+      await tester.ensureVisible(find.text('1,25'));
+      await tester.pump();
+      await tester.tap(find.text('1,25'));
+      await idle(tester);
+      expect(player.speed, 1.25);
+      await tester.tap(find.text('Écouter en boucle'));
+      await idle(tester);
+      expect(player.loop, isTrue);
+      final prefs = await settle(tester, PreferencesRepository(db).load());
+      expect(prefs.audioSpeed, 1.25);
+      expect(prefs.audioLoop, isTrue);
+    },
+    hymns: hymnsWithAudio(),
     env: _audioEnv,
     overrides: fakes,
   );

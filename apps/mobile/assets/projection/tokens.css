@@ -54,6 +54,23 @@
   --lad-color-info: #9FB2BC;
 }
 
+[data-theme='sepia'] {
+  color-scheme: light;
+  --lad-color-background: #F1E4CA;
+  --lad-color-surface: #F7ECD6;
+  --lad-color-surface-warm: #E9D9B8;
+  --lad-color-hairline: #DCC79F;
+  --lad-color-text: #3A2814;
+  --lad-color-text-secondary: #6A5233;
+  --lad-color-gold: #9A6210;
+  --lad-color-gold-text: #7A4C0A;
+  --lad-color-gold-light: #C9973F;
+  --lad-color-gold-pale: #E2C690;
+  --lad-color-error: #932A22;
+  --lad-color-success: #3A6241;
+  --lad-color-info: #47565C;
+}
+
 [data-theme='projection'] {
   color-scheme: dark;
   --lad-color-background: #171F1F;

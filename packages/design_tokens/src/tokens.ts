@@ -18,7 +18,7 @@ export const PALETTE_KEYS = [
 export type PaletteKey = (typeof PALETTE_KEYS)[number];
 export type Palette = Record<PaletteKey, string>;
 
-export const THEMES = ['light', 'dark', 'projection'] as const;
+export const THEMES = ['light', 'dark', 'sepia', 'projection'] as const;
 export type ThemeName = (typeof THEMES)[number];
 
 export const FONT_ROLES = ['display', 'lyrics', 'ui', 'numeric'] as const;

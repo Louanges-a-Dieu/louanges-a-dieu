@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../app/state.dart';
@@ -13,16 +14,26 @@ import '../../core/design_system/tokens.g.dart';
 import '../../core/preferences/preferences.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../favorites/favorite_button.dart';
+import '../settings/reading_settings.dart';
 
 /// Mode lecture : une strophe (couplet ou refrain) à la fois, le refrain
 /// répété après chaque couplet (ordre chanté, ADR-009). Précédent /
 /// Suivant (boutons, glissement, flèches du clavier) passent d'une strophe à
-/// l'autre ; Cantique précédent / suivant changent de cantique. Taille
-/// réglable, largeur de lecture limitée, écran maintenu allumé.
+/// l'autre ; Cantique précédent / suivant changent de cantique, dans l'ordre
+/// du recueil, ou de la liste / du programme lu ([listId], [serviceId]).
+/// Réglages de lecture (taille, police, apparence…), plein écran, et à la
+/// dernière strophe les cantiques suivants (planche 3).
 class ReaderScreen extends ConsumerStatefulWidget {
-  const ReaderScreen({super.key, required this.hymnId});
+  const ReaderScreen({
+    super.key,
+    required this.hymnId,
+    this.listId,
+    this.serviceId,
+  });
 
   final String hymnId;
+  final String? listId;
+  final String? serviceId;
 
   @override
   ConsumerState<ReaderScreen> createState() => _ReaderScreenState();
@@ -34,26 +45,54 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   /// Strophe affichée dans le cantique courant.
   int _section = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    WakelockPlus.enable().ignore();
-  }
+  bool? _awake;
+  ReaderOrientation? _orientation;
 
   @override
   void dispose() {
     WakelockPlus.disable().ignore();
+    SystemChrome.setPreferredOrientations(const []).ignore();
     super.dispose();
+  }
+
+  /// Écran allumé et orientation, appliqués quand le réglage change.
+  void _applyDevice(ReadingPreferences prefs) {
+    if (_awake != prefs.keepScreenOn) {
+      _awake = prefs.keepScreenOn;
+      WakelockPlus.toggle(enable: prefs.keepScreenOn).ignore();
+    }
+    if (_orientation != prefs.orientation) {
+      _orientation = prefs.orientation;
+      SystemChrome.setPreferredOrientations(switch (prefs.orientation) {
+        ReaderOrientation.auto => const [],
+        ReaderOrientation.portrait => const [
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+        ],
+        ReaderOrientation.landscape => const [
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ],
+      }).ignore();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final hymns = ref.watch(hymnsByNumberProvider).value;
+    final hymns = ref
+        .watch(
+          readerSequenceProvider((
+            listId: widget.listId,
+            serviceId: widget.serviceId,
+          )),
+        )
+        .value;
     final prefs =
         ref.watch(preferencesProvider).value ?? const ReadingPreferences();
     final notifier = ref.read(preferencesProvider.notifier);
-    if (hymns == null) return const Scaffold();
+    _applyDevice(prefs);
+    if (hymns == null || hymns.isEmpty) return const Scaffold();
     _index ??= hymns
         .indexWhere((h) => h.id == widget.hymnId)
         .clamp(0, hymns.length - 1);
@@ -82,15 +121,16 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           })
         : null;
 
-    final dark = switch (prefs.readerTheme) {
-      ThemeMode.dark => true,
-      ThemeMode.light => false,
-      ThemeMode.system => Theme.of(context).brightness == Brightness.dark,
-    };
+    // « Auto » : l'apparence de l'app (claire, sombre ou sépia).
+    final theme = prefs.readerTheme == LadAppearance.system
+        ? Theme.of(context)
+        : LadTheme.forAppearance(prefs.readerTheme, Brightness.light);
+    final dark = theme.brightness == Brightness.dark;
     void goTo(int target) => setState(() => _section = target);
+    final following = hymns.sublist(index + 1).take(4).toList();
 
     return Theme(
-      data: dark ? LadTheme.dark : LadTheme.light,
+      data: theme,
       child: Builder(
         builder: (context) => _scaffold(
           context,
@@ -104,6 +144,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           nextSection: nextSection,
           previousHymn: toHymn(index - 1),
           nextHymn: toHymn(index + 1),
+          following: section == sections.length - 1 ? following : const [],
+          onFollowing: (h) => toHymn(hymns.indexOf(h))?.call(),
+          inSequence: widget.listId != null || widget.serviceId != null,
           actions: [
             FavoriteButton(hymnId: current.id),
             IconButton(
@@ -114,9 +157,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   : () => _showStanzas(context, sections, section, goTo),
             ),
             IconButton(
-              tooltip: l10n.textSize,
-              icon: const Icon(Icons.format_size),
-              onPressed: () => _showTextSize(context),
+              tooltip: l10n.readingSettings,
+              icon: const Icon(Icons.text_fields),
+              onPressed: () => showReadingSettings(context),
             ),
             IconButton(
               tooltip: dark ? l10n.readerLight : l10n.readerDark,
@@ -125,9 +168,15 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               ),
               onPressed: () => notifier.change(
                 (p) => p.copyWith(
-                  readerTheme: dark ? ThemeMode.light : ThemeMode.dark,
+                  readerTheme: dark ? LadAppearance.light : LadAppearance.dark,
                 ),
               ),
+            ),
+            IconButton(
+              tooltip: l10n.fullScreen,
+              icon: const Icon(Icons.fullscreen),
+              onPressed: () =>
+                  context.push('/presentation?cantique=${current.id}'),
             ),
           ],
         ),
@@ -147,6 +196,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     required VoidCallback? nextSection,
     required VoidCallback? previousHymn,
     required VoidCallback? nextHymn,
+    required List<HymnSummary> following,
+    required ValueChanged<HymnSummary> onFollowing,
+    required bool inSequence,
     required List<Widget> actions,
   }) {
     return Scaffold(
@@ -167,7 +219,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                     hymn: hymn,
                     sections: sections,
                     section: section,
-                    fontSize: prefs.lyricsSize,
+                    prefs: prefs,
+                    following: following,
+                    onFollowing: onFollowing,
+                    inSequence: inSequence,
                   ),
           ),
         ),
@@ -262,75 +317,6 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           ),
         );
       },
-    );
-  }
-
-  /// Taille du texte : curseur, avec A− / A+ de part et d'autre.
-  void _showTextSize(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheet) => Consumer(
-        builder: (sheet, ref, _) {
-          final l10n = AppLocalizations.of(sheet);
-          final size =
-              (ref.watch(preferencesProvider).value ??
-                      const ReadingPreferences())
-                  .lyricsSize;
-          final notifier = ref.read(preferencesProvider.notifier);
-          void set(double value) =>
-              notifier.change((p) => p.copyWith(lyricsSize: value));
-          const steps =
-              (LadLyricsSize.max - LadLyricsSize.min) ~/ LadLyricsSize.step;
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                LadSpace.lg,
-                0,
-                LadSpace.lg,
-                LadSpace.xl,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ListSectionHeader(l10n.textSize),
-                  Row(
-                    children: [
-                      IconButton(
-                        tooltip: l10n.smallerText,
-                        icon: const Icon(Icons.text_decrease),
-                        onPressed: size <= LadLyricsSize.min
-                            ? null
-                            : () => set(size - LadLyricsSize.step),
-                      ),
-                      Expanded(
-                        child: Slider(
-                          min: LadLyricsSize.min,
-                          max: LadLyricsSize.max,
-                          divisions: steps,
-                          value: size,
-                          label: '${size.round()}',
-                          semanticFormatterCallback: (v) =>
-                              '${v.round()} points',
-                          onChanged: set,
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: l10n.largerText,
-                        icon: const Icon(Icons.text_increase),
-                        onPressed: size >= LadLyricsSize.max
-                            ? null
-                            : () => set(size + LadLyricsSize.step),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 }
@@ -485,31 +471,38 @@ class _ReaderPage extends StatelessWidget {
     required this.hymn,
     required this.sections,
     required this.section,
-    required this.fontSize,
+    required this.prefs,
+    required this.following,
+    required this.onFollowing,
+    required this.inSequence,
   });
 
   final PublishedHymn hymn;
   final List<HymnSection> sections;
   final int section;
-  final double fontSize;
+  final ReadingPreferences prefs;
+  final List<HymnSummary> following;
+  final ValueChanged<HymnSummary> onFollowing;
+  final bool inSequence;
 
   @override
   Widget build(BuildContext context) {
+    final wide = prefs.margins == ReaderMargins.wide;
     return SelectionArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          LadSpace.lg,
+        padding: EdgeInsets.fromLTRB(
+          wide ? LadSpace.xxl : LadSpace.lg,
           LadSpace.sm,
-          LadSpace.lg,
+          wide ? LadSpace.xxl : LadSpace.lg,
           LadSpace.xxl,
         ),
         children: [
           ReadableWidth(
-            maxWidth: 680,
+            maxWidth: wide ? 560 : 680,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _ReaderHeader(hymn: hymn),
+                _ReaderHeader(hymn: hymn, prefs: prefs),
                 const SizedBox(height: LadSpace.xl),
                 if (sections.isNotEmpty)
                   AnimatedSwitcher(
@@ -519,10 +512,20 @@ class _ReaderPage extends StatelessWidget {
                     child: SectionBlock(
                       key: ValueKey('${hymn.id}/$section'),
                       section: sections[section],
-                      fontSize: fontSize,
+                      fontSize: prefs.lyricsSize,
+                      fontFamily: LadTheme.lyricsFamily(prefs.lyricsFont),
+                      lineSpacing: prefs.lineSpacing,
                       showName: true,
                     ),
                   ),
+                if (following.isNotEmpty) ...[
+                  const SizedBox(height: LadSpace.xxl),
+                  _Following(
+                    hymns: following,
+                    inSequence: inSequence,
+                    onTap: onFollowing,
+                  ),
+                ],
               ],
             ),
           ),
@@ -532,15 +535,53 @@ class _ReaderPage extends StatelessWidget {
   }
 }
 
-/// En-tête discret du mode lecture : numéro, titre serif, filet doré.
+/// Fin du cantique : les suivants (du recueil, de la liste ou du
+/// programme), et un bouton pour lire le premier (planche 3, écran 16).
+class _Following extends StatelessWidget {
+  const _Following({
+    required this.hymns,
+    required this.inSequence,
+    required this.onTap,
+  });
+
+  final List<HymnSummary> hymns;
+  final bool inSequence;
+  final ValueChanged<HymnSummary> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListSectionHeader(inSequence ? l10n.nextInList : l10n.nextHymns),
+        for (final h in hymns)
+          HymnListTile(hymn: h, margin: EdgeInsets.zero, onTap: () => onTap(h)),
+        const SizedBox(height: LadSpace.md),
+        FilledButton.icon(
+          icon: const Icon(Icons.skip_next),
+          label: Text(l10n.readHymn(hymns.first.numberLabel)),
+          onPressed: () => onTap(hymns.first),
+        ),
+      ],
+    );
+  }
+}
+
+/// En-tête discret du mode lecture : numéro, titre serif, références,
+/// filet doré ; chaque élément peut être masqué (réglages de lecture).
 class _ReaderHeader extends StatelessWidget {
-  const _ReaderHeader({required this.hymn});
+  const _ReaderHeader({required this.hymn, required this.prefs});
 
   final PublishedHymn hymn;
+  final ReadingPreferences prefs;
 
   @override
   Widget build(BuildContext context) {
     final p = context.lad;
+    final references = prefs.showReferences
+        ? hymn.bibleReferences.map((r) => r.displayText).join(' · ')
+        : '';
     return Semantics(
       container: true,
       header: true,
@@ -548,18 +589,30 @@ class _ReaderHeader extends StatelessWidget {
       excludeSemantics: true,
       child: Column(
         children: [
-          HymnNumberBadge(hymn.numberLabel),
-          const SizedBox(height: LadSpace.md),
-          Text(
-            hymn.title,
-            textAlign: TextAlign.center,
-            // Plus grand que sur la fiche : le titre se lit de loin.
-            style: LadTheme.textStyle(
-              LadTypeScale.title,
-              p.text,
-            ).copyWith(fontSize: LadTypeScale.title.size + 6),
-          ),
-          const SizedBox(height: LadSpace.md),
+          if (prefs.showNumber) ...[
+            HymnNumberBadge(hymn.numberLabel),
+            const SizedBox(height: LadSpace.md),
+          ],
+          if (prefs.showTitle) ...[
+            Text(
+              hymn.title,
+              textAlign: TextAlign.center,
+              // Plus grand que sur la fiche : le titre se lit de loin.
+              style: LadTheme.textStyle(
+                LadTypeScale.title,
+                p.text,
+              ).copyWith(fontSize: LadTypeScale.title.size + 6),
+            ),
+            const SizedBox(height: LadSpace.md),
+          ],
+          if (references.isNotEmpty) ...[
+            Text(
+              references,
+              textAlign: TextAlign.center,
+              style: LadTheme.textStyle(LadTypeScale.caption, p.goldText),
+            ),
+            const SizedBox(height: LadSpace.md),
+          ],
           const AccentRule(),
         ],
       ),

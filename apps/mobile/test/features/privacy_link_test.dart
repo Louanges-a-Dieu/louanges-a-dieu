@@ -8,14 +8,18 @@ Future<void> openMore(WidgetTester tester) async {
   for (var i = 0; i < 5; i++) {
     await tester.pump(const Duration(milliseconds: 200));
   }
+  await tester.tap(find.text('Confidentialité'));
+  for (var i = 0; i < 5; i++) {
+    await tester.pump(const Duration(milliseconds: 200));
+  }
 }
 
 void main() {
   testApp(
-    'Plus : lien « Confidentialité » quand le site est configuré',
+    'Plus → Confidentialité : lien vers la politique quand le site est configuré',
     (tester, _) async {
       await openMore(tester);
-      expect(find.text('Confidentialité'), findsOneWidget);
+      expect(find.text('Politique de confidentialité'), findsOneWidget);
     },
     env: const {
       'APP_ENV': 'dev',
@@ -23,8 +27,11 @@ void main() {
     },
   );
 
-  testApp('Plus : pas de lien sans site configuré', (tester, _) async {
+  testApp('Plus → Confidentialité : pas de lien sans site configuré', (
+    tester,
+    _,
+  ) async {
     await openMore(tester);
-    expect(find.text('Confidentialité'), findsNothing);
+    expect(find.text('Politique de confidentialité'), findsNothing);
   });
 }

@@ -400,7 +400,7 @@ class _Controller extends StatelessWidget {
   );
 }
 
-/// Aperçu de ce que montre l'écran projeté (mêmes couleurs).
+/// Aperçu de ce que montre l'écran projeté (mêmes couleurs), au format 16/9.
 class SlidePreview extends StatelessWidget {
   const SlidePreview({super.key, required this.slide, required this.blank});
 
@@ -408,50 +408,72 @@ class SlidePreview extends StatelessWidget {
   final bool blank;
 
   @override
+  Widget build(BuildContext context) => AspectRatio(
+    aspectRatio: 16 / 9,
+    child: SlideView(slide: slide, blank: blank, framed: true),
+  );
+}
+
+/// Une diapositive avec le fond de l'écran projeté ; plein écran sur
+/// l'appareil (présentation) ou encadrée (aperçu du pilote).
+class SlideView extends StatelessWidget {
+  const SlideView({
+    super.key,
+    required this.slide,
+    required this.blank,
+    this.framed = false,
+  });
+
+  final Slide? slide;
+  final bool blank;
+  final bool framed;
+
+  @override
   Widget build(BuildContext context) {
     const p = LadPalette.projection;
     final l10n = AppLocalizations.of(context);
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          // « Écran noir » : noir pur, comme l'écran projeté ; sinon le fond
-          // vert-noir et sa lumière discrète venue du bas.
-          color: blank ? Colors.black : p.background,
-          gradient: blank
-              ? null
-              : RadialGradient(
-                  center: const Alignment(0.4, 1.1),
-                  radius: 0.9,
-                  // Un dégradé remplace la couleur : teintes opaques sur le fond.
-                  colors: [
-                    Color.alphaBlend(
-                      p.goldLight.withValues(alpha: 0.16),
-                      p.background,
-                    ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        // « Écran noir » : noir pur, comme l'écran projeté ; sinon le fond
+        // vert-noir et sa lumière discrète venue du bas.
+        color: blank ? Colors.black : p.background,
+        gradient: blank
+            ? null
+            : RadialGradient(
+                center: const Alignment(0.4, 1.1),
+                radius: 0.9,
+                // Un dégradé remplace la couleur : teintes opaques sur le fond.
+                colors: [
+                  Color.alphaBlend(
+                    p.goldLight.withValues(alpha: 0.16),
                     p.background,
-                  ],
-                ),
-          borderRadius: BorderRadius.circular(LadRadius.md),
-          border: Border.all(color: context.lad.hairline),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(LadSpace.md),
-          child: blank
-              ? Center(
-                  child: Text(
-                    l10n.blankScreenOn,
-                    style: _style(
-                      LadProjectionTypeScale.label,
-                      p.textSecondary,
-                    ),
                   ),
-                )
-              : FittedBox(
+                  p.background,
+                ],
+              ),
+        borderRadius: framed ? BorderRadius.circular(LadRadius.md) : null,
+        border: framed ? Border.all(color: context.lad.hairline) : null,
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(framed ? LadSpace.md : LadSpace.xl),
+        child: blank
+            ? Center(
+                child: framed
+                    ? Text(
+                        l10n.blankScreenOn,
+                        style: _style(
+                          LadProjectionTypeScale.label,
+                          p.textSecondary,
+                        ),
+                      )
+                    : null,
+              )
+            : Center(
+                child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: _slideContent(slide, p),
                 ),
-        ),
+              ),
       ),
     );
   }
