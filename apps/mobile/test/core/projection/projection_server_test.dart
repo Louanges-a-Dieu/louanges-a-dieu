@@ -81,6 +81,21 @@ void main() {
     expect(redirectHeaders.value('location'), server.screenPath);
   });
 
+  test('sert les photos de l’app (fonds), et elles seules', () async {
+    final (status, _, headers) = await get(
+      '${server.screenPath}images/hero_wheat_sunset.jpg',
+    );
+    expect(status, 200);
+    expect(headers.contentType?.mimeType, 'image/jpeg');
+    for (final path in [
+      'images/inconnue.jpg',
+      'images/hero_wheat_sunset.png',
+      'images/Hero.jpg',
+    ]) {
+      expect((await get('${server.screenPath}$path')).$1, 404, reason: path);
+    }
+  });
+
   test('mauvais jeton, autre chemin, autre méthode : même 404', () async {
     final wrong = ProjectionServer.newSessionToken();
     final responses = [

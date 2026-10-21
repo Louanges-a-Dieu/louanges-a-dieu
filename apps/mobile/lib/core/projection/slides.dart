@@ -71,6 +71,26 @@ final class SectionSlide extends Slide {
   Map<String, Object?> toJson() => {'kind': 'section', 'label': label};
 }
 
+/// Écran de transition entre deux cantiques d'un programme (logo), option
+/// de l'app seule : hors du contrat partagé avec le TypeScript.
+final class TransitionSlide extends Slide {
+  const TransitionSlide();
+
+  @override
+  Map<String, Object?> toJson() => {'kind': 'transition'};
+}
+
+/// Message de fin de programme (« Merci pour ce temps de louange ! »), option
+/// de l'app seule.
+final class EndSlide extends Slide {
+  const EndSlide(this.message);
+
+  final String message;
+
+  @override
+  Map<String, Object?> toJson() => {'kind': 'end', 'message': message};
+}
+
 @immutable
 final class ProjectionOptions {
   const ProjectionOptions({this.repeatRefrain = true, this.maxLines = 6})
@@ -153,3 +173,24 @@ List<Slide> programSlides(
         hymn == null ? const <Slide>[] : hymnSlides(hymn, options),
     },
 ];
+
+/// Options d'un programme ajoutées après la découpe partagée (app seule) :
+/// écran de transition avant chaque cantique sauf le premier, message de fin.
+List<Slide> withProgramExtras(
+  List<Slide> slides, {
+  bool transitions = false,
+  String? endMessage,
+}) {
+  final result = <Slide>[];
+  var seenTitle = false;
+  for (final slide in slides) {
+    if (slide is TitleSlide) {
+      if (transitions && seenTitle) result.add(const TransitionSlide());
+      seenTitle = true;
+    }
+    result.add(slide);
+  }
+  final end = endMessage?.trim() ?? '';
+  if (end.isNotEmpty) result.add(EndSlide(end));
+  return result;
+}

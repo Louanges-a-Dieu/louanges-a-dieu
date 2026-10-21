@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:louanges_a_dieu/app/providers.dart';
+import 'package:louanges_a_dieu/core/preferences/preferences.dart';
 import 'package:louanges_a_dieu/core/sync/user_sync.dart';
 
 import '../support/app_harness.dart';
@@ -44,6 +45,7 @@ Future<void> openProjection(WidgetTester tester) async {
   await tapText(tester, 'Cantique projeté');
   await tester.tap(find.byTooltip('Projeter'));
   await idle(tester);
+  await tapText(tester, 'Projeter sur un écran');
 }
 
 void main() {
@@ -56,6 +58,67 @@ void main() {
           failing ? throw StateError('pas de réseau') : host,
     ),
   ];
+
+  testApp(
+    'télécommande : refrain, relancer, masquer, apparence, défilement auto',
+    (tester, db) async {
+      await openProjection(tester);
+      await tapText(tester, 'Suivante');
+      expect(host.last['index'], 1);
+
+      await tester.tap(find.byTooltip('Refrain'));
+      await idle(tester);
+      expect(host.last['index'], 2, reason: 'prochain refrain');
+      await tester.tap(find.byTooltip('Relancer'));
+      await idle(tester);
+      expect(host.last['index'], 0, reason: 'début du cantique');
+
+      await tester.tap(find.byTooltip('Masquer'));
+      await idle(tester);
+      expect(host.last['mask'], isTrue);
+      expect(host.last['blank'], isFalse);
+      await tester.tap(find.byTooltip('Masquer'));
+      await idle(tester);
+      expect(host.last['mask'], isFalse);
+
+      await tester.tap(find.byTooltip('Mode d’affichage'));
+      await idle(tester);
+      await tapText(tester, 'Clair');
+      await tapText(tester, 'Afficher le numéro');
+      expect(host.last['display'], containsPair('background', 'light'));
+      expect(host.last['display'], containsPair('showNumber', false));
+      final prefs = await settle(tester, PreferencesRepository(db).load());
+      expect(prefs.projectionBackground, 'light');
+      expect(prefs.projectionShowNumber, isFalse);
+      await tester.tapAt(const Offset(10, 10));
+      await idle(tester);
+
+      await tester.tap(find.byTooltip('Défilement auto'));
+      await tester.pump(const Duration(seconds: 9));
+      await idle(tester);
+      expect(host.last['index'], 1);
+      await tester.tap(find.byTooltip('Pause'));
+      await tester.pump(const Duration(seconds: 20));
+      expect(host.last['index'], 1);
+    },
+    hymns: hymns,
+    overrides: overrides(),
+  );
+
+  testApp(
+    'connexion : adresse de l’écran retour',
+    (tester, _) async {
+      await openProjection(tester);
+      await tester.tap(find.byTooltip('Connecter un écran'));
+      await idle(tester);
+      expect(
+        find.text('http://192.168.43.1:47100/s/k7mx2qpa/?role=retour'),
+        findsOneWidget,
+      );
+    },
+    hymns: hymns,
+    overrides: overrides(),
+  );
 
   testApp(
     'T-008 : le pilote envoie chaque changement à l’écran',
@@ -82,7 +145,14 @@ void main() {
       // Saut direct depuis la liste (2e refrain).
       await tester.drag(find.byType(ListView), const Offset(0, -400));
       await idle(tester);
-      await tester.tap(find.text('Refrain').last);
+      await tester.tap(
+        find
+            .descendant(
+              of: find.byType(ListView),
+              matching: find.text('Refrain'),
+            )
+            .last,
+      );
       await idle(tester);
       expect(host.last['index'], 4);
       expect(find.text('Dernière diapositive'), findsOneWidget);

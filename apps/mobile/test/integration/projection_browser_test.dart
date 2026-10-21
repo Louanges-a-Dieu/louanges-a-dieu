@@ -222,6 +222,59 @@ void main() {
           "!document.body.classList.contains('blank') && document.body.innerText.includes('Refrain, vers 1')",
         );
 
+        // Planche 5 : écran masqué (logo seul), fond clair, photo voilée,
+        // numéro masqué, transition et message de fin.
+        state = state.toggleMask();
+        server.publish(state.toMessage());
+        await cdp.waitFor(
+          "document.querySelector('.content.masked') !== null && !document.body.innerText.includes('Refrain, vers 1')",
+        );
+        state = state.toggleMask().withDisplay(
+          const ProjectionDisplay(background: 'light', showNumber: false),
+        );
+        server.publish(state.toMessage());
+        await cdp.waitFor(
+          "document.documentElement.dataset.theme === 'light' && document.body.innerText.includes('Refrain, vers 1')",
+        );
+        expect(
+          await cdp.eval("document.body.innerText.includes('12 · ')"),
+          isFalse,
+          reason: 'numéro masqué',
+        );
+        state = state.withDisplay(
+          const ProjectionDisplay(background: 'image:hero_wheat_sunset'),
+        );
+        server.publish(state.toMessage());
+        await cdp.waitFor(
+          "document.body.classList.contains('photo') && document.documentElement.dataset.theme === 'projection'",
+        );
+        await cdp.waitFor(
+          "getComputedStyle(document.body).backgroundImage.includes('images/hero_wheat_sunset.jpg')",
+        );
+        final extras = ProjectionState(
+          slides: withProgramExtras(
+            [...hymnSlides(hymn), ...hymnSlides(hymn)],
+            transitions: true,
+            endMessage: 'Merci pour ce temps de louange !',
+          ),
+        );
+        final transition = extras.slides.indexWhere(
+          (s) => s is TransitionSlide,
+        );
+        server.publish(extras.goTo(transition).toMessage());
+        await cdp.waitFor(
+          "document.querySelector('.content.transition') !== null",
+        );
+        server.publish(extras.goTo(extras.slides.length - 1).toMessage());
+        await cdp.waitFor(
+          "document.body.innerText.includes('Merci pour ce temps de louange !')",
+        );
+        state = state.withDisplay(const ProjectionDisplay());
+        server.publish(state.toMessage());
+        await cdp.waitFor(
+          "!document.body.classList.contains('photo') && document.body.innerText.includes('Refrain, vers 1')",
+        );
+
         // Coupure : la dernière diapositive reste affichée, « Reconnexion… ».
         await server.stop(endSession: false);
         await cdp.waitFor("!document.getElementById('status').hidden");

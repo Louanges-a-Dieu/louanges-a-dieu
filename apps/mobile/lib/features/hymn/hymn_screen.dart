@@ -184,33 +184,38 @@ class _ActionBar extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final p = context.lad;
     final env = ref.watch(envProvider);
-    Widget action(IconData icon, String label, String tooltip, String route) =>
-        Expanded(
-          child: Tooltip(
-            message: tooltip,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(LadRadius.md),
-              onTap: () => context.push(route),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  minHeight: LadTouchTarget.min + LadSpace.md,
+    Widget action(
+      IconData icon,
+      String label,
+      String tooltip,
+      String route, {
+      VoidCallback? onTap,
+    }) => Expanded(
+      child: Tooltip(
+        message: tooltip,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(LadRadius.md),
+          onTap: onTap ?? () => context.push(route),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: LadTouchTarget.min + LadSpace.md,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: p.goldText),
+                const SizedBox(height: LadSpace.xxs),
+                Text(
+                  label,
+                  style: LadTheme.textStyle(LadTypeScale.caption, p.text),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(icon, color: p.goldText),
-                    const SizedBox(height: LadSpace.xxs),
-                    Text(
-                      label,
-                      style: LadTheme.textStyle(LadTypeScale.caption, p.text),
-                    ),
-                  ],
-                ),
-              ),
+              ],
             ),
           ),
-        );
+        ),
+      ),
+    );
     return DecoratedBox(
       decoration: BoxDecoration(
         color: p.surface,
@@ -256,6 +261,7 @@ class _ActionBar extends ConsumerWidget {
                     l10n.project,
                     l10n.project,
                     '/projection?cantique=${hymn.id}',
+                    onTap: () => showProjectChoice(context, ref, hymn),
                   ),
                 ],
               ),

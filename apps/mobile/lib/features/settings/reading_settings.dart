@@ -33,7 +33,7 @@ class ReadingSettings extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _Label(l10n.textSize),
+        SettingsLabel(l10n.textSize),
         Row(
           children: [
             IconButton(
@@ -71,7 +71,7 @@ class ReadingSettings extends ConsumerWidget {
             ),
           ],
         ),
-        _Label(l10n.lyricsFont),
+        SettingsLabel(l10n.lyricsFont),
         _Choice<LyricsFont>(
           value: prefs.lyricsFont,
           options: {
@@ -81,7 +81,7 @@ class ReadingSettings extends ConsumerWidget {
           },
           onChanged: (v) => set((p) => p.copyWith(lyricsFont: v)),
         ),
-        _Label(l10n.readerAppearance),
+        SettingsLabel(l10n.readerAppearance),
         _Choice<LadAppearance>(
           value: prefs.readerTheme,
           options: {
@@ -92,7 +92,7 @@ class ReadingSettings extends ConsumerWidget {
           },
           onChanged: (v) => set((p) => p.copyWith(readerTheme: v)),
         ),
-        _Label(l10n.lineSpacing),
+        SettingsLabel(l10n.lineSpacing),
         Slider(
           min: 0,
           max: spacings.length - 1.0,
@@ -104,7 +104,7 @@ class ReadingSettings extends ConsumerWidget {
           onChanged: (v) =>
               set((p) => p.copyWith(lineSpacing: spacings[v.round()])),
         ),
-        _Label(l10n.margins),
+        SettingsLabel(l10n.margins),
         _Choice<ReaderMargins>(
           value: prefs.margins,
           options: {
@@ -113,7 +113,7 @@ class ReadingSettings extends ConsumerWidget {
           },
           onChanged: (v) => set((p) => p.copyWith(margins: v)),
         ),
-        _Label(l10n.orientation),
+        SettingsLabel(l10n.orientation),
         _Choice<ReaderOrientation>(
           value: prefs.orientation,
           options: {
@@ -196,8 +196,9 @@ Future<void> showReadingSettings(BuildContext context) =>
       ),
     );
 
-class _Label extends StatelessWidget {
-  const _Label(this.text);
+/// Intitulé d'un réglage dans une page de paramètres.
+class SettingsLabel extends StatelessWidget {
+  const SettingsLabel(this.text, {super.key});
 
   final String text;
 

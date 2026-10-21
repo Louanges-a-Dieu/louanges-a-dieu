@@ -9,7 +9,9 @@ import '../../app/state.dart';
 import '../../core/design_system/theme.dart';
 import '../../core/design_system/tokens.g.dart';
 import '../../core/preferences/preferences.dart';
+import '../../core/projection/projection_state.dart';
 import '../../core/projection/slides.dart';
+import '../../core/user_data/user_data_models.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../projection/projection_screen.dart';
 
@@ -92,6 +94,22 @@ class _PresentationScreenState extends ConsumerState<PresentationScreen> {
             )
             .value ??
         const <Slide>[];
+    // Même apparence que l'écran projeté : celle du programme, sinon celle
+    // choisie pour les cantiques seuls.
+    final prefs =
+        ref.watch(preferencesProvider).value ?? const ReadingPreferences();
+    final program = widget.serviceId == null
+        ? null
+        : ProgramOptions.decode(
+            (ref.watch(worshipServicesProvider).value ?? const [])
+                .where((s) => s.id == widget.serviceId)
+                .firstOrNull
+                ?.options,
+          );
+    final display = ProjectionDisplay(
+      background: program?.background ?? prefs.projectionBackground,
+      showNumber: program?.showNumbers ?? prefs.projectionShowNumber,
+    );
     final count = slides.length;
     final index = count == 0 ? 0 : _index.clamp(0, count - 1);
     final slide = count == 0 ? null : slides[index];
@@ -128,7 +146,13 @@ class _PresentationScreenState extends ConsumerState<PresentationScreen> {
               },
               child: Stack(
                 children: [
-                  Positioned.fill(child: SlideView(slide: slide, blank: false)),
+                  Positioned.fill(
+                    child: SlideView(
+                      slide: slide,
+                      blank: false,
+                      display: display,
+                    ),
+                  ),
                   if (_controls && slide != null)
                     Positioned(
                       top: 0,
@@ -199,6 +223,7 @@ class _PresentationScreenState extends ConsumerState<PresentationScreen> {
     TitleSlide(:final numberLabel) => numberLabel,
     LyricsSlide(:final numberLabel) => numberLabel,
     SectionSlide(:final label) => label,
+    TransitionSlide() || EndSlide() => '',
   };
 }
 

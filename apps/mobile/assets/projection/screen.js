@@ -10,6 +10,10 @@
   var status = document.getElementById('status');
   var storageKey = 'lad-projection-state';
   var lastState = null;
+  // Écran retour (musiciens, orateur) : diapositive en cours et suivante,
+  // même pendant un écran noir ou masqué.
+  var retour = new URLSearchParams(window.location.search).get('role') === 'retour';
+  if (retour) document.body.classList.add('retour');
 
   var SECTION_NAMES = {
     verse: 'Couplet',
@@ -26,23 +30,45 @@
     return node;
   }
 
-  function sectionName(slide) {
+  function sectionName(slide, showNumber) {
     var name = SECTION_NAMES[slide.sectionType] || '';
     if (slide.sectionNumber !== null && slide.sectionNumber !== undefined) {
       name += ' ' + slide.sectionNumber;
     }
     if (slide.parts > 1) name += ' (' + slide.part + '/' + slide.parts + ')';
-    return slide.numberLabel + ' · ' + name;
+    return showNumber ? slide.numberLabel + ' · ' + name : name;
   }
 
-  function build(slide) {
+  // Libellé court (écran retour) : « 125 — Titre », « Couplet 2 », message.
+  function shortLabel(slide) {
+    if (!slide) return '';
+    if (slide.kind === 'title') return slide.numberLabel + ' — ' + slide.title;
+    if (slide.kind === 'section') return slide.label;
+    if (slide.kind === 'end') return slide.message;
+    if (slide.kind === 'transition') return 'Transition';
+    return sectionName(slide, false) + ' : ' + (slide.lines[0] || '');
+  }
+
+  function brand(box) {
+    box.appendChild(el('p', 'brand', 'Louanges à Dieu'));
+    return { node: box, max: 0.09 };
+  }
+
+  function build(slide, display) {
     var box = el('div', 'content');
-    if (!slide) {
+    var showNumber = display.showNumber !== false;
+    if (!slide || slide.kind === 'transition') {
+      if (slide) box.className += ' transition';
+      return brand(box);
+    }
+    if (slide.kind === 'end') {
+      box.className += ' end';
       box.appendChild(el('p', 'brand', 'Louanges à Dieu'));
-      return { node: box, max: 0.09 };
+      box.appendChild(el('p', 'title', slide.message));
+      return { node: box, max: 0.12 };
     }
     if (slide.kind === 'title') {
-      box.appendChild(el('p', 'number', slide.numberLabel));
+      if (showNumber) box.appendChild(el('p', 'number', slide.numberLabel));
       box.appendChild(el('p', 'title', slide.title));
       return { node: box, max: 0.14 };
     }
@@ -51,11 +77,34 @@
       return { node: box, max: 0.12 };
     }
     if (slide.sectionType === 'refrain') box.className += ' refrain';
-    box.appendChild(el('p', 'section-name', sectionName(slide)));
+    box.appendChild(el('p', 'section-name', sectionName(slide, showNumber)));
     var lines = el('div', 'lines');
     for (var i = 0; i < slide.lines.length; i++) lines.appendChild(el('p', null, slide.lines[i]));
     box.appendChild(lines);
     return { node: box, max: 0.11 };
+  }
+
+  // Écran retour : diapositive en cours (réduite), position, et la suivante.
+  function buildRetour(state) {
+    var box = el('div', 'content');
+    var built = build(state.slide, { showNumber: true });
+    built.node.className += ' current';
+    box.appendChild(built.node);
+    var info = el('p', 'retour-info', (state.index + 1) + ' / ' + state.count);
+    if (state.blank) info.textContent += ' · écran noir';
+    else if (state.mask) info.textContent += ' · écran masqué';
+    box.appendChild(info);
+    box.appendChild(el('p', 'retour-next', state.next ? 'Ensuite : ' + shortLabel(state.next) : 'Fin'));
+    return { node: box, max: 0.07 };
+  }
+
+  // Fond : sombre (thème projection), clair, ou photo voilée de l'app.
+  function applyDisplay(display) {
+    var light = !retour && display.background === 'light';
+    document.documentElement.setAttribute('data-theme', light ? 'light' : 'projection');
+    var photo = !retour && display.background === 'image' && /^images\/[a-z0-9_]+\.jpg$/.test(display.image || '');
+    document.body.classList.toggle('photo', photo);
+    document.body.style.setProperty('--photo', photo ? 'url("' + display.image + '")' : 'none');
   }
 
   // Plus grande taille de texte qui tient dans l'écran (recherche dichotomique).
@@ -75,11 +124,18 @@
 
   function render(state) {
     lastState = state;
-    document.body.classList.toggle('blank', !!state.blank);
-    var built = build(state.slide);
+    var display = state.display || {};
+    var scale = typeof display.scale === 'number' ? Math.min(1.3, Math.max(0.7, display.scale)) : 1;
+    applyDisplay(display);
+    document.body.classList.toggle('blank', !retour && !!state.blank);
+    var built = retour
+      ? buildRetour(state)
+      : state.mask
+        ? brand(el('div', 'content masked'))
+        : build(state.slide, display);
     stage.replaceChild(built.node, content);
     content = built.node;
-    fit(content, built.max);
+    fit(content, built.max * scale);
   }
 
   function save(state) {
@@ -113,6 +169,7 @@
   var delay = 500;
   function connect() {
     var url = new URL('ws', window.location.href);
+    url.search = '';
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
     var socket;
     try {

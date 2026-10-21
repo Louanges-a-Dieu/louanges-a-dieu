@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import '../design_system/photos.dart';
+
 /// Lit une ressource de l'app (page de l'écran, polices) ; null si absente.
 typedef AssetLoader = Future<List<int>?> Function(String assetPath);
 
@@ -191,7 +193,7 @@ class ProjectionServer implements ProjectionHost {
       return _attach(socket);
     }
 
-    final file = _files[rest];
+    final file = _files[rest] ?? _photo(rest);
     final bytes = file == null ? null : await _assets(file.$1);
     if (file == null || bytes == null) return _notFound(response);
     response.headers
@@ -203,6 +205,13 @@ class ProjectionServer implements ProjectionHost {
       );
     response.add(bytes);
     await response.close();
+  }
+
+  /// Photo de fond (`images/<nom>.jpg`), seulement parmi celles de l'app.
+  static (String, String)? _photo(String path) {
+    final match = RegExp(r'^images/([a-z0-9_]+)\.jpg$').firstMatch(path);
+    final asset = photoAsset(match?.group(1));
+    return asset == null ? null : (asset, 'image/jpeg');
   }
 
   void _attach(WebSocket socket) {

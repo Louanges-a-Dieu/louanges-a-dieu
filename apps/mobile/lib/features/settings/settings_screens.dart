@@ -73,7 +73,7 @@ class AppearanceScreen extends ConsumerWidget {
     return _SettingsPage(
       title: l10n.appearance,
       children: [
-        ListSectionHeader(l10n.theme),
+        SettingsLabel(l10n.themeLabel),
         Wrap(
           spacing: LadSpace.md,
           runSpacing: LadSpace.md,
@@ -93,8 +93,7 @@ class AppearanceScreen extends ConsumerWidget {
               ),
           ],
         ),
-        const SizedBox(height: LadSpace.lg),
-        ListSectionHeader(l10n.textSize),
+        SettingsLabel(l10n.textSize),
         Slider(
           min: LadLyricsSize.min,
           max: LadLyricsSize.max,
@@ -105,7 +104,7 @@ class AppearanceScreen extends ConsumerWidget {
           semanticFormatterCallback: (v) => '${v.round()} points',
           onChanged: (v) => notifier.change((p) => p.copyWith(lyricsSize: v)),
         ),
-        ListSectionHeader(l10n.lyricsFont),
+        SettingsLabel(l10n.lyricsFont),
         SegmentedButton<LyricsFont>(
           showSelectedIcon: false,
           segments: [
@@ -127,8 +126,7 @@ class AppearanceScreen extends ConsumerWidget {
               notifier.change((p) => p.copyWith(lyricsFont: s.first)),
         ),
         if (sample?.sections.firstOrNull case final HymnSection first) ...[
-          const SizedBox(height: LadSpace.lg),
-          ListSectionHeader(l10n.preview),
+          SettingsLabel(l10n.preview),
           Container(
             padding: const EdgeInsets.all(LadSpace.lg),
             decoration: BoxDecoration(

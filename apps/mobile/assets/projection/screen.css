@@ -41,6 +41,18 @@ body {
   font-family: var(--lad-font-lyrics);
 }
 
+/* Photo de l'app, voilée pour que le texte clair reste lisible. */
+body.photo {
+  background:
+    linear-gradient(rgb(0 0 0 / 55%), rgb(0 0 0 / 55%)),
+    var(--photo) center / cover no-repeat,
+    var(--lad-color-background);
+}
+
+body.photo .content {
+  text-shadow: 0 2px 12px rgb(0 0 0 / 60%);
+}
+
 /* « Écran noir » : noir pur, quel que soit le fond du thème (vidéoprojecteur). */
 body.blank {
   background: black;
@@ -130,6 +142,29 @@ body.blank .content {
 
 .refrain .lines {
   font-style: italic;
+}
+
+.end .title {
+  margin-top: 0.3em;
+}
+
+/* Écran retour : en cours (réduit), position, suivante. */
+.retour .content.current {
+  max-height: none;
+}
+
+.retour-info {
+  margin: 1.2em 0 0;
+  color: var(--lad-color-text-secondary);
+  font-family: var(--lad-font-ui);
+  font-size: 0.35em;
+}
+
+.retour-next {
+  margin: 0.4em 0 0;
+  color: var(--lad-color-gold-text);
+  font-family: var(--lad-font-ui);
+  font-size: 0.45em;
 }
 
 .hint,

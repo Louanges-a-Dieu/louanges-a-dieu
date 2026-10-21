@@ -190,3 +190,77 @@ class _HymnActionsSheet extends ConsumerWidget {
     );
   }
 }
+
+/// « Projeter » depuis la fiche (planche 5, écran 1) : lire ou afficher en
+/// plein écran sur cet appareil, projeter sur un écran, ajouter au
+/// programme, partager.
+Future<void> showProjectChoice(
+  BuildContext context,
+  WidgetRef ref,
+  PublishedHymn hymn,
+) => showModalBottomSheet<void>(
+  context: context,
+  showDragHandle: true,
+  builder: (sheet) {
+    final l10n = AppLocalizations.of(sheet);
+    final p = sheet.lad;
+    void then(VoidCallback action) {
+      Navigator.pop(sheet);
+      action();
+    }
+
+    Widget item(
+      IconData icon,
+      String title,
+      String subtitle,
+      VoidCallback onTap,
+    ) => ListTile(
+      leading: Icon(icon, color: p.goldText),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: Icon(Icons.chevron_right, color: p.textSecondary),
+      onTap: () => then(onTap),
+    );
+    return SafeArea(
+      child: ListView(
+        shrinkWrap: true,
+        children: [
+          ListTile(
+            leading: HymnNumberBadge(hymn.numberLabel),
+            title: Text(hymn.title),
+          ),
+          item(
+            Icons.cast,
+            l10n.projectOnScreen,
+            l10n.projectOnScreenSubtitle,
+            () => context.push('/projection?cantique=${hymn.id}'),
+          ),
+          item(
+            Icons.fullscreen,
+            l10n.fullScreenHere,
+            l10n.fullScreenHereSubtitle,
+            () => context.push('/presentation?cantique=${hymn.id}'),
+          ),
+          item(
+            Icons.chrome_reader_mode_outlined,
+            l10n.readHere,
+            l10n.readHereSubtitle,
+            () => context.push('/lecture/${hymn.id}'),
+          ),
+          item(
+            Icons.event_note_outlined,
+            l10n.addToProgram,
+            l10n.addToProgramSubtitle,
+            () => showAddToWorship(context, ref, hymn.id),
+          ),
+          item(
+            Icons.ios_share,
+            l10n.shareHymn,
+            l10n.shareHymnSubtitle,
+            () => showShareHymn(context, hymn),
+          ),
+        ],
+      ),
+    );
+  },
+);

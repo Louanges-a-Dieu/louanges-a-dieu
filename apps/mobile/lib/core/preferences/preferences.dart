@@ -37,6 +37,9 @@ final class ReadingPreferences {
     this.audioSpeed = 1.0,
     this.audioLoop = false,
     this.autoAdvanceSeconds = 8,
+    this.projectionBackground = 'dark',
+    this.projectionShowNumber = true,
+    this.projectionScale = 1.0,
   });
 
   /// Taille des paroles (pt), entre [LadLyricsSize.min] et [LadLyricsSize.max].
@@ -76,6 +79,12 @@ final class ReadingPreferences {
   /// projection).
   final int autoAdvanceSeconds;
 
+  /// Apparence de l'écran projeté pour un cantique seul (un programme garde
+  /// la sienne) : fond (`dark`, `light`, `image:<photo>`), numéro, taille.
+  final String projectionBackground;
+  final bool projectionShowNumber;
+  final double projectionScale;
+
   static const lineSpacings = [0.9, 1.0, 1.15, 1.3, 1.5];
   static const audioSpeeds = [0.75, 1.0, 1.25, 1.5];
   static const autoAdvanceChoices = [5, 8, 10, 15, 20, 30];
@@ -96,6 +105,9 @@ final class ReadingPreferences {
     double? audioSpeed,
     bool? audioLoop,
     int? autoAdvanceSeconds,
+    String? projectionBackground,
+    bool? projectionShowNumber,
+    double? projectionScale,
   }) => ReadingPreferences(
     lyricsSize: (lyricsSize ?? this.lyricsSize).clamp(
       LadLyricsSize.min,
@@ -124,6 +136,9 @@ final class ReadingPreferences {
       autoAdvanceChoices.first,
       autoAdvanceChoices.last,
     ),
+    projectionBackground: projectionBackground ?? this.projectionBackground,
+    projectionShowNumber: projectionShowNumber ?? this.projectionShowNumber,
+    projectionScale: (projectionScale ?? this.projectionScale).clamp(0.7, 1.3),
   );
 
   /// Réglages de lecture remis par défaut (« Réinitialiser ») ; l'apparence
@@ -135,6 +150,9 @@ final class ReadingPreferences {
       sungOrder: sungOrder,
       audioSpeed: audioSpeed,
       audioLoop: audioLoop,
+      projectionBackground: projectionBackground,
+      projectionShowNumber: projectionShowNumber,
+      projectionScale: projectionScale,
       lyricsSize: d.lyricsSize,
       readerTheme: d.readerTheme,
       lyricsFont: d.lyricsFont,
@@ -171,6 +189,9 @@ class PreferencesRepository {
   static const _speed = 'pref.audioSpeed';
   static const _loop = 'pref.audioLoop';
   static const _auto = 'pref.autoAdvanceSeconds';
+  static const _projBackground = 'pref.projectionBackground';
+  static const _projNumber = 'pref.projectionShowNumber';
+  static const _projScale = 'pref.projectionScale';
 
   Future<ReadingPreferences> load() async {
     final rows = await (_db.select(
@@ -195,6 +216,9 @@ class PreferencesRepository {
       audioSpeed: double.tryParse(values[_speed] ?? ''),
       audioLoop: flag(_loop),
       autoAdvanceSeconds: int.tryParse(values[_auto] ?? ''),
+      projectionBackground: values[_projBackground],
+      projectionShowNumber: flag(_projNumber),
+      projectionScale: double.tryParse(values[_projScale] ?? ''),
     );
   }
 
@@ -216,6 +240,9 @@ class PreferencesRepository {
         (_speed, '${p.audioSpeed}'),
         (_loop, '${p.audioLoop}'),
         (_auto, '${p.autoAdvanceSeconds}'),
+        (_projBackground, p.projectionBackground),
+        (_projNumber, '${p.projectionShowNumber}'),
+        (_projScale, '${p.projectionScale}'),
       ])
         SyncStateCompanion.insert(key: key, value: value),
     ]),

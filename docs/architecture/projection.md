@@ -66,6 +66,17 @@ rechargement, écran projeté, recherche, T-008, écran noir, programme.
 `slide.kind` vaut `title` (`numberLabel`, `title`), `lyrics` ou `section` (`label`, moment libre
 d'un programme). L'écran n'envoie rien ; tout message reçu par le serveur est ignoré.
 
+Planche 5 (2026-10-21), champs facultatifs (un écran plus ancien les ignore) :
+
+- `mask` : écran masqué (fond et logo seulement), distinct de `blank` (noir pur) ;
+- `display` : `{ background: "dark" | "light" | "image", image?: "images/<photo>.jpg",
+  showNumber, scale }` ; le serveur ne sert que les photos embarquées de l'app ;
+- `next` : diapositive suivante, pour l'**écran retour** (adresse suivie de `?role=retour`) qui
+  montre la diapositive en cours, la position et la suivante, même pendant un écran noir ;
+- `slide.kind` peut aussi valoir `transition` (logo entre deux cantiques) ou `end` (`message`) :
+  options d'un programme ajoutées par l'app après la découpe partagée (`withProgramExtras`),
+  hors du contrat TypeScript.
+
 ## Liste de contrôle sur appareils réels (propriétaire, avant la Phase 10)
 
 À faire avec un téléphone Android, un iPhone et l'ordinateur habituel du projecteur.
