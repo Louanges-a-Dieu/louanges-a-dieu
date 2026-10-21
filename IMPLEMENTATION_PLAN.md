@@ -629,7 +629,7 @@ est accompagné d'un test de non-régression.
 ### PHASE 1 — Architecture et organisation du repository
 
 - [x] 1.1 Checklist de propriété : `docs/ownership/accounts.md` (comptes, règles, transfert) et `docs/ownership/assets.md` (polices, photos)
-- [!] 1.2 Organisation GitHub du propriétaire, dépôt privé, protections de `main` — **bloqué** : nécessite l'adresse e-mail du projet puis la création de l'organisation par le propriétaire. CODEOWNERS et modèle de PR sont prêts
+- [~] 1.2 Organisation GitHub **Louanges-a-Dieu** (offre gratuite) et dépôt privé `Louanges-a-Dieu/louanges-a-dieu` créés le 2026-10-21, code envoyé ; CODEOWNERS = `@louanges-a-dieu-admin`. **Reste** : double authentification du compte et exigée pour l'organisation ; protection de `main` et environnements protégés, indisponibles sur un dépôt privé en offre gratuite (passer à GitHub Team)
 - [x] 1.3 Squelette du monorepo (§10), `README.md`, `.editorconfig`, `.gitignore`, `.gitattributes`, `.env.example` ; `git init` local (aucun commit)
 - [x] 1.4 Outillage épinglé : Flutter 3.47.7 (`.fvmrc`), Node 24 LTS (`.nvmrc`), pnpm 10.34.7 (`packageManager` + empreinte), CLI Supabase 2.121.0 (CI) ; `tools/bootstrap.sh` testé
 - [x] 1.5 Workspace pnpm + Turborepo
@@ -638,7 +638,7 @@ est accompagné d'un test de non-régression.
 - [x] 1.8 `packages/shared_contracts` : contrat `PublishedHymn` (Zod 4 → JSON Schema), règle « inconnu = null, jamais de chaîne vide », 7 fixtures synthétiques partagées
 - [x] 1.9 `packages/design_tokens` : `tokens.json` (blanc épuré, 3 thèmes, typographie Q-12), générateurs Dart et CSS, contrôle des contrastes et de fraîcheur des fichiers générés
 - [x] 1.10 `supabase init` fait (`supabase/config.toml`). Décision du propriétaire : la base de développement est le projet cloud `ssvhoqpvxvfkhwxkewwl` (Postgres 17.11), **lié** (`supabase link`) et vérifié (connexion, base vide, aucune migration). La stack Docker locale devient facultative ; la CI utilise Docker sur les runners GitHub. Secrets stockés hors dépôt (`~/.config/louanges-a-dieu/supabase.env`, droits 600)
-- [~] 1.11 CI `.github/workflows/ci.yml` (un workflow, filtres de chemins, job agrégateur `ci-ok` à exiger dans la protection de branche) : validée par actionlint et rejouée localement étape par étape. **Reste** : première exécution réelle sur GitHub (dépend de 1.2)
+- [x] 1.11 CI `.github/workflows/ci.yml` (un workflow, filtres de chemins, job agrégateur `ci-ok` à exiger dans la protection de branche) : validée par actionlint et rejouée localement étape par étape. **Première exécution réelle verte le 2026-10-21** (corrections : build du back-office sans configuration, données de démonstration en aal2, espace disque pour Android) ; lancement manuel « Run workflow » = toutes les vérifications. Build Android (arm64) vérifié en CI
 - [~] 1.12 Conventional Commits vérifiés sur le titre de PR (fusion en squash, donc sans commitlint) ; configuration Renovate prête. **Reste** : installation de l'app Renovate sur l'organisation (dépend de 1.2)
 - [x] 1.13 ADR-001 à ADR-019 rédigés dans `docs/architecture/adr/`
 

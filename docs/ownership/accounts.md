@@ -23,7 +23,7 @@ secrets du propriétaire.
 |---|---|---|---|---|
 | 1 | Adresse Gmail du projet `louangesaDieu04@gmail.com` | Propriétaire | ☑ | Activer la double authentification ; codes de secours dans le coffre |
 | 2 | Coffre de secrets (ex. Bitwarden Organisation) | Propriétaire | ☐ | Stocke tous les identifiants ci-dessous |
-| 3 | GitHub : organisation + dépôt privé `louanges-a-dieu` | Propriétaire | ☐ | Développeur invité comme membre |
+| 3 | GitHub : organisation `Louanges-a-Dieu` + dépôt privé `louanges-a-dieu` | Propriétaire | ◐ | Créés le 2026-10-21 (compte `louanges-a-dieu-admin`, offre gratuite) ; reste : double authentification, offre Team pour protéger `main` |
 | 4 | Supabase : projet de développement `ssvhoqpvxvfkhwxkewwl` ; projets `staging` et `prod` à créer plus tard | Propriétaire | ◐ | Vérifier que le projet appartient à une organisation au nom du projet |
 | 5 | Vercel : équipe, projets `admin` et `web` | Propriétaire | ☐ | Vérifier l'offre (Hobby = usage personnel non commercial) |
 | 6 | Cloudflare : compte (R2 pour sauvegardes, V2 médias) | Propriétaire | ☐ | — |
