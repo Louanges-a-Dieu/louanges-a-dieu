@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/auth/auth_service.dart';
 import '../core/catalog/bundled_catalog.dart';
 import '../core/catalog/catalog_repository.dart';
+import '../core/community/community.dart';
 import '../core/database/app_database.dart';
 import '../core/network/supabase_remotes.dart';
 import '../core/projection/projection_server.dart';
@@ -133,3 +134,9 @@ Future<List<int>?> _bundleAsset(String path) async {
     return null;
   }
 }
+
+/// Statistiques anonymes et avis ; null sans backend.
+final communityRemoteProvider = Provider<CommunityRemote?>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  return client == null ? null : SupabaseCommunityRemote(client);
+});

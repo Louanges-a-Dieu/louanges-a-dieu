@@ -81,3 +81,18 @@ select id, 'super_admin' from auth.users where email = '<adresse du responsable>
 ```
 
 Les rôles suivants sont attribués depuis le back-office par ce super_admin.
+
+## Planche 8 (0023–0025) : statistiques anonymes, avis, paramètres
+
+| Fonction | Accès | Rôle |
+|---|---|---|
+| `record_usage(p_events)` | anon, authenticated | `[{ hymnId, event: view \| listen \| project, count }]` ; 200 éléments au plus, 50 par cantique et type ; totaux par jour **sans identifiant** ; sans effet si `stats_enabled` est faux |
+| `usage_stats(p_days)` | éditeurs | `{ days, totals, daily: [{ day, view, listen, project }], top: [{ hymnId, numberLabel, title, views }] }` |
+| `community_overview()` | éditeurs | `{ users, programs, sharedPrograms, pendingReviews, approvedReviews, hymnsWithAudio }` |
+| `hymn_reviews(p_hymn_id)` | anon, authenticated | `{ enabled, count, average, reviews: [{ rating, body, reply, createdAt }], mine }` — avis **approuvés** seulement, sans auteur |
+| `submit_review(p_hymn_id, p_rating, p_body?)` | authenticated | un avis par compte et par cantique ; toute modification repasse « en attente » ; refusé si `comments_enabled` est faux |
+| `delete_my_review(p_hymn_id)` | authenticated | retire son avis |
+| `moderate_review(p_id, p_status, p_reply?)` | éditeurs | `approved`, `rejected` ou `pending`, réponse publique facultative |
+
+Table `app_settings` (`comments_enabled`, `stats_enabled`) : lecture publique, modification par un
+super administrateur (journalisée).

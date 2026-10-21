@@ -584,7 +584,7 @@
     }
   },
   "privacyDataTitle": "Vos données",
-  "privacyDataText": "Les cantiques, vos réglages et vos favoris restent sur cet appareil. Avec un compte, vos favoris, listes et programmes sont aussi enregistrés sur notre serveur pour les retrouver sur vos autres appareils. Aucune publicité, aucun traçage.",
+  "privacyDataText": "Les cantiques, vos réglages et vos favoris restent sur cet appareil. Avec un compte, vos favoris, listes, programmes et avis sont aussi enregistrés sur notre serveur. Aucune publicité, aucun pistage : seules des statistiques anonymes, que vous pouvez désactiver ci-dessous, sont envoyées.",
   "accountAndDeletion": "Compte et suppression du compte",
   "helpSearchHint": "Rechercher une réponse…",
   "faqTitle": "Questions fréquentes",
@@ -789,5 +789,55 @@
       }
     }
   },
-  "cloudSync": "Synchronisation"
+  "cloudSync": "Synchronisation",
+  "tabReviews": "Avis",
+  "ratingOutOf5": "{rating} sur 5",
+  "@ratingOutOf5": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewsOffline": "Les avis demandent une connexion Internet.",
+  "reviewsDisabled": "Les avis ne sont pas ouverts pour le moment.",
+  "reviewCount": "{count, plural, =0{Aucun avis publié} =1{1 avis} other{{count} avis}}",
+  "@reviewCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "writeReview": "Donner mon avis",
+  "yourReview": "Votre avis",
+  "reviewPublished": "Publié",
+  "reviewRejected": "Non retenu",
+  "reviewPending": "En attente de validation",
+  "teamReply": "Réponse de l’équipe : {reply}",
+  "@teamReply": {
+    "placeholders": {
+      "reply": {
+        "type": "String"
+      }
+    }
+  },
+  "edit": "Modifier",
+  "deleteReviewTitle": "Retirer votre avis ?",
+  "noReviewsYet": "Aucun avis publié pour ce cantique.",
+  "reviewThanks": "Merci ! Votre avis sera publié après validation.",
+  "reviewSendFailed": "Envoi impossible. Vérifiez votre connexion et réessayez.",
+  "starCount": "{count, plural, =1{1 étoile} other{{count} étoiles}}",
+  "@starCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "commentOptional": "Commentaire (facultatif)",
+  "reviewModerationHint": "Votre avis est relu par l’équipe avant d’être publié, sans votre nom ni votre adresse.",
+  "send": "Envoyer",
+  "shareStats": "Statistiques anonymes",
+  "shareStatsHint": "Compter, sans vous identifier, les cantiques consultés, écoutés et projetés, pour améliorer le recueil."
 }

@@ -41,4 +41,16 @@ données masqués, barre du bas inchangée).
 | B | Favoris (récents), listes (icône, couleur, description, ajout multiple, cases à cocher, lecture à la suite, partage), programmes (lieu, description, image, à venir / historique, modèles, options de projection, lecture et plein écran, partage lien / image / texte) ; migration 0022, base locale v2, page publique avec lieu et description | fait |
 | C | Projection : choix depuis la fiche (écran, plein écran, lecture, programme, partage), mode d’affichage (fond sombre / clair / photo, numéro, taille), masquer, refrain, relancer, cantique suivant, défilement automatique, transitions et message de fin (options du programme), écran retour (`?role=retour`), mise en page tablette ; le serveur local sert les photos de l’app | fait |
 | D | Hors connexion : vue d’ensemble (recueil, enregistrements sur l’appareil, place occupée), « Sans Internet, vous pouvez », gestionnaire d’écoute hors connexion (choix, favoris, avancement, annulation, suppression, libérer l’espace) ; compte : favoris, listes, programmes, synchronisation | fait |
-| E | Statistiques anonymes et commentaires (base, app, back-office) ; back-office : tableau de bord, thèmes et auteurs, utilisateurs, paramètres de l'app, notes de version | à faire |
+| E | Statistiques anonymes (compteurs par jour et par cantique, désactivables dans l’app et le back-office), avis notés modérés (onglet « Avis » de la fiche, page « Avis » du back-office) ; back-office : tableau de bord enrichi (consultations, comptes, programmes, avis à modérer, activité), Statistiques (7 / 30 / 90 jours, classement, export CSV), Thèmes, Paramètres de l’app ; politique de confidentialité mise à jour ; migrations 0023–0025 | fait |
+
+## Écarts restants (non faits, à décider)
+
+- Planche 8 : liste complète des utilisateurs (8·9 ; la page Équipe gère les rôles), notifications
+  et annonces (8·12, exclues), sauvegardes (8·14, voir `docs/operations/backup-restore.md`),
+  modèles de programmes proposés par l’équipe (8·8), filtre des cantiques par thème dans la liste.
+- Planche 7 : couleur principale au choix (7·8) non retenue : l’identité et les contrastes vérifiés
+  reposent sur l’or ; langue (7·12) exclue.
+- Planche 5 : diffusion différente par écran (5·15) limitée à l’écran retour ; Chromecast écarté
+  (projection sans Internet, ADR-013).
+- Partitions, accords, tonalités, compositeurs : écrans masqués tant que les données n’existent pas.
+- Recette sur appareils réels (Android, iPhone, vidéoprojecteur) à faire par le propriétaire.

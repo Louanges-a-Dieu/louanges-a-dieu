@@ -40,6 +40,7 @@ final class ReadingPreferences {
     this.projectionBackground = 'dark',
     this.projectionShowNumber = true,
     this.projectionScale = 1.0,
+    this.shareStats = true,
   });
 
   /// Taille des paroles (pt), entre [LadLyricsSize.min] et [LadLyricsSize.max].
@@ -85,6 +86,9 @@ final class ReadingPreferences {
   final bool projectionShowNumber;
   final double projectionScale;
 
+  /// Statistiques anonymes (compteurs sans identifiant) envoyées au serveur.
+  final bool shareStats;
+
   static const lineSpacings = [0.9, 1.0, 1.15, 1.3, 1.5];
   static const audioSpeeds = [0.75, 1.0, 1.25, 1.5];
   static const autoAdvanceChoices = [5, 8, 10, 15, 20, 30];
@@ -108,6 +112,7 @@ final class ReadingPreferences {
     String? projectionBackground,
     bool? projectionShowNumber,
     double? projectionScale,
+    bool? shareStats,
   }) => ReadingPreferences(
     lyricsSize: (lyricsSize ?? this.lyricsSize).clamp(
       LadLyricsSize.min,
@@ -139,6 +144,7 @@ final class ReadingPreferences {
     projectionBackground: projectionBackground ?? this.projectionBackground,
     projectionShowNumber: projectionShowNumber ?? this.projectionShowNumber,
     projectionScale: (projectionScale ?? this.projectionScale).clamp(0.7, 1.3),
+    shareStats: shareStats ?? this.shareStats,
   );
 
   /// Réglages de lecture remis par défaut (« Réinitialiser ») ; l'apparence
@@ -192,6 +198,7 @@ class PreferencesRepository {
   static const _projBackground = 'pref.projectionBackground';
   static const _projNumber = 'pref.projectionShowNumber';
   static const _projScale = 'pref.projectionScale';
+  static const _stats = 'pref.shareStats';
 
   Future<ReadingPreferences> load() async {
     final rows = await (_db.select(
@@ -219,6 +226,7 @@ class PreferencesRepository {
       projectionBackground: values[_projBackground],
       projectionShowNumber: flag(_projNumber),
       projectionScale: double.tryParse(values[_projScale] ?? ''),
+      shareStats: flag(_stats),
     );
   }
 
@@ -243,6 +251,7 @@ class PreferencesRepository {
         (_projBackground, p.projectionBackground),
         (_projNumber, '${p.projectionShowNumber}'),
         (_projScale, '${p.projectionScale}'),
+        (_stats, '${p.shareStats}'),
       ])
         SyncStateCompanion.insert(key: key, value: value),
     ]),

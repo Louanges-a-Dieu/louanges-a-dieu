@@ -17,13 +17,14 @@ export default function PrivacyPage() {
     <main className={styles.page}>
       <p className={styles.brand}>Louanges à Dieu</p>
       <h1>Politique de confidentialité</h1>
-      <p className={styles.updated}>Version du 18 octobre 2026</p>
+      <p className={styles.updated}>Version du 21 octobre 2026</p>
 
       <p>
         L’application <strong>Louanges à Dieu</strong> permet de lire, rechercher et projeter les
         cantiques du recueil. Elle est conçue pour collecter le moins de données possible : elle ne
-        contient <strong>ni publicité, ni pistage, ni mesure d’audience</strong>, et aucune donnée
-        n’est vendue ni cédée.
+        contient <strong>ni publicité, ni pistage</strong> ; seules des statistiques{' '}
+        <strong>anonymes</strong>, que vous pouvez désactiver, sont recueillies (voir plus bas).
+        Aucune donnée n’est vendue ni cédée.
       </p>
 
       <h2>Sans compte</h2>
@@ -56,6 +57,10 @@ export default function PrivacyPage() {
             <td>Favoris, listes, programmes de culte</td>
             <td>Les synchroniser entre vos appareils</td>
           </tr>
+          <tr>
+            <td>Avis sur les cantiques (note, commentaire)</td>
+            <td>Les publier après relecture, sans votre nom</td>
+          </tr>
         </tbody>
       </table>
       <p>
@@ -64,10 +69,26 @@ export default function PrivacyPage() {
         après la suppression.
       </p>
 
+      <h2>Statistiques anonymes</h2>
+      <p>
+        Pour savoir quels cantiques sont les plus utilisés, l’application compte sur l’appareil les
+        cantiques consultés, écoutés et projetés, puis envoie seulement des{' '}
+        <strong>totaux par cantique et par jour</strong>, sans identifiant de compte, d’appareil ni
+        d’adresse. Vous pouvez désactiver cet envoi dans Plus → Confidentialité.
+      </p>
+
+      <h2>Avis sur les cantiques</h2>
+      <p>
+        Avec un compte, vous pouvez laisser une note et un commentaire sur un cantique. L’avis est
+        relu par l’équipe avant publication et s’affiche{' '}
+        <strong>sans votre nom ni votre adresse e-mail</strong>. Vous pouvez le modifier ou le
+        retirer à tout moment ; il est effacé avec votre compte.
+      </p>
+
       <h2>Programmes partagés</h2>
       <p>
         Si vous partagez un programme de culte, toute personne disposant du lien voit son titre, sa
-        date et la liste des cantiques et moments,{' '}
+        date, son lieu, sa description et la liste des cantiques et moments,{' '}
         <strong>sans votre nom ni votre adresse e-mail</strong>. Vous pouvez désactiver le lien à
         tout moment depuis l’application.
       </p>

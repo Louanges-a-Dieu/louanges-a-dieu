@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import ui from '@/components/ui.module.css';
 import { requireEditor } from '@/lib/auth';
+import { barHeight, EMPTY_STATS, type Overview, type UsageStats } from '@/lib/community';
 import { listEditions, param } from '@/lib/data';
 
 import styles from './page.module.css';
@@ -31,7 +32,14 @@ export default async function DashboardPage({
   const { supabase } = await requireEditor();
   const editions = await listEditions(supabase);
   const edition = param(sp.edition) ?? editions[0]?.id;
-  const { data } = await supabase.rpc('editorial_stats', { p_edition_id: edition ?? null });
+  const [{ data }, usage, overview] = await Promise.all([
+    supabase.rpc('editorial_stats', { p_edition_id: edition ?? null }),
+    supabase.rpc('usage_stats', { p_days: 30 }),
+    supabase.rpc('community_overview'),
+  ]);
+  const activity = (usage.data ?? EMPTY_STATS) as UsageStats;
+  const community = overview.data as Overview | null;
+  const peak = Math.max(1, ...activity.daily.map((d) => d.view));
   const stats = (data ?? { byStatus: {}, total: 0, openIssues: {}, latestRelease: null }) as Stats;
   const count = (s: string) => stats.byStatus[s] ?? 0;
   const validated = count('published');
@@ -80,6 +88,51 @@ export default async function DashboardPage({
           Anomalies ouvertes
         </Link>
       </div>
+
+      {community && (
+        <div className={styles.grid}>
+          <Link className={styles.stat} href="/statistiques">
+            <span className={styles.value}>{activity.totals.view.toLocaleString('fr-FR')}</span>
+            Consultations (30 jours)
+          </Link>
+          <div className={styles.stat}>
+            <span className={styles.value}>{community.hymnsWithAudio}</span>
+            Cantiques avec audio
+          </div>
+          <div className={styles.stat}>
+            <span className={styles.value}>{community.users.toLocaleString('fr-FR')}</span>
+            Comptes
+          </div>
+          <div className={styles.stat}>
+            <span className={styles.value}>{community.programs}</span>
+            Programmes ({community.sharedPrograms} partagés)
+          </div>
+          <Link className={styles.stat} href="/avis">
+            <span className={styles.value}>{community.pendingReviews}</span>
+            Avis à modérer
+          </Link>
+        </div>
+      )}
+
+      {activity.totals.view > 0 && (
+        <section className={ui.card}>
+          <h2 className={ui.h2}>Activité des 30 derniers jours</h2>
+          <div
+            className={styles.bars}
+            role="img"
+            aria-label={`Consultations par jour, maximum ${peak}`}
+          >
+            {activity.daily.map((d) => (
+              <span
+                key={d.day}
+                className={styles.bar}
+                style={{ height: `${barHeight(d.view, peak)}%` }}
+                title={`${new Date(d.day).toLocaleDateString('fr-FR')} : ${d.view}`}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className={ui.card}>
         <h2 className={ui.h2}>Progression de la revue</h2>

@@ -18,7 +18,8 @@ class LouangesApp extends ConsumerWidget {
         ref.watch(preferencesProvider).value?.appearance ??
         LadAppearance.system;
     return MaterialApp.router(
-      builder: (context, child) => StartupGate(child: child!),
+      builder: (context, child) =>
+          _UsageFlush(child: StartupGate(child: child!)),
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
       // Sépia : thème clair à part ; sinon clair, sombre ou celui de l'appareil.
@@ -42,4 +43,36 @@ class LouangesApp extends ConsumerWidget {
       routerConfig: ref.watch(routerProvider),
     );
   }
+}
+
+/// Envoie les statistiques anonymes en attente quand l'app passe en
+/// arrière-plan.
+class _UsageFlush extends ConsumerStatefulWidget {
+  const _UsageFlush({required this.child});
+
+  final Widget child;
+
+  @override
+  ConsumerState<_UsageFlush> createState() => _UsageFlushState();
+}
+
+class _UsageFlushState extends ConsumerState<_UsageFlush> {
+  late final AppLifecycleListener _listener = AppLifecycleListener(
+    onHide: () => ref.read(usageRecorderProvider).flush().ignore(),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _listener;
+  }
+
+  @override
+  void dispose() {
+    _listener.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

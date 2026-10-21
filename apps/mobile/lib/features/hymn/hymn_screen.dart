@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/env.dart';
+import '../../app/providers.dart';
 import '../../app/state.dart';
 import '../../core/catalog/catalog_models.dart';
 import '../../core/catalog/published_hymn.dart';
 import '../../core/catalog/sung_order.dart';
+import '../../core/community/community.dart';
 import '../../core/design_system/components.dart';
 import '../../core/design_system/theme.dart';
 import '../../core/design_system/tokens.g.dart';
@@ -15,6 +17,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../audio/audio_screen.dart';
 import '../favorites/favorite_button.dart';
 import 'hymn_actions.dart';
+import 'reviews.dart';
 import 'share_hymn.dart';
 
 /// Fiche cantique (F-HYM-001/002, T-010) : bandeau, onglets Paroles /
@@ -38,6 +41,8 @@ class _HymnScreenState extends ConsumerState<HymnScreen> {
     super.initState();
     // « Reprendre votre lecture » (accueil) : sur l'appareil seulement.
     ref.read(readingHistoryRepositoryProvider).record(hymnId).ignore();
+    // Statistiques anonymes (si l'utilisateur ne les a pas désactivées).
+    ref.read(usageRecorderProvider).record(hymnId, UsageEvent.view).ignore();
   }
 
   @override
@@ -273,7 +278,7 @@ class _ActionBar extends ConsumerWidget {
   }
 }
 
-enum _Tab { lyrics, details, media, similar }
+enum _Tab { lyrics, details, media, similar, reviews }
 
 /// Contenu de la fiche : bandeau, onglets, puis l'onglet choisi. Les onglets
 /// Médias et Similaires n'existent que s'ils ont un contenu.
@@ -300,12 +305,14 @@ class HymnContent extends ConsumerWidget {
       _Tab.details,
       if (canListen(ref.watch(envProvider), hymn)) _Tab.media,
       if (hymn.relations.isNotEmpty) _Tab.similar,
+      if (ref.watch(communityRemoteProvider) != null) _Tab.reviews,
     ];
     String name(_Tab tab) => switch (tab) {
       _Tab.lyrics => l10n.tabLyrics,
       _Tab.details => l10n.tabDetails,
       _Tab.media => l10n.tabMedia,
       _Tab.similar => l10n.tabSimilar,
+      _Tab.reviews => l10n.tabReviews,
     };
 
     return DefaultTabController(
@@ -346,6 +353,9 @@ class HymnContent extends ConsumerWidget {
                               _Tab.details => _Details(hymn: hymn),
                               _Tab.media => _Media(hymn: hymn),
                               _Tab.similar => _Similar(hymn: hymn),
+                              _Tab.reviews => _Panel(
+                                child: ReviewsTab(hymnId: hymn.id),
+                              ),
                             },
                       ),
                     ],

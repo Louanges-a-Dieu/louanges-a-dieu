@@ -49,3 +49,31 @@
 .progress::-moz-progress-bar {
   background: var(--lad-color-gold);
 }
+
+/* Courbe des statistiques : barres quotidiennes. */
+.chart {
+  margin: 0;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 10rem;
+  border-bottom: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+}
+
+.bar {
+  flex: 1;
+  min-height: 1px;
+  background: var(--lad-color-gold);
+  border-radius: 2px 2px 0 0;
+}
+
+.axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--lad-space-xs);
+  color: var(--lad-color-text-secondary);
+  font-size: 0.85rem;
+}

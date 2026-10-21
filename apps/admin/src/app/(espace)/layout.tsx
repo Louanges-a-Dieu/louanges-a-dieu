@@ -25,7 +25,16 @@ export default async function EditorialLayout({ children }: { children: ReactNod
             <NavLink href="/cantiques">Cantiques</NavLink>
           </li>
           <li>
+            <NavLink href="/themes">Thèmes</NavLink>
+          </li>
+          <li>
             <NavLink href="/anomalies">Anomalies</NavLink>
+          </li>
+          <li>
+            <NavLink href="/avis">Avis</NavLink>
+          </li>
+          <li>
+            <NavLink href="/statistiques">Statistiques</NavLink>
           </li>
           <li>
             <NavLink href="/publication">Publication</NavLink>
@@ -37,9 +46,14 @@ export default async function EditorialLayout({ children }: { children: ReactNod
             <NavLink href="/journal">Journal</NavLink>
           </li>
           {editor.isSuperAdmin && (
-            <li>
-              <NavLink href="/equipe">Équipe</NavLink>
-            </li>
+            <>
+              <li>
+                <NavLink href="/equipe">Équipe</NavLink>
+              </li>
+              <li>
+                <NavLink href="/parametres">Paramètres</NavLink>
+              </li>
+            </>
           )}
         </ul>
         <p className={styles.account}>

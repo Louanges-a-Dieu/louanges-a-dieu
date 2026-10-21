@@ -9,6 +9,7 @@ import '../../app/env.dart';
 import '../../app/state.dart';
 import '../../core/catalog/published_hymn.dart';
 import '../../core/catalog/sung_order.dart';
+import '../../core/community/community.dart';
 import '../../core/design_system/components.dart';
 import '../../core/design_system/theme.dart';
 import '../../core/design_system/tokens.g.dart';
@@ -152,6 +153,10 @@ class _ListeningState extends ConsumerState<_Listening> {
     super.initState();
     _open();
     _player.state.addListener(_follow);
+    ref
+        .read(usageRecorderProvider)
+        .record(widget.hymn.id, UsageEvent.listen)
+        .ignore();
   }
 
   @override

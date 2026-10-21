@@ -158,6 +158,7 @@ async function cleanup() {
       `Auteur E2E ${editionName}`,
     ]);
     await client.query('delete from public.themes where name = $1', [`Thème E2E ${editionName}`]);
+    await client.query("delete from public.themes where name = 'Thème E2E planche 8'");
     await client.query('commit');
   } catch (error) {
     await client.query('rollback');
@@ -428,6 +429,10 @@ describe.skipIf(!ready)('parcours administrateur (navigateur réel)', () => {
         [`/cantiques?edition=${editionId}`, 'cantiques'],
         [hymnPath, 'cantique'],
         [`/publication?edition=${editionId}`, 'publication'],
+        ['/statistiques', 'statistiques'],
+        ['/avis', 'avis'],
+        ['/themes', 'themes'],
+        ['/parametres', 'parametres'],
       ] as const) {
         await go(path);
         const shot = await page.send('Page.captureScreenshot', {
@@ -451,5 +456,42 @@ describe.skipIf(!ready)('parcours administrateur (navigateur réel)', () => {
           )),
     );
     expect(problems).toEqual([]);
+  });
+
+  // Planche 8 : thèmes, statistiques (export CSV), avis, paramètres, tableau
+  // de bord. Session ouverte par le parcours précédent (second facteur).
+  it('planche 8 : thèmes, statistiques, avis, paramètres', async () => {
+    await go('/');
+    expect(await page.eval<string>('location.pathname')).toBe('/');
+    await go('/themes');
+    await fill('section input[name=name]', 'Thème E2E planche 8');
+    await click('Créer', "document.querySelector('section input[name=name]').closest('form')");
+    await waitText(`Thème « Thème E2E planche 8 » créé.`);
+    await click(
+      'Supprimer',
+      `document.querySelector('input[value="Thème E2E planche 8"]').closest('tr')`,
+    );
+    await waitText('Thème supprimé');
+    await go('/statistiques?jours=7');
+    expect(await text()).toContain('Cantiques les plus consultés');
+    const csv = await page.eval<string>(
+      `fetch('/statistiques/export?jours=7').then(r => r.text())`,
+    );
+    expect(csv).toContain('Jour;Consultations;Écoutes;Projections');
+    await go('/avis');
+    expect(await text()).toContain('En attente (');
+    await go('/parametres');
+    await click(
+      'Désactiver',
+      "document.querySelector('input[value=comments_enabled]').closest('form')",
+    );
+    await waitText('Paramètre enregistré.');
+    await click(
+      'Activer',
+      "document.querySelector('input[value=comments_enabled]').closest('form')",
+    );
+    await waitText('Paramètre enregistré.');
+    await go('/');
+    expect(await text()).toContain('Avis à modérer');
   });
 });

@@ -6,6 +6,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/env.dart';
+import '../../app/providers.dart';
 import '../../app/state.dart';
 import '../../core/catalog/published_hymn.dart';
 import '../../core/design_system/components.dart';
@@ -340,6 +341,20 @@ class PrivacyScreen extends ConsumerWidget {
           style: LadTheme.textStyle(LadTypeScale.body, p.textSecondary),
         ),
         const SizedBox(height: LadSpace.lg),
+        if (ref.watch(communityRemoteProvider) != null)
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            secondary: const Icon(Icons.insights_outlined),
+            title: Text(l10n.shareStats),
+            subtitle: Text(l10n.shareStatsHint),
+            value:
+                (ref.watch(preferencesProvider).value ??
+                        const ReadingPreferences())
+                    .shareStats,
+            onChanged: (v) => ref
+                .read(preferencesProvider.notifier)
+                .change((p) => p.copyWith(shareStats: v)),
+          ),
         if (web.isNotEmpty)
           ListTile(
             contentPadding: EdgeInsets.zero,

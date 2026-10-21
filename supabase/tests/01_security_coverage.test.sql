@@ -22,8 +22,8 @@ select is_empty(
 select set_eq(
   $$ select distinct table_name::text from information_schema.role_table_grants
       where grantee = 'anon' and table_schema = 'public' $$,
-  array['catalog_releases', 'published_hymns']::text[],
-  'anon ne peut lire que les tables du catalogue publié'
+  array['catalog_releases', 'published_hymns', 'app_settings']::text[],
+  'anon ne peut lire que les tables du catalogue publié et les paramètres de l''app'
 );
 
 select is_empty(
@@ -38,7 +38,10 @@ select set_eq(
       where n.nspname = 'public' and p.prosecdef $$,
   array['publish_release', 'get_shared_program', 'delete_my_account', 'preview_release',
         'rollback_release', 'admin_list_team', 'admin_grant_role', 'admin_revoke_role',
-        'admin_audit_log', 'preview_hymn']::text[],
+        'admin_audit_log', 'preview_hymn',
+        -- Planche 8 (0023) : statistiques anonymes et avis.
+        'record_usage', 'usage_stats', 'submit_review', 'delete_my_review',
+        'hymn_reviews', 'moderate_review', 'community_overview']::text[],
   'seules les fonctions SECURITY DEFINER attendues existent dans public'
 );
 
@@ -46,7 +49,8 @@ select set_eq(
   $$ select p.proname::text
        from pg_proc p join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute') $$,
-  array['get_catalog_manifest', 'get_catalog_snapshot', 'get_catalog_delta', 'get_shared_program']::text[],
+  array['get_catalog_manifest', 'get_catalog_snapshot', 'get_catalog_delta', 'get_shared_program',
+        'record_usage', 'hymn_reviews']::text[],
   'anon n''exécute que les RPC publiques prévues'
 );
 

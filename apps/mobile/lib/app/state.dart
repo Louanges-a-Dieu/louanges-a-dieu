@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/catalog/catalog_models.dart';
 import '../core/catalog/hymn_of_the_day.dart';
 import '../core/catalog/published_hymn.dart';
+import '../core/community/community.dart';
 import '../core/database/app_database.dart';
 import '../core/preferences/preferences.dart';
 import '../core/search/search_service.dart';
@@ -180,3 +181,13 @@ final readerSequenceProvider = Provider.autoDispose
           ? ids.whenData((ids) => [for (final id in ids) ?byId[id]])
           : const AsyncLoading();
     });
+
+/// Compteurs anonymes de consultation, d'écoute et de projection.
+final usageRecorderProvider = Provider<UsageRecorder>(
+  (ref) => UsageRecorder(
+    ref.watch(appDatabaseProvider),
+    remote: ref.watch(communityRemoteProvider),
+    enabled: () async =>
+        (await ref.read(preferencesProvider.future)).shareStats,
+  ),
+);

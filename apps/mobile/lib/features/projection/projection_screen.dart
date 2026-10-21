@@ -9,6 +9,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../app/providers.dart';
 import '../../app/state.dart';
 import '../../core/catalog/published_hymn.dart';
+import '../../core/community/community.dart';
 import '../../core/design_system/components.dart';
 import '../../core/design_system/dialogs.dart';
 import '../../core/design_system/photos.dart';
@@ -98,6 +99,24 @@ class _ProjectionScreenState extends ConsumerState<ProjectionScreen>
     WidgetsBinding.instance.addObserver(this);
     WakelockPlus.enable().ignore();
     unawaited(_startHost());
+    unawaited(_countProjection());
+  }
+
+  /// Statistiques anonymes : chaque cantique projeté (seul ou du programme).
+  Future<void> _countProjection() async {
+    final recorder = ref.read(usageRecorderProvider);
+    final ids = widget.hymnId != null
+        ? [widget.hymnId!]
+        : [
+            for (final item
+                in await ref
+                    .read(userDataRepositoryProvider)
+                    .worshipServiceItems(widget.serviceId!))
+              ?item.hymnId,
+          ];
+    for (final id in ids.toSet()) {
+      await recorder.record(id, UsageEvent.project);
+    }
   }
 
   @override
