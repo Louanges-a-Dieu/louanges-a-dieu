@@ -93,6 +93,15 @@ jobs:
         working-directory: apps/mobile
     steps:
       - uses: actions/checkout@v7
+      # La compilation Android (SDK, NDK, Gradle) dépasse l'espace libre de
+      # la machine : outils préinstallés inutiles ici retirés (~20 Go).
+      - name: Espace disque pour Android
+        working-directory: .
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL \
+            /usr/local/share/powershell /usr/share/swift
+          sudo docker image prune --all --force > /dev/null
+          df -h /
       - name: Version Flutter épinglée (.fvmrc)
         id: fvm
         working-directory: .
@@ -114,7 +123,9 @@ jobs:
       - name: Tests
         run: flutter test
       - name: Build Android (vérification)
-        run: flutter build apk --debug
+        # Une seule architecture (téléphones actuels) : vérification plus
+        # rapide et plus légère ; les builds des stores couvrent les autres.
+        run: flutter build apk --debug --target-platform android-arm64
 
   db:
     name: Base de données (migrations depuis zéro)
