@@ -4,6 +4,8 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Lancement manuel (onglet Actions) : toutes les vérifications, sans filtre.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -84,7 +86,7 @@ jobs:
   mobile:
     name: Flutter
     needs: changes
-    if: needs.changes.outputs.mobile == 'true'
+    if: needs.changes.outputs.mobile == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -117,7 +119,7 @@ jobs:
   db:
     name: Base de données (migrations depuis zéro)
     needs: changes
-    if: needs.changes.outputs.db == 'true'
+    if: needs.changes.outputs.db == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
