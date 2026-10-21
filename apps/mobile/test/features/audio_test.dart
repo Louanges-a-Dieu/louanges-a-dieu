@@ -485,4 +485,37 @@ void main() {
     env: _audioEnv,
     overrides: fakes,
   );
+
+  testApp(
+    'écoute d’une piste synchronisée vers par vers : chaque strophe une fois',
+    (tester, _) async {
+      await openHymn(tester, '2', 'L’Éternel est mon berger');
+      await tester.tap(find.text('Écouter'));
+      await idle(tester);
+      await tester.ensureVisible(
+        find.widgetWithText(ChoiceChip, 'Accompagnement'),
+      );
+      await idle(tester);
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Accompagnement'));
+      await idle(tester);
+
+      // 6 vers synchronisés → 3 strophes (couplet 1, refrain, couplet 2).
+      expect(find.text('L’Éternel est mon berger,'), findsOneWidget);
+      expect(find.text('Alléluia, gloire à Dieu,'), findsOneWidget);
+      expect(find.text('Il me fait reposer'), findsOneWidget);
+
+      // Pendant le 2ᵉ vers du refrain, le refrain entier est mis en avant ;
+      // le toucher ramène au début du refrain.
+      await player.seek(const Duration(seconds: 15));
+      await idle(tester);
+      await tester.ensureVisible(find.text('Chantons Son Nom.'));
+      await idle(tester);
+      await tester.tap(find.text('Chantons Son Nom.'));
+      await idle(tester);
+      expect(player.seeks.last, const Duration(seconds: 10));
+    },
+    hymns: hymnsWithKaraoke(),
+    env: _audioEnv,
+    overrides: fakes,
+  );
 }

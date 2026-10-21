@@ -39,6 +39,36 @@ Future<AudioSourceSpec> audioSourceFor(
   );
 }
 
+/// Passages par section d'une piste : sur une piste synchronisée vers par
+/// vers (karaoké), les vers consécutifs d'une même section ne forment qu'un
+/// passage, pour que l'écoute affiche chaque strophe une fois.
+List<AudioSegment> sectionPassages(List<AudioSegment> segments) {
+  final sorted = [...segments]..sort((a, b) => a.order.compareTo(b.order));
+  final passages = <AudioSegment>[];
+  int? previousLine;
+  for (final segment in sorted) {
+    final last = passages.lastOrNull;
+    final line = segment.lineIndex;
+    final sameSection =
+        last != null &&
+        line != null &&
+        previousLine != null &&
+        line > previousLine &&
+        last.sectionId == segment.sectionId;
+    passages.add(
+      AudioSegment(
+        sectionId: segment.sectionId,
+        start: sameSection ? last.start : segment.start,
+        end: segment.end,
+        order: sameSection ? last.order : passages.length,
+      ),
+    );
+    if (sameSection) passages.removeAt(passages.length - 2);
+    previousLine = line;
+  }
+  return passages;
+}
+
 /// Vrai si le karaoké de [hymn] est possible : une piste synchronisée ligne
 /// par ligne.
 bool canKaraoke(Env env, PublishedHymn hymn) =>
@@ -107,6 +137,9 @@ class _ListeningState extends ConsumerState<_Listening> {
   late final HymnAudioPlayer _player = ref.read(audioPlayerProvider);
   late AudioTrack _track = widget.hymn.audio.first;
 
+  /// Passages par section de la piste choisie (vers synchronisés regroupés).
+  late List<AudioSegment> _passages = sectionPassages(_track.segments);
+
   /// Position pendant que l'on fait glisser le curseur.
   Duration? _dragging;
 
@@ -141,6 +174,7 @@ class _ListeningState extends ConsumerState<_Listening> {
     if (track.id == _track.id) return;
     setState(() {
       _track = track;
+      _passages = sectionPassages(track.segments);
       _followed = null;
     });
     _open();
@@ -148,7 +182,7 @@ class _ListeningState extends ConsumerState<_Listening> {
 
   /// Passage en cours (index dans [AudioTrack.segments]), s'il est repéré.
   int? _current(Duration position) {
-    final segments = _track.segments;
+    final segments = _passages;
     for (var i = 0; i < segments.length; i++) {
       if (position >= segments[i].start && position < segments[i].end) {
         return i;
@@ -228,8 +262,8 @@ class _ListeningState extends ConsumerState<_Listening> {
                     ),
                   ),
                   const SizedBox(height: LadSpace.md),
-                  if (_track.segments.any((s) => s.sectionId != null))
-                    for (final (i, segment) in _track.segments.indexed)
+                  if (_passages.any((s) => s.sectionId != null))
+                    for (final (i, segment) in _passages.indexed)
                       if (sectionsById[segment.sectionId] case final section?)
                         _SegmentTile(
                           key: _segmentKeys.putIfAbsent(i, GlobalKey.new),
