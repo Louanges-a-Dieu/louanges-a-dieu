@@ -1,5 +1,6 @@
 # Toute modification requiert la revue d'un mainteneur désigné par le propriétaire.
-# Remplacer par les identifiants GitHub réels lors de la création de l'organisation.
-*                     @louanges-a-dieu/maintainers
-/supabase/            @louanges-a-dieu/maintainers
-/.github/             @louanges-a-dieu/maintainers
+# Organisation GitHub « Louanges-a-Dieu » (2026-10-21). Ajouter ici les comptes des futurs
+# mainteneurs, ou une équipe de l'organisation.
+*                     @louanges-a-dieu-admin
+/supabase/            @louanges-a-dieu-admin
+/.github/             @louanges-a-dieu-admin
