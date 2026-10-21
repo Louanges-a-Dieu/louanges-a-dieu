@@ -421,7 +421,7 @@ void main() {
     'karaoké : introduction, vers chanté, vers suivants, toucher pour y aller',
     (tester, _) async {
       await openHymn(tester, '2', 'L’Éternel est mon berger');
-      await tester.tap(find.text('Karaoké'));
+      await tester.tap(find.text('Chanter'));
       await idle(tester);
 
       // L'accompagnement synchronisé est choisi d'abord.

@@ -57,7 +57,9 @@ Future<void> addToList(
   String listName,
 ) async {
   await openHymn(tester, title);
-  await tester.tap(find.byTooltip('Ajouter à une liste'));
+  await tester.tap(find.byTooltip('Actions'));
+  await idle(tester);
+  await tester.tap(find.text('Ajouter à une liste'));
   await idle(tester);
   if (find.text(listName).evaluate().isEmpty) {
     await tester.tap(find.text('Nouvelle liste'));

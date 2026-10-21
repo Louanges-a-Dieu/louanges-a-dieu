@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../app/state.dart';
+import '../../core/catalog/catalog_models.dart';
 import '../../core/catalog/published_hymn.dart';
 import '../../core/catalog/sung_order.dart';
 import '../../core/design_system/components.dart';
@@ -81,34 +82,75 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           })
         : null;
 
-    return Scaffold(
-      appBar: AppBar(
-        actions: [
-          FavoriteButton(hymnId: current.id),
-          IconButton(
-            tooltip: l10n.smallerText,
-            icon: const Icon(Icons.text_decrease),
-            onPressed: prefs.lyricsSize <= LadLyricsSize.min
-                ? null
-                : () => notifier.change(
-                    (p) => p.copyWith(
-                      lyricsSize: p.lyricsSize - LadLyricsSize.step,
-                    ),
-                  ),
-          ),
-          IconButton(
-            tooltip: l10n.largerText,
-            icon: const Icon(Icons.text_increase),
-            onPressed: prefs.lyricsSize >= LadLyricsSize.max
-                ? null
-                : () => notifier.change(
-                    (p) => p.copyWith(
-                      lyricsSize: p.lyricsSize + LadLyricsSize.step,
-                    ),
-                  ),
-          ),
-        ],
+    final dark = switch (prefs.readerTheme) {
+      ThemeMode.dark => true,
+      ThemeMode.light => false,
+      ThemeMode.system => Theme.of(context).brightness == Brightness.dark,
+    };
+    void goTo(int target) => setState(() => _section = target);
+
+    return Theme(
+      data: dark ? LadTheme.dark : LadTheme.light,
+      child: Builder(
+        builder: (context) => _scaffold(
+          context,
+          l10n: l10n,
+          current: current,
+          hymn: hymn,
+          sections: sections,
+          section: section,
+          prefs: prefs,
+          previousSection: previousSection,
+          nextSection: nextSection,
+          previousHymn: toHymn(index - 1),
+          nextHymn: toHymn(index + 1),
+          actions: [
+            FavoriteButton(hymnId: current.id),
+            IconButton(
+              tooltip: l10n.stanzaList,
+              icon: const Icon(Icons.format_list_numbered),
+              onPressed: sections.isEmpty
+                  ? null
+                  : () => _showStanzas(context, sections, section, goTo),
+            ),
+            IconButton(
+              tooltip: l10n.textSize,
+              icon: const Icon(Icons.format_size),
+              onPressed: () => _showTextSize(context),
+            ),
+            IconButton(
+              tooltip: dark ? l10n.readerLight : l10n.readerDark,
+              icon: Icon(
+                dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+              ),
+              onPressed: () => notifier.change(
+                (p) => p.copyWith(
+                  readerTheme: dark ? ThemeMode.light : ThemeMode.dark,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _scaffold(
+    BuildContext context, {
+    required AppLocalizations l10n,
+    required HymnSummary current,
+    required PublishedHymn? hymn,
+    required List<HymnSection> sections,
+    required int section,
+    required ReadingPreferences prefs,
+    required VoidCallback? previousSection,
+    required VoidCallback? nextSection,
+    required VoidCallback? previousHymn,
+    required VoidCallback? nextHymn,
+    required List<Widget> actions,
+  }) {
+    return Scaffold(
+      appBar: AppBar(actions: actions),
       body: CallbackShortcuts(
         bindings: {
           const SingleActivator(LogicalKeyboardKey.arrowLeft): ?previousSection,
@@ -136,8 +178,158 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             : l10n.sectionProgress(section + 1, sections.length),
         onPreviousSection: previousSection,
         onNextSection: nextSection,
-        onPreviousHymn: toHymn(index - 1),
-        onNextHymn: toHymn(index + 1),
+        onPreviousHymn: previousHymn,
+        onNextHymn: nextHymn,
+      ),
+    );
+  }
+
+  /// Liste des strophes dans l'ordre chanté, la strophe affichée en évidence,
+  /// et « Aller au refrain » (le prochain refrain, sinon le premier).
+  void _showStanzas(
+    BuildContext context,
+    List<HymnSection> sections,
+    int current,
+    void Function(int) goTo,
+  ) {
+    final refrains = [
+      for (var i = 0; i < sections.length; i++)
+        if (sections[i].type == SectionType.refrain) i,
+    ];
+    final nextRefrain = refrains.isEmpty
+        ? null
+        : refrains.firstWhere((i) => i > current, orElse: () => refrains.first);
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheet) {
+        final l10n = AppLocalizations.of(sheet);
+        final p = sheet.lad;
+        void pick(int i) {
+          Navigator.pop(sheet);
+          goTo(i);
+        }
+
+        var verse = 0;
+        final names = [
+          for (final s in sections)
+            s.type == SectionType.verse && s.number == null
+                ? l10n.stanzaNumber(++verse)
+                : sectionName(s.type, s.number),
+        ];
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(sheet).height * 0.8,
+            ),
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                ListSectionHeader(l10n.stanzaList),
+                for (var i = 0; i < sections.length; i++)
+                  ListTile(
+                    selected: i == current,
+                    selectedTileColor: p.surfaceWarm,
+                    selectedColor: p.goldText,
+                    leading: Text(
+                      '${i + 1}.',
+                      style: LadTheme.textStyle(
+                        LadTypeScale.label,
+                        i == current ? p.goldText : p.textSecondary,
+                      ),
+                    ),
+                    title: Text(names[i]),
+                    subtitle: Text(
+                      sections[i].lines.firstOrNull?.text ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => pick(i),
+                  ),
+                if (nextRefrain != null)
+                  Padding(
+                    padding: const EdgeInsets.all(LadSpace.lg),
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.redo),
+                      label: Text(l10n.goToRefrain),
+                      onPressed: () => pick(nextRefrain),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Taille du texte : curseur, avec A− / A+ de part et d'autre.
+  void _showTextSize(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheet) => Consumer(
+        builder: (sheet, ref, _) {
+          final l10n = AppLocalizations.of(sheet);
+          final size =
+              (ref.watch(preferencesProvider).value ??
+                      const ReadingPreferences())
+                  .lyricsSize;
+          final notifier = ref.read(preferencesProvider.notifier);
+          void set(double value) =>
+              notifier.change((p) => p.copyWith(lyricsSize: value));
+          const steps =
+              (LadLyricsSize.max - LadLyricsSize.min) ~/ LadLyricsSize.step;
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                LadSpace.lg,
+                0,
+                LadSpace.lg,
+                LadSpace.xl,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ListSectionHeader(l10n.textSize),
+                  Row(
+                    children: [
+                      IconButton(
+                        tooltip: l10n.smallerText,
+                        icon: const Icon(Icons.text_decrease),
+                        onPressed: size <= LadLyricsSize.min
+                            ? null
+                            : () => set(size - LadLyricsSize.step),
+                      ),
+                      Expanded(
+                        child: Slider(
+                          min: LadLyricsSize.min,
+                          max: LadLyricsSize.max,
+                          divisions: steps,
+                          value: size,
+                          label: '${size.round()}',
+                          semanticFormatterCallback: (v) =>
+                              '${v.round()} points',
+                          onChanged: set,
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: l10n.largerText,
+                        icon: const Icon(Icons.text_increase),
+                        onPressed: size >= LadLyricsSize.max
+                            ? null
+                            : () => set(size + LadLyricsSize.step),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

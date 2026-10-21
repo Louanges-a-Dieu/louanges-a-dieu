@@ -56,10 +56,21 @@ void main() {
     expect(find.text('Le jour se lève.'), findsOneWidget);
     expect(find.text('Se chante sur la mélodie du n° 37'), findsOneWidget);
     // Actions réelles seulement : pas d'audio sans enregistrement.
-    for (final label in ['Lire', 'Projeter', 'Partager', 'À une liste']) {
+    for (final label in ['Lire', 'Projeter']) {
       expect(find.text(label), findsOneWidget);
     }
+    expect(find.byTooltip('Partager le cantique'), findsOneWidget);
     expect(find.textContaining('Écouter'), findsNothing);
+    expect(find.text('Chanter'), findsNothing);
+    // Onglets : pas de « Médias » sans enregistrement ; « Similaires »
+    // seulement grâce au lien vers le n° 37.
+    expect(find.text('Médias'), findsNothing);
+    await tester.tap(find.text('Similaires'));
+    await idle(tester);
+    expect(find.text('MÉLODIE D’ORIGINE'), findsOneWidget);
+    expect(find.text('Au matin'), findsOneWidget);
+    await tester.tap(find.text('Paroles'));
+    await idle(tester);
 
     await tester.tap(find.byTooltip('Ajouter aux favoris'));
     await idle(tester);
@@ -104,6 +115,9 @@ void main() {
     tester,
     _,
   ) async {
+    // Assez haut pour voir les six cantiques sous le champ de recherche.
+    tester.view.physicalSize = const Size(2400, 2400);
+    addTearDown(tester.view.resetPhysicalSize);
     await tester.tap(find.text('Recueil').last);
     await idle(tester);
     final labels = tester

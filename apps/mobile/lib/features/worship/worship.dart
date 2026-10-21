@@ -186,7 +186,7 @@ class _Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: HymnListTile.margin,
+    padding: HymnListTile.defaultMargin,
     child: Material(
       color: color ?? context.lad.surface,
       shape: RoundedRectangleBorder(
@@ -832,6 +832,225 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Feuille « Ajouter au programme » depuis la fiche d'un cantique : choix du
+/// programme, puis de la position (sous une section du programme ou à la
+/// fin). Sans section, le cantique est ajouté directement à la fin.
+Future<void> showAddToWorship(
+  BuildContext context,
+  WidgetRef ref,
+  String hymnId,
+) async {
+  if (ref.read(currentUserProvider).value == null) {
+    await context.push('/compte');
+    return;
+  }
+  final messenger = ScaffoldMessenger.of(context);
+  final added = await showModalBottomSheet<String>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (_) => _AddToWorshipSheet(hymnId: hymnId),
+  );
+  if (added == null || !context.mounted) return;
+  messenger.showSnackBar(
+    SnackBar(content: Text(AppLocalizations.of(context).addedToProgram(added))),
+  );
+}
+
+class _AddToWorshipSheet extends ConsumerStatefulWidget {
+  const _AddToWorshipSheet({required this.hymnId});
+
+  final String hymnId;
+
+  @override
+  ConsumerState<_AddToWorshipSheet> createState() => _AddToWorshipSheetState();
+}
+
+class _AddToWorshipSheetState extends ConsumerState<_AddToWorshipSheet> {
+  WorshipServiceRow? _service;
+
+  /// Section choisie (identifiant de l'élément-section), `null` : à la fin.
+  String? _section;
+
+  Future<void> _create() async {
+    final l10n = AppLocalizations.of(context);
+    final title = await textInputDialog(
+      context,
+      title: l10n.newProgram,
+      label: l10n.programTitle,
+      action: l10n.create,
+    );
+    if (title == null) return;
+    final id = await ref
+        .read(userDataRepositoryProvider)
+        .createWorshipService(title);
+    final created = (await ref.read(worshipServicesProvider.future))
+        .where((s) => s.id == id)
+        .firstOrNull;
+    if (created != null && mounted) setState(() => _service = created);
+  }
+
+  Future<void> _add(WorshipServiceRow service, String? sectionId) async {
+    final repo = ref.read(userDataRepositoryProvider);
+    final items = await repo.worshipServiceItems(service.id);
+    final dtos = [
+      for (final i in items)
+        WorshipItemDto(
+          id: i.id,
+          hymnId: i.hymnId,
+          label: i.label,
+          notes: i.notes,
+        ),
+    ];
+    // Sous une section : après son dernier élément, avant la section suivante.
+    var at = dtos.length;
+    final start = dtos.indexWhere((d) => d.id == sectionId);
+    if (start >= 0) {
+      final next = dtos.indexWhere((d) => d.hymnId == null, start + 1);
+      at = next < 0 ? dtos.length : next;
+    }
+    dtos.insert(
+      at,
+      WorshipItemDto(
+        id: repo.newItemId(),
+        hymnId: widget.hymnId,
+        label: null,
+        notes: null,
+      ),
+    );
+    await repo.setWorshipServiceItems(service.id, dtos);
+    if (mounted) Navigator.pop(context, service.title);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final p = context.lad;
+    final services =
+        (ref.watch(worshipServicesProvider).value ??
+                const <WorshipServiceRow>[])
+            .where((s) => s.status != 'archived')
+            .toList();
+    final service = _service;
+    final sections = service == null
+        ? const <WorshipServiceItemRow>[]
+        : (ref.watch(worshipItemsProvider(service.id)).value ??
+                  const <WorshipServiceItemRow>[])
+              .where((i) => i.hymnId == null)
+              .toList();
+
+    final heading = Padding(
+      padding: const EdgeInsets.fromLTRB(
+        LadSpace.lg,
+        0,
+        LadSpace.lg,
+        LadSpace.sm,
+      ),
+      child: Text(
+        l10n.addToProgram,
+        style: LadTheme.textStyle(LadTypeScale.sectionTitle, p.text),
+      ),
+    );
+
+    final List<Widget> body;
+    if (service == null) {
+      body = [
+        for (final s in services)
+          ListTile(
+            leading: Icon(Icons.event_note_outlined, color: p.gold),
+            title: Text(s.title),
+            subtitle: Text(formatServiceDate(context, s.serviceDate)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => setState(() {
+              _service = s;
+              _section = null;
+            }),
+          ),
+        ListTile(
+          leading: const Icon(Icons.add),
+          title: Text(l10n.newProgram),
+          onTap: _create,
+        ),
+      ];
+    } else if (sections.isEmpty) {
+      body = [
+        _SelectedService(service: service, onChange: _reset),
+        Padding(
+          padding: const EdgeInsets.all(LadSpace.lg),
+          child: FilledButton(
+            onPressed: () => _add(service, null),
+            child: Text(l10n.addAtEnd),
+          ),
+        ),
+      ];
+    } else {
+      body = [
+        _SelectedService(service: service, onChange: _reset),
+        ListSectionHeader(l10n.programPosition),
+        RadioGroup<String?>(
+          groupValue: _section,
+          onChanged: (v) => setState(() => _section = v),
+          child: Column(
+            children: [
+              for (final s in sections)
+                RadioListTile<String?>(
+                  value: s.id,
+                  title: Text(l10n.underSection(s.label ?? '')),
+                ),
+              RadioListTile<String?>(
+                value: null,
+                title: Text(l10n.atProgramEnd),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(LadSpace.lg),
+          child: FilledButton(
+            onPressed: () => _add(service, _section),
+            child: Text(l10n.add),
+          ),
+        ),
+      ];
+    }
+
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+        ),
+        child: ListView(shrinkWrap: true, children: [heading, ...body]),
+      ),
+    );
+  }
+
+  void _reset() => setState(() {
+    _service = null;
+    _section = null;
+  });
+}
+
+class _SelectedService extends StatelessWidget {
+  const _SelectedService({required this.service, required this.onChange});
+
+  final WorshipServiceRow service;
+  final VoidCallback onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.lad;
+    return ListTile(
+      leading: Icon(Icons.event_note_outlined, color: p.gold),
+      title: Text(service.title),
+      subtitle: Text(formatServiceDate(context, service.serviceDate)),
+      trailing: TextButton(
+        onPressed: onChange,
+        child: Text(AppLocalizations.of(context).change),
       ),
     );
   }

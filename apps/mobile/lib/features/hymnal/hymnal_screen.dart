@@ -44,13 +44,14 @@ class HymnalScreen extends ConsumerWidget {
               icon: const Icon(Icons.dialpad),
               onPressed: () => _goToNumber(context, ref),
             ),
-            IconButton(
-              tooltip: l10n.searchAction,
-              icon: const Icon(Icons.search),
-              onPressed: () => context.push('/recherche'),
-            ),
           ],
-          bottom: PillTabBar(tabs: [l10n.byNumber, l10n.alphabetical]),
+          bottom: _HymnalBar(
+            search: SearchField(
+              hint: l10n.hymnalSearchHint,
+              onTap: () => context.push('/recherche'),
+            ),
+            tabs: PillTabBar(tabs: [l10n.byNumber, l10n.alphabetical]),
+          ),
         ),
         body: TabBarView(
           children: [
@@ -78,6 +79,37 @@ class HymnalScreen extends ConsumerWidget {
       await context.push('/cantique/${hymn.id}');
     }
   }
+}
+
+/// Sous la barre de titre : champ de recherche (ouvre la recherche) puis
+/// onglets.
+class _HymnalBar extends StatelessWidget implements PreferredSizeWidget {
+  const _HymnalBar({required this.search, required this.tabs});
+
+  final Widget search;
+  final PillTabBar tabs;
+
+  @override
+  Size get preferredSize => Size.fromHeight(
+    tabs.preferredSize.height + LadTouchTarget.min + LadSpace.sm + LadSpace.md,
+  );
+
+  @override
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(
+          LadSpace.lg,
+          0,
+          LadSpace.lg,
+          LadSpace.md,
+        ),
+        child: search,
+      ),
+      tabs,
+    ],
+  );
 }
 
 class _HymnList extends ConsumerWidget {

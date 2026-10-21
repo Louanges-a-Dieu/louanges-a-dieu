@@ -144,20 +144,39 @@ class _Hero extends StatelessWidget {
                   : display,
             ),
           ),
-          if (!compact) ...[
-            const SizedBox(height: LadSpace.md),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Text(
-                l10n.heroLead,
-                style: LadTheme.textStyle(LadTypeScale.body, ink.text).copyWith(
-                  fontFamily: LadFonts.lyrics,
-                  fontStyle: FontStyle.italic,
-                  color: ink.text.withValues(alpha: 0.9),
-                ),
+          const SizedBox(height: LadSpace.md),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Semantics(
+              label: '${l10n.heroVerse} ${l10n.heroVerseReference}',
+              excludeSemantics: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '« ${l10n.heroVerse} »',
+                    style:
+                        LadTheme.textStyle(
+                          compact ? LadTypeScale.label : LadTypeScale.body,
+                          ink.text,
+                        ).copyWith(
+                          fontFamily: LadFonts.lyrics,
+                          fontStyle: FontStyle.italic,
+                          color: ink.text.withValues(alpha: 0.9),
+                        ),
+                  ),
+                  const SizedBox(height: LadSpace.xs),
+                  Text(
+                    l10n.heroVerseReference,
+                    style: LadTheme.textStyle(
+                      LadTypeScale.caption,
+                      ink.goldText,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ],
       ),
     );

@@ -109,6 +109,47 @@ void main() {
   );
 
   testApp(
+    'depuis la fiche : ajout au programme, sous le moment choisi',
+    (tester, _) async {
+      Future<void> addMoment(String label) async {
+        await tapText(tester, 'Ajouter un moment');
+        await tester.enterText(find.byType(TextField).last, label);
+        await tapText(tester, 'Créer');
+      }
+
+      await signIn(tester);
+      await newProgram(tester, 'Culte du dimanche');
+      await addMoment('Louange');
+      await addHymn(tester, '3', 'Mon cœur Te loue');
+      await addMoment('Clôture');
+      await back(tester);
+
+      await tapText(tester, 'Recueil');
+      await tapText(tester, 'Au matin');
+      await tester.tap(find.byTooltip('Actions'));
+      await idle(tester);
+      await tapText(tester, 'Ajouter à un programme');
+      await tapText(tester, 'Culte du dimanche');
+      await tapText(tester, 'Sous « Louange »');
+      await tapText(tester, 'Ajouter');
+      expect(
+        find.text('Ajouté au programme « Culte du dimanche »'),
+        findsOneWidget,
+      );
+
+      await back(tester);
+      await tapText(tester, 'Culte');
+      await tapText(tester, 'Culte du dimanche');
+      expect(
+        rows(tester, ['Louange', 'Mon cœur Te loue', 'Au matin', 'Clôture']),
+        ['Louange', 'Mon cœur Te loue', 'Au matin', 'Clôture'],
+      );
+    },
+    overrides: services(),
+    env: env,
+  );
+
+  testApp(
     'ajout par numéro imprimé, message si le numéro n’existe pas',
     (tester, _) async {
       await signIn(tester);

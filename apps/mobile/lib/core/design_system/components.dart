@@ -308,6 +308,7 @@ class HymnListTile extends StatelessWidget {
     this.excerpt,
     required this.onTap,
     this.trailing,
+    this.margin = defaultMargin,
   });
 
   final HymnSummary hymn;
@@ -319,8 +320,11 @@ class HymnListTile extends StatelessWidget {
   /// Action propre à la ligne (cœur, menu), annoncée séparément.
   final Widget? trailing;
 
+  /// Marges autour de la ligne.
+  final EdgeInsetsGeometry margin;
+
   /// Marges d'une ligne dans une liste pleine largeur.
-  static const margin = EdgeInsets.symmetric(
+  static const defaultMargin = EdgeInsets.symmetric(
     horizontal: LadSpace.lg,
     vertical: LadSpace.xs,
   );
@@ -412,9 +416,19 @@ class HymnListTile extends StatelessWidget {
 /// Onglets-filtres en pilules (« Par numéro », « A–Z ») ; même comportement
 /// que [TabBar] (glissement, état conservé).
 class PillTabBar extends StatelessWidget implements PreferredSizeWidget {
-  const PillTabBar({super.key, required this.tabs});
+  const PillTabBar({
+    super.key,
+    required this.tabs,
+    this.padding = const EdgeInsets.fromLTRB(
+      LadSpace.lg,
+      0,
+      LadSpace.lg,
+      LadSpace.md,
+    ),
+  });
 
   final List<String> tabs;
+  final EdgeInsetsGeometry padding;
 
   @override
   Size get preferredSize =>
@@ -425,12 +439,7 @@ class PillTabBar extends StatelessWidget implements PreferredSizeWidget {
     final p = context.lad;
     final label = LadTheme.textStyle(LadTypeScale.label, p.text);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        LadSpace.lg,
-        0,
-        LadSpace.lg,
-        LadSpace.md,
-      ),
+      padding: padding,
       child: Align(
         alignment: Alignment.centerLeft,
         child: DecoratedBox(

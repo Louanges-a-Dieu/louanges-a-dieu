@@ -271,7 +271,6 @@
   "linkOpenFailed": "Impossible d’ouvrir le lien.",
   "homeEyebrow": "Le recueil vivant",
   "heroTitle": "Que chaque chant devienne une prière.",
-  "heroLead": "Retrouvez vos cantiques, méditez leurs paroles et préparez les louanges ensemble.",
   "hymnOfTheDayTitle": "Le cantique du jour",
   "hymnOfTheDayLead": "Une invitation à prendre un instant de louange.",
   "openHymn": "Ouvrir le cantique",
@@ -408,5 +407,110 @@
         "type": "String"
       }
     }
-  }
+  },
+  "heroVerse": "Il est beau de louer l’Éternel, et de célébrer ton nom, ô Très-Haut !",
+  "heroVerseReference": "Psaume 92.2",
+  "hymnActions": "Actions",
+  "sing": "Chanter",
+  "singSubtitle": "Paroles synchronisées avec l’enregistrement",
+  "readSubtitle": "Paroles en mode lecture",
+  "listenSubtitle": "Enregistrement du cantique",
+  "projectSubtitle": "Afficher sur un écran",
+  "addToProgram": "Ajouter à un programme",
+  "shareSubtitle": "En image ou en texte",
+  "downloadSubtitle": "Pour écouter hors connexion",
+  "downloadStarted": "Téléchargement lancé",
+  "tabLyrics": "Paroles",
+  "tabDetails": "Détails",
+  "tabMedia": "Médias",
+  "tabSimilar": "Similaires",
+  "verseCount": "{count, plural, =1{1 couplet} other{{count} couplets}}",
+  "@verseCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "withRefrain": "avec refrain",
+  "roleAuthor": "Auteur",
+  "roleComposer": "Compositeur",
+  "roleTranslator": "Traducteur",
+  "roleArranger": "Arrangeur",
+  "detailsNumber": "Numéro",
+  "detailsTitle": "Titre",
+  "detailsOpening": "Premier vers",
+  "detailsStructure": "Structure",
+  "detailsReferences": "Références",
+  "detailsThemes": "Thèmes",
+  "relationSameMelody": "Même mélodie",
+  "relationVariant": "Variante",
+  "relationBisOf": "Mélodie d’origine",
+  "relationRelated": "Cantique lié",
+  "noSimilarTitle": "Aucun cantique lié pour le moment",
+  "shareImagePreview": "Aperçu de l’image partagée",
+  "shareAsImage": "Partager en image",
+  "shareAsImageSubtitle": "Couverture et premier couplet",
+  "shareAsText": "Partager le texte",
+  "shareAsTextSubtitle": "Toutes les paroles (WhatsApp, e-mail…)",
+  "copyLyrics": "Copier les paroles",
+  "copyLyricsSubtitle": "Dans le presse-papiers",
+  "lyricsCopied": "Paroles copiées",
+  "shareCardSource": "Louanges à Dieu · n° {label}",
+  "@shareCardSource": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "addedToProgram": "Ajouté au programme « {name} »",
+  "@addedToProgram": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addAtEnd": "Ajouter à la fin",
+  "programPosition": "Position dans le programme",
+  "underSection": "Sous « {label} »",
+  "@underSection": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "atProgramEnd": "À la fin du programme",
+  "add": "Ajouter",
+  "change": "Changer",
+  "resultCount": "{count, plural, =0{Aucun résultat} =1{1 résultat} other{{count} résultats}}",
+  "@resultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sortBy": "Trier les résultats",
+  "sortRelevance": "Pertinence",
+  "sortNumber": "Numéro",
+  "sortTitle": "Titre",
+  "filterAll": "Tous",
+  "filterTitles": "Titres",
+  "filterLyrics": "Paroles",
+  "hymnalSearchHint": "Rechercher un cantique…",
+  "stanzaList": "Strophes",
+  "readerLight": "Lecture claire",
+  "readerDark": "Lecture sombre",
+  "stanzaNumber": "Couplet {number}",
+  "@stanzaNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "goToRefrain": "Aller au refrain"
 }
