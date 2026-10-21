@@ -1,6 +1,6 @@
 /**
  * Configuration publique du projet Supabase (ADR-011 : jamais de clé
- * « secret » ni « service_role » dans le back-office ; tout passe par la
+ * secrète ni de rôle de service dans le back-office ; tout passe par la
  * session de l'éditeur et la RLS).
  */
 export function supabaseConfig() {

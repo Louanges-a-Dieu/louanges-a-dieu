@@ -17,7 +17,8 @@ on conflict do nothing;
 -- Agir en tant que cet éditeur pour le reste du script.
 select set_config(
   'request.jwt.claims',
-  '{"sub":"d0000000-0000-4000-8000-00000000ed17","role":"authenticated"}',
+  -- aal2 : le rôle éditeur exige le second facteur (has_role, migration 0015).
+  '{"sub":"d0000000-0000-4000-8000-00000000ed17","role":"authenticated","aal":"aal2"}',
   false
 );
 
