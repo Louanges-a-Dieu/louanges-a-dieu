@@ -15,7 +15,11 @@ const nextConfig: NextConfig = {
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'Referrer-Policy', value: 'no-referrer' },
+          // « same-origin » et non « no-referrer » : avec no-referrer, un
+          // formulaire envoyé avant le chargement complet de la page part avec
+          // « Origin: null », que Next refuse (action serveur rejetée). Rien
+          // n'est transmis aux autres sites.
+          { key: 'Referrer-Policy', value: 'same-origin' },
           { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
           { key: 'Cache-Control', value: 'private, no-store' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },

@@ -56,3 +56,68 @@
   font-size: 0.8rem;
   color: var(--lad-color-gold-text);
 }
+
+/* Ajustement vers par vers d'une synchronisation existante. */
+.cues {
+  margin: var(--lad-space-md) 0;
+  padding: 0;
+  list-style: none;
+  max-height: 28rem;
+  overflow: auto;
+  border: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+  border-radius: var(--lad-radius-md);
+}
+
+.cues li {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: var(--lad-space-xs) var(--lad-space-sm);
+  padding: var(--lad-space-xs) var(--lad-space-sm);
+  border-bottom: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+}
+
+.cueText {
+  font-family: var(--lad-font-lyrics);
+}
+
+.cueTime {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lad-space-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.invalid {
+  background: color-mix(in srgb, var(--lad-color-error) 8%, transparent);
+}
+
+.problem {
+  grid-column: 2 / -1;
+  color: var(--lad-color-error);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 760px) {
+  .cues li {
+    grid-template-columns: auto 1fr;
+  }
+
+  .cueTime {
+    grid-column: 2;
+  }
+}
+
+.shift {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lad-space-xs);
+}
+
+.shift input {
+  width: 5rem;
+}
+
+.cueTime input {
+  width: 6.5rem;
+}

@@ -72,3 +72,82 @@ export function cuesFromTaps(
     }))
     .filter((c) => c.end_ms > c.start_ms);
 }
+
+// ------------------------------------------------- ajustement après coup
+
+/** Vers déjà synchronisé, ajustable : début et fin modifiables. */
+export interface EditableCue {
+  sectionId: string;
+  lineIndex: number;
+  text: string;
+  /** Nom de la section quand elle change par rapport au vers précédent. */
+  section: string | null;
+  start: number;
+  end: number;
+}
+
+/**
+ * Passages synchronisés (dans l'ordre de l'enregistrement) avec le texte de
+ * leur vers, pour les ajuster sans tout refaire.
+ */
+export function editableCues(cues: CueRow[], lines: SyncLine[]): EditableCue[] {
+  const text = new Map(lines.map((l) => [`${l.sectionId}|${l.lineIndex}`, l.text]));
+  const names = new Map(
+    lines.filter((l) => l.section !== null).map((l) => [l.sectionId, l.section]),
+  );
+  return cues.map((c, i) => ({
+    sectionId: c.section_id,
+    lineIndex: c.line_index,
+    text: text.get(`${c.section_id}|${c.line_index}`) ?? `Vers ${c.line_index + 1}`,
+    section:
+      i === 0 || cues[i - 1]!.section_id !== c.section_id
+        ? (names.get(c.section_id) ?? null)
+        : null,
+    start: c.start_ms,
+    end: c.end_ms,
+  }));
+}
+
+/** Problème d'un vers (null : correct) : fin avant le début, chevauchement. */
+export function cueProblems(cues: EditableCue[]): (string | null)[] {
+  return cues.map((c, i) => {
+    if (c.start < 0) return 'début négatif';
+    if (c.end <= c.start) return 'la fin doit suivre le début';
+    if (i > 0 && c.start < cues[i - 1]!.end) return 'commence avant la fin du vers précédent';
+    return null;
+  });
+}
+
+/** Décale de `deltaMs` les vers à partir de `from` (jamais avant 0). */
+export function shiftCues(cues: EditableCue[], deltaMs: number, from = 0): EditableCue[] {
+  return cues.map((c, i) =>
+    i < from
+      ? c
+      : { ...c, start: Math.max(0, c.start + deltaMs), end: Math.max(1, c.end + deltaMs) },
+  );
+}
+
+/** Lignes à enregistrer (même format que la synchronisation complète). */
+export function toCueRows(cues: EditableCue[]): CueRow[] {
+  return cues.map((c) => ({
+    section_id: c.sectionId,
+    line_index: c.lineIndex,
+    start_ms: Math.round(c.start),
+    end_ms: Math.round(c.end),
+  }));
+}
+
+/** « 1:05.3 » (au dixième). */
+export function tenths(ms: number): string {
+  const s = Math.max(0, Math.round(ms / 100)) / 10;
+  return `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, '0')}`;
+}
+
+/** « 1:05.3 », « 65.3 » ou « 1:05 » → millisecondes (null si illisible). */
+export function parseTenths(value: string): number | null {
+  const m = /^\s*(?:(\d+):)?(\d+)(?:[.,](\d{1,3}))?\s*$/.exec(value);
+  if (!m) return null;
+  const [, min, sec, frac] = m;
+  if (min !== undefined && Number(sec) > 59) return null;
+  return (Number(min ?? 0) * 60 + Number(sec)) * 1000 + Number((frac ?? '').padEnd(3, '0') || 0);
+}

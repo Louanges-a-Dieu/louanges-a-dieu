@@ -6,12 +6,14 @@ import { notFound } from 'next/navigation';
 import { SubmitButton } from '@/components/buttons';
 import { Flash } from '@/components/flash';
 import { HymnPreview } from '@/components/hymn-preview';
+import { KaraokeCues } from '@/components/karaoke-cues';
 import { KaraokeSync } from '@/components/karaoke-sync';
 import { RIGHTS_LABELS, SeverityBadge, StatusBadge } from '@/components/status';
 import ui from '@/components/ui.module.css';
 import { requireEditor } from '@/lib/auth';
 import { param } from '@/lib/data';
 import { MEDIA_LABELS, audioUrl, formatClock, formatSegments, syncLines } from '@/lib/audio';
+import { editableCues } from '@/lib/karaoke';
 import { sectionName } from '@/lib/text';
 import { transitions } from '@/lib/transitions';
 
@@ -626,9 +628,32 @@ export default async function HymnEditorPage({
                       </form>
                     </details>
                   )}
+                  {lineCues > 0 && url && (
+                    <details className={styles.add}>
+                      <summary>Karaoké : ajuster le début et la fin des vers</summary>
+                      <KaraokeCues
+                        src={url}
+                        initial={editableCues(
+                          segments
+                            .filter((g) => g.line_index != null && g.section_id != null)
+                            .map((g) => ({
+                              section_id: g.section_id!,
+                              line_index: g.line_index!,
+                              start_ms: g.start_ms,
+                              end_ms: g.end_ms,
+                            })),
+                          karaokeLines,
+                        )}
+                        hymnId={id}
+                        trackId={track.id}
+                        action={saveAudioCuesAction}
+                      />
+                    </details>
+                  )}
                   <details className={styles.add}>
                     <summary>
-                      Karaoké : {lineCues > 0 ? 'resynchroniser' : 'synchroniser'} vers par vers
+                      Karaoké : {lineCues > 0 ? 'tout resynchroniser' : 'synchroniser'} vers par
+                      vers
                     </summary>
                     {url && karaokeLines.length > 0 ? (
                       <KaraokeSync

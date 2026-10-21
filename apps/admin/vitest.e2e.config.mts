@@ -10,6 +10,9 @@ export default defineConfig({
   test: {
     include: ['e2e/**/*.e2e.ts'],
     testTimeout: 240_000,
+    // Un seul compte d'essai avec code à usage unique : un fichier après
+    // l'autre (deux connexions simultanées réutiliseraient le même code).
+    fileParallelism: false,
     hookTimeout: 60_000,
   },
 });
