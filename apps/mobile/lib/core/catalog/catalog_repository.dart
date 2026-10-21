@@ -153,6 +153,23 @@ class CatalogRepository {
     return row == null ? null : _parse(row);
   }
 
+  /// Cantiques qui ont au moins un enregistrement publié, par numéro
+  /// (téléchargements pour l'écoute hors connexion).
+  Future<List<PublishedHymn>> hymnsWithAudio() async {
+    final rows =
+        await (_db.select(_db.catalogHymns)
+              ..where((h) => h.payload.like('%"audio"%'))
+              ..orderBy([
+                (h) => OrderingTerm.asc(h.numberNumeric),
+                (h) => OrderingTerm.asc(h.numberLabel),
+              ]))
+            .get();
+    return [
+      for (final row in rows)
+        if (_parse(row) case final hymn when hymn.audio.isNotEmpty) hymn,
+    ];
+  }
+
   /// Cantique précédent / suivant dans l'ordre du recueil (mode lecture).
   Future<HymnSummary?> neighbour(String id, {required bool next}) async {
     final all = await watchByNumber().first;

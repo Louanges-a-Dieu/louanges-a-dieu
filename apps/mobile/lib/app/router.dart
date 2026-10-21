@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/account/account_screen.dart';
+import '../features/audio/audio_library.dart';
 import '../features/audio/audio_screen.dart';
 import '../features/audio/karaoke_screen.dart';
 import '../features/favorites/favorites_screen.dart';
@@ -64,6 +65,13 @@ final routerProvider = Provider<GoRouter>(
                     path: 'hors-connexion',
                     parentNavigatorKey: _rootKey,
                     builder: (_, _) => const OfflineScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'audio',
+                        parentNavigatorKey: _rootKey,
+                        builder: (_, _) => const AudioLibraryScreen(),
+                      ),
+                    ],
                   ),
                   GoRoute(
                     path: 'a-propos',

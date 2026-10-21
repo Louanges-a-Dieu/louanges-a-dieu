@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/account.dart';
 import '../../app/providers.dart';
+import '../../app/state.dart';
 import '../../core/auth/auth_service.dart';
 import '../../core/design_system/components.dart';
 import '../../core/design_system/theme.dart';
@@ -161,17 +163,71 @@ class _SignedIn extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final p = context.lad;
     final status = ref.watch(syncRunnerProvider);
+    final email = user.email ?? '';
+    final favorites = ref.watch(favoriteIdsProvider).value?.length ?? 0;
+    final lists = ref.watch(playlistsProvider).value?.length ?? 0;
+    final programs = (ref.watch(worshipServicesProvider).value ?? const [])
+        .where((s) => !s.isTemplate)
+        .length;
+    Widget entry(IconData icon, String title, String subtitle, String route) =>
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(icon, color: p.gold),
+          title: Text(title),
+          subtitle: Text(subtitle),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.go(route),
+        );
     return ListView(
       padding: const EdgeInsets.all(LadSpace.xl),
       children: [
-        Text(
-          l10n.signedInAs(user.email ?? ''),
-          style: LadTheme.textStyle(LadTypeScale.body, p.text),
+        Row(
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: p.goldPale,
+              foregroundColor: p.goldText,
+              child: Text(
+                email.isEmpty ? '?' : email.characters.first.toUpperCase(),
+                style: LadTheme.textStyle(LadTypeScale.title, p.goldText),
+              ),
+            ),
+            const SizedBox(width: LadSpace.md),
+            Expanded(
+              child: Text(
+                l10n.signedInAs(email),
+                style: LadTheme.textStyle(LadTypeScale.body, p.text),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: LadSpace.xl),
-        Text(
-          status.syncing ? l10n.syncing : l10n.pendingChanges(status.pending),
-          style: LadTheme.textStyle(LadTypeScale.body, p.textSecondary),
+        const SizedBox(height: LadSpace.lg),
+        entry(
+          Icons.favorite_border,
+          l10n.myFavorites,
+          l10n.hymnCount(favorites),
+          '/favoris',
+        ),
+        entry(
+          Icons.queue_music,
+          l10n.myLists,
+          l10n.listCount(lists),
+          '/favoris',
+        ),
+        entry(
+          Icons.event_note_outlined,
+          l10n.myPrograms,
+          l10n.programCount(programs),
+          '/culte',
+        ),
+        const SizedBox(height: LadSpace.md),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(Icons.sync, color: p.gold),
+          title: Text(l10n.cloudSync),
+          subtitle: Text(
+            status.syncing ? l10n.syncing : l10n.pendingChanges(status.pending),
+          ),
         ),
         if (status.lastFailed)
           Padding(

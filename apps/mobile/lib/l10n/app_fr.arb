@@ -728,5 +728,66 @@
   "readHereSubtitle": "Mode lecture, une strophe à la fois.",
   "addToProgramSubtitle": "Dans un programme de culte.",
   "shareHymnSubtitle": "Image, texte ou copie des paroles.",
-  "themeLabel": "Thème"
+  "themeLabel": "Thème",
+  "audioLibraryTitle": "Écoute hors connexion",
+  "batchProgress": "Téléchargement {current} sur {total}…",
+  "@batchProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "batchFailed": "{count, plural, =1{1 téléchargement a échoué.} other{{count} téléchargements ont échoué.}} Réessayez avec une meilleure connexion.",
+  "@batchFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wifiRecommended": "Téléchargement recommandé en Wi-Fi.",
+  "audioLibraryEmpty": "Aucun enregistrement à télécharger",
+  "freeSpace": "Libérer de l’espace",
+  "downloadCount": "{count, plural, =0{Télécharger} other{Télécharger ({count})}}",
+  "@downloadCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "onDevice": "sur l’appareil",
+  "downloadFailed": "échec, à réessayer",
+  "recordingsOnDevice": "Enregistrements sur l’appareil",
+  "spaceUsed": "Espace utilisé",
+  "manageDownloads": "Gérer les téléchargements",
+  "withoutInternetTitle": "Sans Internet, vous pouvez",
+  "withoutInternetHymnal": "Chercher et lire tous les cantiques",
+  "withoutInternetFavorites": "Utiliser vos favoris et vos listes",
+  "withoutInternetPrograms": "Préparer et lire vos programmes de culte",
+  "withoutInternetProjection": "Projeter sur un écran relié au même Wi-Fi ou au point d’accès du téléphone",
+  "withoutInternetAudio": "Écouter les enregistrements téléchargés",
+  "withoutInternetUpdates": "Internet sert aux mises à jour du recueil, à la synchronisation de votre compte et au partage par lien.",
+  "myPrograms": "Mes programmes",
+  "listCount": "{count, plural, =0{Aucune liste} =1{1 liste} other{{count} listes}}",
+  "@listCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programCount": "{count, plural, =0{Aucun programme} =1{1 programme} other{{count} programmes}}",
+  "@programCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cloudSync": "Synchronisation"
 }

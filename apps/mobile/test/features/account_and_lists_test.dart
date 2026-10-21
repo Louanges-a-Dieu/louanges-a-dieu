@@ -176,6 +176,13 @@ void main() {
       await addToList(tester, 'Mon cœur Te loue', 'Liste du compte');
 
       await openAccount(tester);
+      // Bas de la page (liste construite à la demande).
+      await tester.scrollUntilVisible(
+        find.text('Se déconnecter'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await idle(tester);
       await tester.tap(find.text('Se déconnecter'));
       await idle(tester);
       expect(find.text('Garder mes favoris sur cet appareil'), findsOneWidget);
@@ -201,6 +208,13 @@ void main() {
       await favorite(tester, 'Au matin');
 
       await openAccount(tester);
+      // Bas de la page (liste construite à la demande).
+      await tester.scrollUntilVisible(
+        find.text('Supprimer mon compte'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await idle(tester);
       await tester.tap(find.text('Supprimer mon compte'));
       await idle(tester);
       expect(

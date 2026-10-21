@@ -382,7 +382,7 @@ void main() {
   );
 
   testApp(
-    'Plus → Hors connexion : enregistrements téléchargés, suppression',
+    'Plus → Hors connexion : enregistrements sur l’appareil, place occupée',
     (tester, _) async {
       const track = AudioTrack(
         id: '00000000-0000-4000-8000-0000000a0001',
@@ -396,22 +396,8 @@ void main() {
       await idle(tester);
       await tester.tap(find.text('Hors connexion'));
       await idle(tester);
-      await tester.ensureVisible(find.text('Supprimer les enregistrements'));
-      await tester.pump();
-      await idle(tester);
-      expect(
-        find.text('1 enregistrement sur cet appareil (3,0 Mo).'),
-        findsOneWidget,
-      );
-      await tester.tap(find.text('Supprimer les enregistrements'));
-      await idle(tester);
-      await tester.tap(find.widgetWithText(FilledButton, 'Supprimer'));
-      await idle(tester);
-      expect(downloads.files, isEmpty);
-      expect(
-        find.textContaining('Aucun enregistrement téléchargé'),
-        findsOneWidget,
-      );
+      expect(find.text('1 / 2'), findsOneWidget);
+      expect(find.text('3,0 Mo'), findsOneWidget);
     },
     hymns: hymnsWithAudio(),
     env: _audioEnv,
@@ -552,6 +538,39 @@ void main() {
       final prefs = await settle(tester, PreferencesRepository(db).load());
       expect(prefs.audioSpeed, 1.25);
       expect(prefs.audioLoop, isTrue);
+    },
+    hymns: hymnsWithAudio(),
+    env: _audioEnv,
+    overrides: fakes,
+  );
+
+  testApp(
+    'hors connexion : choisir, télécharger puis libérer l’espace',
+    (tester, _) async {
+      await tester.tap(find.text('Plus').last);
+      await idle(tester);
+      await tester.tap(find.text('Hors connexion'));
+      await idle(tester);
+      expect(find.text('Sans Internet, vous pouvez'), findsOneWidget);
+      expect(find.text('0 / 2'), findsOneWidget);
+      await tester.ensureVisible(find.text('Gérer les téléchargements'));
+      await idle(tester);
+      await tester.tap(find.text('Gérer les téléchargements'));
+      await idle(tester);
+
+      await tester.tap(find.byType(CheckboxListTile).first);
+      await tester.tap(find.byType(CheckboxListTile).last);
+      await idle(tester);
+      await tester.tap(find.text('Télécharger (2)'));
+      await idle(tester);
+      expect(downloads.files, hasLength(2));
+      expect(find.textContaining('sur l’appareil'), findsNWidgets(2));
+
+      await tester.tap(find.text('Libérer de l’espace'));
+      await idle(tester);
+      await tester.tap(find.widgetWithText(FilledButton, 'Supprimer'));
+      await idle(tester);
+      expect(downloads.files, isEmpty);
     },
     hymns: hymnsWithAudio(),
     env: _audioEnv,

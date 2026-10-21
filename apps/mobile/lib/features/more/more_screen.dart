@@ -14,6 +14,7 @@ import '../../core/design_system/tokens.g.dart';
 import '../../core/sync/catalog_sync.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../audio/audio_downloads.dart';
+import '../audio/audio_library.dart';
 
 /// Onglet « Plus » : réglages, état hors connexion, à propos, licences.
 class MoreScreen extends ConsumerWidget {
@@ -212,6 +213,8 @@ class _OfflineScreenState extends ConsumerState<OfflineScreen> {
                   const SizedBox(height: LadSpace.lg),
                   const _AudioDownloadsPanel(),
                 ],
+                const SizedBox(height: LadSpace.lg),
+                const _WithoutInternet(),
               ],
             ),
           ),
@@ -222,19 +225,101 @@ class _OfflineScreenState extends ConsumerState<OfflineScreen> {
 }
 
 /// Enregistrements téléchargés pour l'écoute sans Internet : nombre, place
-/// occupée, suppression.
+/// occupée, accès au gestionnaire (choix, avancement, suppression).
 class _AudioDownloadsPanel extends ConsumerWidget {
   const _AudioDownloadsPanel();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final p = context.lad;
     final usage = ref.watch(audioDownloadsUsageProvider).value;
+    final available = ref.watch(hymnsWithAudioProvider).value;
     final megabytes = NumberFormat(
       '0.0',
       'fr',
     ).format((usage?.bytes ?? 0) / (1024 * 1024));
+    return _Panel(
+      icon: Icons.headphones_outlined,
+      title: l10n.audioDownloadsTitle,
+      children: [
+        _Row(
+          l10n.recordingsOnDevice,
+          usage == null || available == null
+              ? '—'
+              : '${usage.count} / ${available.fold<int>(0, (n, h) => n + h.audio.length)}',
+        ),
+        _Row(l10n.spaceUsed, usage == null ? '—' : '$megabytes Mo'),
+        const SizedBox(height: LadSpace.md),
+        FilledButton.icon(
+          icon: const Icon(Icons.download_outlined),
+          label: Text(l10n.manageDownloads),
+          onPressed: () => context.push('/plus/hors-connexion/audio'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Ce qui fonctionne sans Internet (planche 7, écran 6).
+class _WithoutInternet extends StatelessWidget {
+  const _WithoutInternet();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final p = context.lad;
+    return _Panel(
+      icon: Icons.airplanemode_active,
+      title: l10n.withoutInternetTitle,
+      children: [
+        for (final item in [
+          l10n.withoutInternetHymnal,
+          l10n.withoutInternetFavorites,
+          l10n.withoutInternetPrograms,
+          l10n.withoutInternetProjection,
+          l10n.withoutInternetAudio,
+        ])
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: LadSpace.xxs),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.check_circle_outline, size: 20, color: p.success),
+                const SizedBox(width: LadSpace.sm),
+                Expanded(
+                  child: Text(
+                    item,
+                    style: LadTheme.textStyle(LadTypeScale.body, p.text),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: LadSpace.sm),
+        Text(
+          l10n.withoutInternetUpdates,
+          style: LadTheme.textStyle(LadTypeScale.caption, p.textSecondary),
+        ),
+      ],
+    );
+  }
+}
+
+/// Encadré des pages de réglages : icône, titre, contenu.
+class _Panel extends StatelessWidget {
+  const _Panel({
+    required this.icon,
+    required this.title,
+    required this.children,
+  });
+
+  final IconData icon;
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.lad;
     return Container(
       padding: const EdgeInsets.all(LadSpace.lg + 4),
       decoration: BoxDecoration(
@@ -247,54 +332,18 @@ class _AudioDownloadsPanel extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.headphones_outlined, color: p.gold),
+              Icon(icon, color: p.gold),
               const SizedBox(width: LadSpace.sm),
               Expanded(
                 child: Text(
-                  l10n.audioDownloadsTitle,
+                  title,
                   style: LadTheme.textStyle(LadTypeScale.cardTitle, p.text),
                 ),
               ),
             ],
           ),
           const SizedBox(height: LadSpace.md),
-          Text(
-            usage == null
-                ? '—'
-                : usage.count == 0
-                ? l10n.audioDownloadsNone
-                : l10n.audioDownloadsUsage(usage.count, megabytes),
-            style: LadTheme.textStyle(LadTypeScale.body, p.textSecondary),
-          ),
-          if ((usage?.count ?? 0) > 0) ...[
-            const SizedBox(height: LadSpace.md),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.delete_outline),
-              label: Text(l10n.audioDownloadsDeleteAll),
-              onPressed: () async {
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text(l10n.audioDownloadsDeleteAll),
-                    content: Text(l10n.audioDownloadsDeleteConfirm),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: Text(l10n.cancel),
-                      ),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: Text(l10n.audioRemoveDownload),
-                      ),
-                    ],
-                  ),
-                );
-                if (confirmed != true) return;
-                await ref.read(audioDownloadsProvider).deleteAll();
-                ref.invalidate(audioDownloadsUsageProvider);
-              },
-            ),
-          ],
+          ...children,
         ],
       ),
     );
