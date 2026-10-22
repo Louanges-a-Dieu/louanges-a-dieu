@@ -22,9 +22,12 @@ officiel pour Supabase : <https://resend.com/docs/send-with-supabase-smtp>.
 
 ### Étape 2 — Domaine d'expédition
 
-Les e-mails partent d'une adresse sur un domaine que vous contrôlez. Recommandation : un
-**sous-domaine dédié**, qui isole la réputation d'envoi du domaine principal, par exemple
-`louanges.eglisedabidjan.com` ; adresse d'expédition `connexion@louanges.eglisedabidjan.com`.
+Les e-mails partent d'une adresse sur un domaine que vous contrôlez : un **sous-domaine
+dédié**, qui isole la réputation d'envoi du domaine principal. **Choisi (2026-10-22)** :
+`louanges.eglisedabidjan.com`, adresse d'expédition `connexion@louanges.eglisedabidjan.com`.
+Le domaine est enregistré chez Infomaniak mais ses **DNS sont chez Cloudflare** : c'est là que
+se font les enregistrements (Resend propose de les ajouter automatiquement dans Cloudflare).
+Conseillé en plus : `TXT _dmarc.louanges` → `v=DMARC1; p=none;`.
 
 1. Resend → **Domains → Add Domain** → saisir le sous-domaine ; région **Ireland (eu-west-1)**
    (même région que la base Supabase).
@@ -89,6 +92,9 @@ Corps (HTML) :
   </p>
 </div>
 ```
+
+Astuce : pour le second modèle, copier la vue **Source** du premier (Cmd + A, Cmd + C) plutôt
+que recoller depuis ce document ; un collage partiel a déjà abîmé un modèle.
 
 ### Étape 7 — Vérification
 

@@ -30,7 +30,8 @@ secrets du propriétaire.
 | 7 | Nom de domaine / DNS | Propriétaire | ☐ | Sous-domaines prévus : admin, web/projection |
 | 8 | Apple Developer Program (individuel) | Titulaire désigné | ☐ | Vendeur affiché = nom légal du titulaire |
 | 9 | Google Play Console (personnel) | Titulaire désigné | ☐ | Test fermé obligatoire (≥ 12 testeurs, 14 jours) avant la production |
-| 9b | Service d'envoi d'e-mails (SMTP : Resend, Brevo, Postmark…) + domaine d'expédition vérifié | Propriétaire | ☐ | Indispensable avant la production (connexion par e-mail) — voir docs/deployment/auth-email.md |
+| 9b | Service d'envoi d'e-mails : **Resend** (compte `louangesaDieu04@gmail.com`), domaine vérifié `louanges.eglisedabidjan.com` | Propriétaire | ◐ | Branché sur la base de dev le 2026-10-22 (clé `supabase-auth-dev`) ; refaire pour staging et prod avec une clé par projet |
+| 7b | Domaine `eglisedabidjan.com` : enregistré chez **Infomaniak**, DNS gérés par **Cloudflare** ; messagerie de l'église chez Infomaniak (ne pas toucher) | Propriétaire | ☑ | Sous-domaine `louanges.` réservé au projet (envoi d'e-mails ; site et back-office possibles) |
 | 10 | Sentry (suivi des plantages, Q-16) : organisation au nom du projet, région UE, projets `louanges-mobile` et `louanges-web` | Propriétaire | ☐ | `docs/operations/observability.md` ; facultatif (sans DSN, rien n'est envoyé) |
 | 11 | Clé d'envoi Android + clé API App Store Connect | Propriétaire | ☐ | `docs/deployment/mobile-signing.md` |
 | 12 | Clé de chiffrement des sauvegardes (age) + bucket R2 `louanges-sauvegardes` | Propriétaire | ☐ | Clé privée dans le coffre **et** hors ligne — `docs/operations/backup-restore.md` |

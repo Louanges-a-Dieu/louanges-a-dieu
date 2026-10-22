@@ -797,7 +797,7 @@ est accompagné d'un test de non-régression.
 ### PHASE 6 — Favoris et listes
 
 - [x] 6.1 Favoris locaux (visiteur, hors connexion) : bouton sur la fiche **et en mode lecture** (cantique affiché), onglet Favoris ; pour un visiteur, l'onglet « Listes » invite à se connecter (Q-05)
-- [~] 6.2 Compte : connexion **sans mot de passe** par e-mail (lien qui rouvre l'app — schéma `org.louangesadieu.app://login-callback/` déclaré sur Android et iOS — ou code), déconnexion (listes et programmes retirés de l'appareil, favoris gardés au choix, avertissement s'il reste des modifications non envoyées), **suppression de compte** (migration 0013, fonction `delete_my_account`). **Reste (propriétaire)** : autoriser les adresses de retour et brancher un service d'envoi d'e-mails (voir `docs/deployment/auth-email.md`) — sans cela, la connexion par e-mail ne peut pas aboutir
+- [~] 6.2 Compte : connexion **sans mot de passe** par e-mail (lien qui rouvre l'app — schéma `org.louangesadieu.app://login-callback/` déclaré sur Android et iOS — ou code), déconnexion (listes et programmes retirés de l'appareil, favoris gardés au choix, avertissement s'il reste des modifications non envoyées), **suppression de compte** (migration 0013, fonction `delete_my_account`). **Service d'envoi branché sur la base de développement le 2026-10-22** : Resend, domaine `louanges.eglisedabidjan.com` (DNS Cloudflare), expéditeur `connexion@louanges.eglisedabidjan.com`, modèles français avec code ; **premier vrai essai réussi** (e-mail reçu immédiatement, hors spams, connexion par code). **Reste** : même configuration sur les projets staging et production ; essai du lien sur téléphone
 - [x] 6.3 Listes : créer, renommer, supprimer, ajouter depuis la fiche (nouvelle liste à la volée, doublon signalé), réordonner par glisser-déposer **et** par « Monter / Descendre » (accessibilité), retirer
 - [x] 6.4 Synchronisation branchée : à la connexion, quelques secondes après chaque modification, et à la demande ; fusion des favoris de visiteur à la première connexion
 - [x] 6.5 États : modifications en attente, synchronisation en cours, échec (données conservées sur l'appareil), liste vide, aucune liste
@@ -807,7 +807,7 @@ est accompagné d'un test de non-régression.
 - [x] T-005 : favori ajouté hors ligne, conservé, puis envoyé (Phase 4) ; fusion à la connexion.
 - [x] Deux appareils sur le même compte voient les mêmes listes après synchronisation — **vérifié avec le vrai serveur**.
 - [x] Aucune perte de données hors connexion ; conflits selon §12.2 (tests Phase 4).
-- [!] Connexion d'un utilisateur réel par e-mail : dépend de la configuration Auth (6.2).
+- [x] Connexion d'un utilisateur réel par e-mail : réussie le 2026-10-22 sur la base de développement (code reçu de Resend).
 
 **Rapport Phase 6 (2026-10-18)**
 
