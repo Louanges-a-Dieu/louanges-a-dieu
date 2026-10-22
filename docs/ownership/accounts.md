@@ -25,9 +25,9 @@ secrets du propriétaire.
 | 2 | Coffre de secrets (ex. Bitwarden Organisation) | Propriétaire | ☐ | Stocke tous les identifiants ci-dessous |
 | 3 | GitHub : organisation `Louanges-a-Dieu` + dépôt privé `louanges-a-dieu` | Propriétaire | ◐ | Créés le 2026-10-21 (compte `louanges-a-dieu-admin`, offre gratuite) ; reste : double authentification, offre Team pour protéger `main` |
 | 4 | Supabase (offre gratuite) : développement `ssvhoqpvxvfkhwxkewwl`, production `vmgpfbgdtljoefbkuxbz` (créée le 2026-10-22) ; pas de staging | Propriétaire | ◐ | Vérifier que le projet appartient à une organisation au nom du projet |
-| 5 | Vercel : équipe, projets `admin` et `web` | Propriétaire | ☐ | Vérifier l'offre (Hobby = usage personnel non commercial) |
+| 5 | Vercel (offre Hobby) : projets `louanges-admin` (racine `apps/admin`) et `louanges-web` (racine `apps/web`), reliés au dépôt GitHub | Propriétaire | ◐ | En ligne le 2026-10-23 ; Hobby = usage personnel non commercial, passer à Pro si Vercel le demande |
 | 6 | Cloudflare : compte (R2 pour sauvegardes, V2 médias) | Propriétaire | ☐ | — |
-| 7 | Nom de domaine / DNS | Propriétaire | ☐ | Sous-domaines prévus : admin, web/projection |
+| 7 | Nom de domaine / DNS | Propriétaire | ☑ | Site `https://louanges.eglisedabidjan.com`, back-office `https://admin.louanges.eglisedabidjan.com` (CNAME Vercel dans Cloudflare, proxy désactivé) |
 | 8 | Apple Developer Program (individuel) | Titulaire désigné | ☐ | Vendeur affiché = nom légal du titulaire |
 | 9 | Google Play Console (personnel) | Titulaire désigné | ☐ | Test fermé obligatoire (≥ 12 testeurs, 14 jours) avant la production |
 | 9b | Service d'envoi d'e-mails : **Resend** (compte `louangesaDieu04@gmail.com`), domaine vérifié `louanges.eglisedabidjan.com` | Propriétaire | ◐ | Branché sur la base de dev le 2026-10-22 (clé `supabase-auth-dev`) ; refaire pour la production avec une clé dédiée |
