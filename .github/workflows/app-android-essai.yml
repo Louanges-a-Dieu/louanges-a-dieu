@@ -1,0 +1,116 @@
+# Version Android d'ESSAI, à installer directement sur un téléphone (sans
+# Google Play) : lancement manuel (Actions → app-android-essai → Run
+# workflow), puis télécharger l'APK dans « Artifacts » en bas de l'exécution.
+# Le recueil embarqué est exporté de la base choisie au moment du build (il
+# n'est jamais versionné : il contient les paroles). Signature : clé d'envoi
+# du propriétaire si les secrets ANDROID_* existent (mises à jour possibles
+# par-dessus la version précédente), sinon clé de test jetable (désinstaller
+# l'ancienne version avant d'installer la nouvelle).
+name: app-android-essai
+
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Base de données reliée
+        type: choice
+        options: [developpement, production]
+        default: developpement
+
+permissions:
+  contents: read
+
+concurrency:
+  group: app-android-essai
+  cancel-in-progress: false
+
+jobs:
+  apk:
+    name: APK d'essai (${{ inputs.base }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      # Compilation Android : même place disque que la CI.
+      - name: Espace disque pour Android
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL \
+            /usr/local/share/powershell /usr/share/swift
+          sudo docker image prune --all --force > /dev/null
+
+      - name: Configuration de l'app (valeurs publiques)
+        env:
+          BASE: ${{ inputs.base }}
+          DEV_URL: ${{ vars.DEV_SUPABASE_URL }}
+          DEV_KEY: ${{ vars.DEV_SUPABASE_PUBLISHABLE_KEY }}
+          PROD_URL: ${{ vars.PROD_SUPABASE_URL }}
+          PROD_KEY: ${{ vars.PROD_SUPABASE_PUBLISHABLE_KEY }}
+          AUDIO: ${{ vars.AUDIO_BASE_URL }}
+        run: |
+          if [ "$BASE" = production ]; then
+            jq -n --arg url "$PROD_URL" --arg key "$PROD_KEY" --arg audio "$AUDIO" \
+              '{APP_ENV: "prod", SUPABASE_URL: $url, SUPABASE_PUBLISHABLE_KEY: $key,
+                PUBLIC_WEB_URL: "https://louanges.eglisedabidjan.com", AUDIO_BASE_URL: $audio}' \
+              > apps/mobile/config/essai.json
+          else
+            jq -n --arg url "$DEV_URL" --arg key "$DEV_KEY" --arg audio "$AUDIO" \
+              '{APP_ENV: "dev", SUPABASE_URL: $url, SUPABASE_PUBLISHABLE_KEY: $key,
+                PUBLIC_WEB_URL: "", AUDIO_BASE_URL: $audio}' > apps/mobile/config/essai.json
+          fi
+          jq 'del(.SUPABASE_PUBLISHABLE_KEY)' apps/mobile/config/essai.json
+
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Recueil embarqué (exporté de la base choisie)
+        run: |
+          node packages/content_tools/src/cli.ts export-snapshot --config apps/mobile/config/essai.json
+          ls -l apps/mobile/assets/catalog/
+
+      - name: Clé de signature
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+            printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=upload\nkeyPassword=%s\n' \
+              "$RUNNER_TEMP/upload.jks" "$KEYSTORE_PASSWORD" "$KEYSTORE_PASSWORD" \
+              > apps/mobile/android/key.properties
+            echo "Signature : clé d'envoi du propriétaire."
+          else
+            echo "::warning::Pas de clé d'envoi : signature de test jetable (désinstaller l'ancienne version avant d'installer celle-ci)."
+          fi
+
+      - name: Version Flutter épinglée (.fvmrc)
+        id: fvm
+        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.fvm.outputs.version }}
+          channel: stable
+          cache: true
+
+      - name: Construction de l'APK
+        working-directory: apps/mobile
+        run: |
+          flutter pub get
+          flutter build apk --release --target-platform android-arm64 \
+            --dart-define-from-file=config/essai.json \
+            --build-number=${{ github.run_number }}
+          name="louanges-a-dieu-essai-${{ inputs.base }}-${{ github.run_number }}.apk"
+          mv build/app/outputs/flutter-apk/app-release.apk "$name"
+          echo "APK=apps/mobile/$name" >> "$GITHUB_ENV"
+          rm -f android/key.properties
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: louanges-a-dieu-essai-${{ inputs.base }}-${{ github.run_number }}
+          path: ${{ env.APK }}
+          retention-days: 30
+          if-no-files-found: error
