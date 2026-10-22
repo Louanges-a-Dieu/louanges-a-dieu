@@ -1,7 +1,9 @@
-# Déploiement des migrations (tâche 10.9, ADR-011) : uniquement par ce
-# workflow, déclenché à la main, sur un environnement GitHub protégé
-# (`production` : approbation du propriétaire requise). Aperçu des migrations,
-# puis application ; en staging, tests pgTAP sur la base déployée.
+# Déploiement des migrations en production (tâche 10.9, ADR-011) : uniquement
+# par ce workflow, déclenché à la main. Pas de staging (décision du
+# propriétaire, 2026-10-22) : les migrations sont essayées sur la base de
+# développement et vérifiées par la CI (base reconstruite de zéro, pgTAP)
+# avant d'arriver ici. Offre GitHub gratuite : pas d'approbation obligatoire,
+# remplacée par une confirmation à taper. Aperçu, puis application.
 name: deploiement-base
 
 on:
@@ -10,7 +12,11 @@ on:
       cible:
         description: Environnement
         type: choice
-        options: [staging, production]
+        options: [production]
+        required: true
+      confirmation:
+        description: Tapez PRODUCTION pour confirmer
+        type: string
         required: true
 
 permissions:
@@ -37,6 +43,15 @@ jobs:
         with:
           version: 2.121.0
 
+      - name: Confirmation
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          if [ "$CONFIRMATION" != "PRODUCTION" ]; then
+            echo "::error::Confirmation absente : tapez PRODUCTION pour déployer."
+            exit 1
+          fi
+
       - name: Projet cible
         run: |
           test -n "$SUPABASE_PROJECT_REF"
@@ -50,16 +65,3 @@ jobs:
 
       - name: Avertissements de sécurité et de performance
         run: supabase db advisors --linked --type all --level warn
-
-      - uses: pnpm/action-setup@v6
-        if: inputs.cible == 'staging'
-      - uses: actions/setup-node@v7
-        if: inputs.cible == 'staging'
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - name: Tests pgTAP sur la base déployée (staging)
-        if: inputs.cible == 'staging'
-        run: |
-          pnpm install --frozen-lockfile
-          node tools/pgtap/run.ts

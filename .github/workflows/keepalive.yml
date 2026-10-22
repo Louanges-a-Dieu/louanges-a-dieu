@@ -1,0 +1,47 @@
+# Maintien en éveil des projets Supabase en offre gratuite (décision du
+# propriétaire, 2026-10-22) : un projet sans activité pendant 7 jours est mis
+# en pause. Deux fois par semaine, une lecture publique (manifeste du
+# catalogue, clé publishable) suffit à compter comme activité. En cas
+# d'échec, GitHub prévient par e-mail le compte qui a modifié ce fichier.
+# Attention : GitHub suspend les tâches planifiées d'un dépôt sans activité
+# depuis 60 jours (un e-mail d'avertissement est envoyé avant).
+name: maintien-supabase
+
+on:
+  schedule:
+    - cron: '17 6 * * 1,4' # lundi et jeudi, 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    name: Activité → ${{ matrix.projet }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - projet: production
+            url: PROD_SUPABASE_URL
+            cle: PROD_SUPABASE_PUBLISHABLE_KEY
+          - projet: développement
+            url: DEV_SUPABASE_URL
+            cle: DEV_SUPABASE_PUBLISHABLE_KEY
+    steps:
+      - name: Lecture du manifeste du catalogue
+        env:
+          SUPABASE_URL: ${{ vars[matrix.url] }}
+          PUBLISHABLE_KEY: ${{ vars[matrix.cle] }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$PUBLISHABLE_KEY" ]; then
+            echo "::warning::Variables ${{ matrix.url }} / ${{ matrix.cle }} absentes : rien à faire."
+            exit 0
+          fi
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 20 \
+            -X POST "$SUPABASE_URL/rest/v1/rpc/get_catalog_manifest" \
+            -H "apikey: $PUBLISHABLE_KEY" -H "Content-Type: application/json" -d '{}')
+          echo "Réponse : $code"
+          test "$code" = 200

@@ -1,4 +1,5 @@
-# Sauvegarde hebdomadaire de la base de production (tâche 10.6).
+# Sauvegarde QUOTIDIENNE de la base de production (tâche 10.6) : l'offre
+# gratuite de Supabase n'en fait pas (décision du 2026-10-22).
 # Rôles, schéma et données (méthode officielle Supabase), RESTAURATION
 # VÉRIFIÉE à chaque fois dans une base neuve, chiffrement « age » (clé privée
 # détenue hors ligne par le propriétaire), envoi vers Cloudflare R2.
@@ -7,7 +8,7 @@ name: sauvegarde
 
 on:
   schedule:
-    - cron: '0 3 * * 1' # lundi, 03:00 UTC
+    - cron: '0 3 * * *' # chaque jour, 03:00 UTC
   workflow_dispatch:
 
 permissions:

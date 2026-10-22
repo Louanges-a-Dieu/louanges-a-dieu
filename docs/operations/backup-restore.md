@@ -5,7 +5,7 @@
 | Niveau | Quoi | Où |
 |---|---|---|
 | Supabase | Sauvegardes quotidiennes automatiques (offre **Pro** ; l'offre gratuite n'en fournit pas de téléchargeables) | tableau de bord → Database → Backups |
-| Projet | **Sauvegarde hebdomadaire** : rôles, schéma, données ; **restauration vérifiée** à chaque fois dans une base Supabase neuve de même version ; archive chiffrée (age) | `.github/workflows/backup.yml` → Cloudflare R2 |
+| Projet | **Sauvegarde quotidienne** (offre gratuite : aucune sauvegarde Supabase) : rôles, schéma, données ; **restauration vérifiée** à chaque fois dans une base Supabase neuve de même version ; archive chiffrée (age) | `.github/workflows/backup.yml` → Cloudflare R2 |
 
 La vérification restaure l'export complet dans un conteneur `supabase/postgres` neuf
 (`tools/backup/verify-restore.sh`) et compare son empreinte à celle relevée sur la source
