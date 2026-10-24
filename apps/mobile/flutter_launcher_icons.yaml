@@ -1,0 +1,17 @@
+# Icône de l'app (image du propriétaire, docs/ownership/assets.md). Images
+# préparées par tools/branding/icones.py, puis : dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: assets/branding/icone.png
+  android: ic_launcher
+  min_sdk_android: 24
+  adaptive_icon_background: '#FFFFFF'
+  adaptive_icon_foreground: assets/branding/icone_premier_plan.png
+  adaptive_icon_foreground_inset: 0
+  ios: true
+  remove_alpha_ios: true
+  background_color_ios: '#FFFFFF'
+  web:
+    generate: true
+    image_path: assets/branding/icone.png
+    background_color: '#FFFFFF'
+    theme_color: '#FFFFFF'

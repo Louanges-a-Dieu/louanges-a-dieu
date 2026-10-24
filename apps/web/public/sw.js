@@ -2,7 +2,7 @@
 // projection et l'écran projeté restent disponibles sans Internet (Q-08).
 // Seules ces pages et leurs ressources statiques sont mises en cache ; les
 // pages de programmes partagés (privées, sans cache) ne le sont jamais.
-const CACHE = 'lad-projection-v1';
+const CACHE = 'lad-projection-v2'; // v2 : icônes de l'épi (2026-10-24)
 const PRECACHE = [
   '/projection',
   '/projection-ecran/screen.html',

@@ -37,4 +37,4 @@ ne montrent ni personne ni marque.
 | Asset | Source | Remarques |
 |---|---|---|
 | Épi de blé | à vectoriser depuis la couverture (Affinity) | à fournir par le propriétaire |
-| Icône **provisoire** de la PWA de projection (`apps/web/public/icons/icon-192.png`, `icon-512.png`) | monogramme « L » en Cormorant Garamond (OFL), créé pour le projet le 2026-10-18 | à remplacer par l'épi dès qu'il est fourni |
+| Icône de l'app, écran de démarrage, icônes du site et du back-office | image `app_android_louanges_icone.png` (trois épis dorés dans un cercle, fond blanc, 1254×1254) **fournie par le propriétaire** le 2026-10-23 ; copie : `apps/mobile/assets/branding/icone_source.png` | dérivés produits par `tools/branding/icones.py` (recadrage, fond blanc pur, zone sûre Android), puis `flutter_launcher_icons` et `flutter_native_splash` (`apps/mobile/*.yaml`) ; a remplacé le 2026-10-24 le monogramme « L » provisoire de la PWA de projection et les icônes par défaut de Flutter et Next.js |
