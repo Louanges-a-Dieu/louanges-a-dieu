@@ -30,3 +30,22 @@ export function sectionName(type: string, number: number | null): string {
 export function themeSlug(name: string): string {
   return fold(name).replace(/\s+/g, '-');
 }
+
+/** Numéro d'un cantique : « 1139 », « 37bis », « 37 bis », « 12 TER » (null si invalide). */
+export function parseHymnNumber(
+  input: string,
+): { label: string; numeric: number; suffix: 'bis' | 'ter' | null } | null {
+  const m = /^\s*0*(\d{1,4})\s*(bis|ter)?\s*$/i.exec(input);
+  if (!m || Number(m[1]) === 0) return null;
+  const numeric = Number(m[1]);
+  const suffix = (m[2]?.toLowerCase() ?? null) as 'bis' | 'ter' | null;
+  return { label: `${numeric}${suffix ?? ''}`, numeric, suffix };
+}
+
+/** Paroles saisies d'un bloc : une strophe par paragraphe (ligne vide entre deux). */
+export function splitStanzas(text: string): string[] {
+  return normalizeSectionText(text)
+    .split(/\n[ \t]*\n+/)
+    .map(normalizeSectionText)
+    .filter((s) => s.length > 0);
+}

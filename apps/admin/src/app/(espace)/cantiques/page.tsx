@@ -8,7 +8,7 @@ import ui from '@/components/ui.module.css';
 import { requireEditor } from '@/lib/auth';
 import { listEditions, param } from '@/lib/data';
 
-import { batchStatusAction } from './actions';
+import { batchStatusAction, createHymnAction } from './actions';
 import styles from './cantiques.module.css';
 
 export const metadata: Metadata = { title: 'Cantiques — Administration' };
@@ -72,6 +72,45 @@ export default async function HymnsPage({
     <>
       <h1 className={ui.h1}>Cantiques</h1>
       <Flash ok={param(sp.ok)} erreur={param(sp.erreur) ?? error?.message} />
+
+      <details className={ui.card}>
+        <summary>
+          <strong>Nouveau cantique</strong>
+        </summary>
+        <p className={ui.hint}>
+          Créé en brouillon. Paroles : une strophe par paragraphe, avec une ligne vide entre deux
+          strophes. Le refrain, les références et les droits se règlent ensuite sur la fiche.
+        </p>
+        <form action={createHymnAction} className={ui.field}>
+          <div className={ui.row}>
+            <label className={ui.field}>
+              <span className={ui.label}>Numéro</span>
+              <input className={ui.input} name="number" required placeholder="1139 ou 37bis" />
+            </label>
+            <label className={ui.field}>
+              <span className={ui.label}>Titre</span>
+              <input className={ui.input} name="title" required />
+            </label>
+            <label className={ui.field}>
+              <span className={ui.label}>Édition</span>
+              <select className={ui.select} name="edition_id" defaultValue={edition}>
+                {editions.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <label className={ui.field}>
+            <span className={ui.label}>Paroles (facultatif)</span>
+            <textarea className={ui.textarea} name="lyrics" rows={10} />
+          </label>
+          <div className={ui.row}>
+            <SubmitButton variant="primary">Créer le cantique</SubmitButton>
+          </div>
+        </form>
+      </details>
 
       <form className={styles.filters} method="get" role="search">
         <label className={ui.field}>

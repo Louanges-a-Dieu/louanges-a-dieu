@@ -100,3 +100,24 @@ describe('ajustement de la synchronisation karaoké', () => {
     expect(parseTenths('abc')).toBeNull();
   });
 });
+
+import { parseHymnNumber, splitStanzas } from '../src/lib/text';
+
+describe('nouveau cantique', () => {
+  it('numéro : chiffres et suffixe bis / ter', () => {
+    expect(parseHymnNumber('1139')).toEqual({ label: '1139', numeric: 1139, suffix: null });
+    expect(parseHymnNumber(' 37 BIS ')).toEqual({ label: '37bis', numeric: 37, suffix: 'bis' });
+    expect(parseHymnNumber('012ter')).toEqual({ label: '12ter', numeric: 12, suffix: 'ter' });
+    expect(parseHymnNumber('0')).toBeNull();
+    expect(parseHymnNumber('12a')).toBeNull();
+    expect(parseHymnNumber('')).toBeNull();
+  });
+
+  it('paroles : une strophe par paragraphe', () => {
+    expect(splitStanzas('Vers un\nVers deux\n\n\nVers trois  \r\nVers quatre\n')).toEqual([
+      'Vers un\nVers deux',
+      'Vers trois\nVers quatre',
+    ]);
+    expect(splitStanzas('   \n')).toEqual([]);
+  });
+});
