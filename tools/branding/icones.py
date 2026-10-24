@@ -87,8 +87,11 @@ def sites() -> None:
             apps / f'web/public/icons/icon-{size}.png', optimize=True
         )
     icon.resize((180, 180), Image.LANCZOS).save(apps / 'web/src/app/apple-icon.png', optimize=True)
+    # Next.js n'accepte que des images RGBA dans un .ico.
     for app in ('web', 'admin'):
-        icon.save(apps / f'{app}/src/app/favicon.ico', sizes=[(16, 16), (32, 32), (48, 48)])
+        icon.convert('RGBA').save(
+            apps / f'{app}/src/app/favicon.ico', sizes=[(16, 16), (32, 32), (48, 48)]
+        )
 
 
 def main() -> None:
