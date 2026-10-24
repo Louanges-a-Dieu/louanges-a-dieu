@@ -16,6 +16,67 @@ export const MEDIA_LABELS: Record<string, string> = {
   other: 'Enregistrement',
 };
 
+/** Nom de fichier de chaque version, sans accent (chemin du dépôt sur Backblaze). */
+const MEDIA_SLUGS: Record<string, string> = {
+  melody: 'melodie',
+  accompaniment: 'accompagnement',
+  choir: 'chorale',
+  soprano: 'soprano',
+  alto: 'alto',
+  tenor: 'tenor',
+  bass: 'basse',
+  instrumental: 'instrumental',
+  other: 'enregistrement',
+};
+
+/**
+ * Enregistrement dont un instrumental non synchronisé reprend les temps dans
+ * le karaoké de l'app (même règle que `karaokeTracks`, apps/mobile) : la
+ * mélodie synchronisée d'abord, sinon la première autre piste synchronisée
+ * vers par vers qui n'est pas un instrumental.
+ */
+export function karaokeReference<T extends { media_type: string; lineCues: number }>(
+  tracks: T[],
+): T | null {
+  const main = tracks.filter((t) => t.lineCues > 0 && t.media_type !== 'instrumental');
+  return main.find((t) => t.media_type === 'melody') ?? main[0] ?? null;
+}
+
+/** Types de fichier acceptés (lisibles sur iOS, Android et navigateurs). */
+export const AUDIO_CONTENT_TYPES: Record<string, string> = {
+  mp3: 'audio/mpeg',
+  m4a: 'audio/mp4',
+  aac: 'audio/aac',
+};
+
+/** Taille maximale d'un fichier déposé depuis le back-office. */
+export const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
+
+/** Extension acceptée d'un nom de fichier (« Chant.MP3 » → « mp3 »), sinon null. */
+export function audioExtension(fileName: string): string | null {
+  const ext = /\.([A-Za-z0-9]+)$/.exec(fileName.trim())?.[1]?.toLowerCase();
+  return ext && ext in AUDIO_CONTENT_TYPES ? ext : null;
+}
+
+/**
+ * Chemin d'un fichier déposé : `cantiques/<numéro sur 4 chiffres><suffixe>/<version>.<ext>`,
+ * puis `<version>-2`, `-3`… pour les essais suivants (`attempt`).
+ */
+export function uploadKey(
+  hymn: { number_numeric: number; number_suffix: string | null },
+  mediaType: string,
+  ext: string,
+  attempt = 1,
+): string {
+  const suffix = (hymn.number_suffix ?? '')
+    .normalize('NFD')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+  const folder = `${String(hymn.number_numeric).padStart(4, '0')}${suffix}`;
+  const name = MEDIA_SLUGS[mediaType] ?? 'enregistrement';
+  return `cantiques/${folder}/${name}${attempt > 1 ? `-${attempt}` : ''}.${ext}`;
+}
+
 /** « 3:05 », « 1:02:07 » ou « 185 » (secondes) → secondes ; vide → null. */
 export function parseDuration(value: string): number | null | 'invalide' {
   const v = value.trim();

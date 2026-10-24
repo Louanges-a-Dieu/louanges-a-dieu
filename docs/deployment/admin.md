@@ -10,9 +10,12 @@ projet. Domaine dédié recommandé (par exemple `admin.<domaine>`), jamais inde
 | `SUPABASE_URL` | `https://<projet>.supabase.co` |
 | `SUPABASE_PUBLISHABLE_KEY` | clé `sb_publishable_…` (publique) |
 | `AUDIO_BASE_URL` | facultative : adresse HTTPS des enregistrements (Backblaze B2, voir `audio-backblaze.md`) ; permet d'écouter un enregistrement sur la fiche d'un cantique |
+| `B2_KEY_ID`, `B2_APPLICATION_KEY` | facultatives, **secrètes** (« Sensitive » sur Vercel) : clé Backblaze limitée au compartiment audio, pour l'envoi direct des enregistrements depuis la fiche (`audio-backblaze.md`, §1 bis) |
+| `B2_BUCKET` | facultative : nom du compartiment, si `AUDIO_BASE_URL` ne le contient pas (`…/file/<compartiment>`) |
 
-**Aucune clé secrète** (ADR-011) : chaque action passe par la session de l'éditeur ; la base
-applique la RLS, les déclencheurs de workflow et le journal. En local : copier `.env.example`
+**Aucune clé secrète Supabase** (ADR-011) : chaque action passe par la session de l'éditeur ; la base
+applique la RLS, les déclencheurs de workflow et le journal. Seule exception : la clé Backblaze
+de dépôt, restreinte au compartiment audio, jamais transmise au navigateur. En local : copier `.env.example`
 en `.env.local`.
 
 ## Accès

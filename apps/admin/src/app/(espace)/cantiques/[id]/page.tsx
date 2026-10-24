@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { AudioUpload } from '@/components/audio-upload';
 import { SubmitButton } from '@/components/buttons';
 import { Flash } from '@/components/flash';
 import { HymnPreview } from '@/components/hymn-preview';
@@ -11,8 +12,16 @@ import { KaraokeSync } from '@/components/karaoke-sync';
 import { RIGHTS_LABELS, SeverityBadge, StatusBadge } from '@/components/status';
 import ui from '@/components/ui.module.css';
 import { requireEditor } from '@/lib/auth';
+import { b2Config } from '@/lib/backblaze';
 import { param } from '@/lib/data';
-import { MEDIA_LABELS, audioUrl, formatClock, formatSegments, syncLines } from '@/lib/audio';
+import {
+  MEDIA_LABELS,
+  audioUrl,
+  formatClock,
+  formatSegments,
+  karaokeReference,
+  syncLines,
+} from '@/lib/audio';
 import { editableCues } from '@/lib/karaoke';
 import { sectionName } from '@/lib/text';
 import { transitions } from '@/lib/transitions';
@@ -26,6 +35,7 @@ import {
   addRightsAction,
   addAudioTrackAction,
   deleteAudioTrackAction,
+  prepareAudioUploadAction,
   saveAudioCuesAction,
   saveAudioSegmentsAction,
   updateAudioTrackAction,
@@ -127,6 +137,14 @@ export default async function HymnEditorPage({
   if (!hymn) notFound();
   const here = `/cantiques/${id}`;
   const rightsStatus = effective.data?.rights_status ?? 'unknown';
+  const uploadEnabled = b2Config() !== null;
+  const cueCounts = (audio.data ?? []).map((t) => ({
+    id: t.id,
+    media_type: t.media_type,
+    lineCues: (t.segments ?? []).filter((g) => g.line_index != null).length,
+  }));
+  const reference = karaokeReference(cueCounts);
+  const instrumentals = cueCounts.filter((t) => t.media_type === 'instrumental');
   const karaokeLines = preview.data ? syncLines((preview.data as PublishedHymn).sections) : [];
 
   return (
@@ -504,10 +522,10 @@ export default async function HymnEditorPage({
           <section className={ui.card} id="audio">
             <h2 className={ui.h2}>Enregistrements audio</h2>
             <p className={ui.hint}>
-              Déposer d’abord le fichier sur Backblaze B2, puis indiquer ici son chemin dans le
-              compartiment (par exemple <code>cantiques/0037bis/melodie.mp3</code>). Un
-              enregistrement est diffusé à la prochaine publication, sans repasser le cantique en
-              brouillon ; un enregistrement aux droits « Restreint » n’est jamais diffusé.
+              Un enregistrement est diffusé à la prochaine publication, sans repasser le cantique en
+              brouillon ; un enregistrement aux droits « Restreint » n’est jamais diffusé. Pour le
+              karaoké, ajouter aussi la version « Instrumental » (sans la voix) : l’application la
+              joue à la place de l’enregistrement principal, avec sa synchronisation.
             </p>
             {(audio.data ?? []).length === 0 && <p className={ui.muted}>Aucun.</p>}
             {(audio.data ?? []).map((track) => {
@@ -517,6 +535,14 @@ export default async function HymnEditorPage({
               const url = audioUrl(track.storage_key);
               const label = MEDIA_LABELS[track.media_type] ?? track.media_type;
               const lineCues = segments.filter((g) => g.line_index != null).length;
+              const karaokeNote =
+                track.media_type === 'instrumental' && lineCues === 0
+                  ? reference
+                    ? `Karaoké : joué à la place de « ${MEDIA_LABELS[reference.media_type] ?? reference.media_type} », avec sa synchronisation (rien à faire, sauf si les temps diffèrent : synchroniser alors cet instrumental).`
+                    : 'Karaoké : synchroniser d’abord l’enregistrement principal (avec la voix) ; cet instrumental reprendra ses temps.'
+                  : track.id === reference?.id && instrumentals.some((t) => t.lineCues === 0)
+                    ? 'Karaoké : l’application joue l’instrumental avec cette synchronisation.'
+                    : null;
               return (
                 <div key={track.id} className={styles.section}>
                   <div className={styles.sectionHead}>
@@ -586,6 +612,7 @@ export default async function HymnEditorPage({
                     </label>
                     <SubmitButton>Enregistrer</SubmitButton>
                   </form>
+                  {karaokeNote && <p className={ui.hint}>{karaokeNote}</p>}
                   {lineCues > 0 ? (
                     <form action={saveAudioSegmentsAction} className={ui.row}>
                       <input type="hidden" name="hymn_id" value={id} />
@@ -682,8 +709,27 @@ export default async function HymnEditorPage({
                 </div>
               );
             })}
-            <details className={styles.add}>
+            <details className={styles.add} open={(audio.data ?? []).length === 0}>
               <summary>Ajouter un enregistrement</summary>
+              {uploadEnabled ? (
+                <AudioUpload
+                  hymnId={id}
+                  mediaLabels={MEDIA_LABELS}
+                  rightsLabels={RIGHTS_LABELS}
+                  className={styles.grid}
+                  prepare={prepareAudioUploadAction}
+                  attach={addAudioTrackAction}
+                />
+              ) : (
+                <p className={ui.muted}>
+                  Envoi direct indisponible : clé Backblaze (B2_KEY_ID, B2_APPLICATION_KEY) ou
+                  adresse des enregistrements (AUDIO_BASE_URL) non configurée. Déposer le fichier
+                  sur Backblaze, puis indiquer son chemin ci-dessous.
+                </p>
+              )}
+            </details>
+            <details className={styles.add}>
+              <summary>Fichier déjà sur Backblaze : indiquer son chemin</summary>
               <form action={addAudioTrackAction} className={styles.grid}>
                 <input type="hidden" name="hymn_id" value={id} />
                 <label className={ui.field}>

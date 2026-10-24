@@ -229,7 +229,7 @@ describe.skipIf(!ready)('parcours administrateur (navigateur réel)', () => {
     );
     expect(login.headers.get('x-frame-options')).toBe('DENY');
     expect(login.headers.get('content-security-policy')).toContain(
-      'media-src https://media.invalid',
+      'media-src blob: https://media.invalid',
     );
 
     // Session sans second facteur → page MFA → code TOTP → tableau de bord.

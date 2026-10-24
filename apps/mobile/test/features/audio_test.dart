@@ -8,6 +8,7 @@ import 'package:louanges_a_dieu/core/catalog/published_hymn.dart';
 import 'package:louanges_a_dieu/core/preferences/preferences.dart';
 import 'package:louanges_a_dieu/features/audio/audio_downloads.dart';
 import 'package:louanges_a_dieu/features/audio/audio_player.dart';
+import 'package:louanges_a_dieu/features/audio/karaoke_screen.dart';
 
 import '../support/app_harness.dart';
 import '../support/catalog_fixtures.dart';
@@ -203,6 +204,20 @@ List<Map<String, Object?>> hymnsWithKaraoke() {
     'storageKey': 'cantiques/0002/accompagnement.mp3',
     'durationSeconds': 40,
     'segments': cues,
+  });
+  return hymns;
+}
+
+/// Comme [hymnsWithKaraoke], plus un instrumental non synchronisé.
+List<Map<String, Object?>> hymnsWithInstrumental() {
+  final hymns = hymnsWithKaraoke();
+  final hymn = hymns.firstWhere((h) => h['numberLabel'] == '2');
+  (hymn['audio']! as List<Object?>).add({
+    'id': '00000000-0000-4000-8000-0000000a0004',
+    'mediaType': 'instrumental',
+    'storageKey': 'cantiques/0002/instrumental.mp3',
+    'durationSeconds': 40,
+    'segments': <Object?>[],
   });
   return hymns;
 }
@@ -577,6 +592,90 @@ void main() {
       expect(downloads.files, isEmpty);
     },
     hymns: hymnsWithAudio(),
+    env: _audioEnv,
+    overrides: fakes,
+  );
+
+  group('pistes du karaoké', () {
+    PublishedHymn hymn(List<Map<String, Object?>> hymns) =>
+        PublishedHymn.fromJson(
+          hymns.firstWhere((h) => h['numberLabel'] == '2'),
+        );
+
+    test('sans instrumental : l’accompagnement synchronisé', () {
+      final tracks = karaokeTracks(hymn(hymnsWithKaraoke()));
+      expect(tracks.map((t) => t.mediaType), [MediaType.accompaniment]);
+    });
+
+    test('instrumental non synchronisé : choisi d’abord, avec la '
+        'synchronisation de l’enregistrement principal', () {
+      final h = hymn(hymnsWithInstrumental());
+      final tracks = karaokeTracks(h);
+      expect(tracks.map((t) => t.mediaType), [
+        MediaType.instrumental,
+        MediaType.accompaniment,
+      ]);
+      expect(tracks.first.storageKey, 'cantiques/0002/instrumental.mp3');
+      expect(karaokeLines(h, tracks.first), hasLength(6));
+      expect(
+        karaokeLines(h, tracks.first).first.start,
+        const Duration(seconds: 2),
+      );
+    });
+
+    test('instrumental synchronisé : sa propre synchronisation', () {
+      final hymns = hymnsWithInstrumental();
+      final audio =
+          hymns.firstWhere((h) => h['numberLabel'] == '2')['audio']!
+              as List<Object?>;
+      final instrumental = audio.last! as Map<String, Object?>;
+      final accompaniment = audio[audio.length - 2]! as Map<String, Object?>;
+      instrumental['segments'] = [
+        for (final c in accompaniment['segments']! as List<Object?>)
+          {
+            ...(c! as Map<String, Object?>),
+            'startMs': ((c as Map)['startMs'] as int) + 1000,
+            'endMs': (c['endMs'] as int) + 1000,
+          },
+      ];
+      final h = hymn(hymns);
+      expect(
+        karaokeLines(h, karaokeTracks(h).first).first.start,
+        const Duration(seconds: 3),
+      );
+    });
+
+    test('instrumental seul, sans piste synchronisée : pas de karaoké', () {
+      final hymns = hymnsWithAudio();
+      final h = hymns.firstWhere((h) => h['numberLabel'] == '2');
+      h['audio'] = [
+        {
+          'id': '00000000-0000-4000-8000-0000000a0004',
+          'mediaType': 'instrumental',
+          'storageKey': 'cantiques/0002/instrumental.mp3',
+          'durationSeconds': 40,
+          'segments': <Object?>[],
+        },
+      ];
+      expect(karaokeTracks(PublishedHymn.fromJson(h)), isEmpty);
+    });
+  });
+
+  testApp(
+    'karaoké : l’instrumental est joué, avec les vers de l’enregistrement',
+    (tester, _) async {
+      await openHymn(tester, '2', 'L’Éternel est mon berger');
+      await tester.tap(find.text('Chanter'));
+      await idle(tester);
+      expect(
+        player.opened.last.toString(),
+        '$_base/cantiques/0002/instrumental.mp3',
+      );
+      await player.seek(const Duration(seconds: 3));
+      await idle(tester);
+      expect(find.text('L’Éternel est mon berger,'), findsWidgets);
+    },
+    hymns: hymnsWithInstrumental(),
     env: _audioEnv,
     overrides: fakes,
   );

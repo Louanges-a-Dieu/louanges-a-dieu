@@ -25,8 +25,34 @@ qu'un cantique n'a pas d'enregistrement publié, le bouton « Écouter » n'appa
    devant le compartiment. Seule `AUDIO_BASE_URL` change ; les données restent les mêmes.
 
 Aucune clé d'application Backblaze n'est nécessaire dans l'app : elle ne fait que lire des
-fichiers publics. Une clé d'écriture ne servira qu'à un futur outil de dépôt du back-office, et
-restera côté serveur.
+fichiers publics. Seul le back-office a une clé d'écriture (envoi depuis la fiche, ci-dessous),
+gardée côté serveur.
+
+## 1 bis. Envoi depuis le back-office (une seule fois, propriétaire)
+
+Le fichier part directement du navigateur vers Backblaze (il ne passe pas par Vercel, limité à
+4,5 Mo par envoi) ; le serveur du back-office ne fait que préparer une adresse d'envoi.
+
+1. **Application Keys → Add a New Application Key** :
+   - nom : `back-office` ; **Allow access to Bucket(s)** : `CantiquesEA` seulement ;
+   - **Type of Access : Read and Write** ; le reste vide.
+   - Backblaze affiche une seule fois le `keyID` et l'`applicationKey` : les garder dans le
+     gestionnaire de mots de passe. **Ne jamais les coller dans une conversation.**
+2. **Vercel → louanges-admin → Settings → Environment Variables** : `B2_KEY_ID` et
+   `B2_APPLICATION_KEY` (cocher « Sensitive »), puis **Redeploy**. Pour le back-office local,
+   les ajouter à `apps/admin/.env.local`. `AUDIO_BASE_URL` doit aussi être renseignée : elle
+   donne le nom du compartiment (sinon `B2_BUCKET`).
+3. **Autoriser les envois du navigateur** (règle CORS, impossible depuis le tableau de bord
+   Backblaze) : dans l'app Terminal,
+
+   ```
+   cd ~/louanges-a-dieu && ~/.local/bin/node tools/backblaze/autoriser-envoi.mts
+   ```
+
+   Le script demande une clé (saisie masquée, jamais enregistrée). Il faut le droit de modifier
+   le compartiment : si la clé `back-office` est refusée, créer une clé temporaire **All
+   buckets / Read and Write**, relancer, puis **supprimer** cette clé temporaire. Les autres
+   règles CORS du compartiment sont conservées.
 
 ## 2. Préparer et déposer les fichiers
 
@@ -41,7 +67,13 @@ restera côté serveur.
 
 ## 3. Rattacher un enregistrement à un cantique (back-office)
 
-Fiche du cantique → **Enregistrements audio** → **Ajouter un enregistrement** :
+**Envoi direct** (si 1 bis est fait) : fiche du cantique → **Enregistrements audio** →
+**Ajouter un enregistrement** → choisir le fichier sur l'ordinateur, la version et les droits
+(la durée est lue sur le fichier) → **Envoyer et ajouter**. Le fichier est rangé sous
+`cantiques/<numéro>/<version>.mp3` (`-2`, `-3`… si ce nom est déjà pris : rien n'est jamais
+écrasé), puis rattaché au cantique.
+
+**Fichier déjà sur Backblaze** : **Fichier déjà sur Backblaze : indiquer son chemin** :
 
 - **Chemin du fichier** : chemin dans le compartiment, par exemple `cantiques/0006/melodie.mp3`
   (jamais l'adresse web complète : elle est refusée).
@@ -50,8 +82,8 @@ Fiche du cantique → **Enregistrements audio** → **Ajouter un enregistrement*
 - **Durée** : facultative (« 3:05 ») ; l'app la lit sur le fichier.
 - **Droits** : un enregistrement « Restreint » n'est jamais diffusé.
 
-Si `AUDIO_BASE_URL` est configurée pour le back-office, un lecteur permet d'écouter le fichier
-directement sur la fiche (vérification du chemin).
+Si `AUDIO_BASE_URL` est configurée pour le back-office, le chemin est vérifié (un fichier
+introuvable est refusé) et un lecteur permet d'écouter le fichier directement sur la fiche.
 
 **Passages** (facultatif) : une ligne par début de passage, puis la fin.
 
@@ -74,9 +106,16 @@ début de chaque vers surligné (les vers suivent l'ordre chanté, refrain aprè
 **P** dès que le chant s'arrête avant un passage instrumental (le vers s'éteint ; l'app affiche « Reprise dans N s ») ; **S** si l'enregistrement ne chante pas ce vers ; **Retour arrière** pour annuler le dernier
 appui ; **Entrée** à la fin. Vérifier les temps affichés, puis « Enregistrer la
 synchronisation ». L'app propose alors le **Karaoké** : le vers chanté en grand, rempli au rythme
-du chant, avec le précédent et les suivants ; une version « Accompagnement » synchronisée est
-choisie d'abord. Une synchronisation vers par vers remplace les passages par section (et sert
-aussi à mettre en avant les paroles dans l'écoute normale).
+du chant, avec le précédent et les suivants. Une synchronisation vers par vers remplace les
+passages par section (et sert aussi à mettre en avant les paroles dans l'écoute normale).
+
+**Instrumental pour le karaoké** : ajouter l'enregistrement sans la voix en version
+**Instrumental**. S'il existe, l'app le joue d'abord dans le karaoké ; sinon un
+« Accompagnement » synchronisé, sinon l'enregistrement principal. Un instrumental non
+synchronisé reprend les temps de l'enregistrement principal synchronisé (la Mélodie d'abord) :
+rien à faire s'il s'agit du même arrangement. Si ses temps diffèrent (introduction plus longue,
+autre tempo), le synchroniser lui-même (outil karaoké sur sa piste, en suivant le chant de
+mémoire). Les autres versions restent proposées au choix dans le karaoké.
 
 Puis **publier** : l'enregistrement part avec la release suivante. Ajouter, modifier ou retirer
 un enregistrement ne repasse **pas** le cantique en brouillon (le texte n'a pas changé) ; tout

@@ -1,0 +1,6 @@
+.progress {
+  display: block;
+  width: 100%;
+  margin-top: var(--lad-space-sm);
+  accent-color: var(--lad-color-gold-text);
+}

@@ -21,8 +21,8 @@ import 'karaoke_projection.dart';
 /// Karaoké (en plus de l'écoute) : sur une piste synchronisée ligne par
 /// ligne, le vers chanté s'affiche en grand et se remplit au rythme du chant ;
 /// le précédent et les suivants restent visibles, plus discrets. Fond sombre,
-/// comme l'écran projeté. La version « Accompagnement » est choisie d'abord
-/// quand elle est synchronisée.
+/// comme l'écran projeté. L'instrumental est choisi d'abord (voir
+/// [karaokeTracks]), sinon l'accompagnement, sinon l'enregistrement principal.
 class KaraokeScreen extends ConsumerWidget {
   const KaraokeScreen({super.key, required this.hymnId});
 
@@ -106,6 +106,47 @@ List<KaraokeLine> karaokeLines(PublishedHymn hymn, AudioTrack track) {
   ];
 }
 
+/// Pistes du karaoké, la préférée en premier : l'instrumental, puis
+/// l'accompagnement, puis les autres pistes synchronisées vers par vers. Un
+/// instrumental sans synchronisation propre reprend celle de l'enregistrement
+/// principal (la mélodie d'abord) : même arrangement, sans la voix.
+List<AudioTrack> karaokeTracks(PublishedHymn hymn) {
+  final synced = [
+    for (final t in hymn.audio)
+      if (t.hasLineCues) t,
+  ];
+  final main = [
+    for (final t in synced)
+      if (t.mediaType != MediaType.instrumental) t,
+  ];
+  final reference = main
+      .where((t) => t.mediaType == MediaType.melody)
+      .followedBy(main)
+      .firstOrNull;
+  final tracks = [
+    for (final t in hymn.audio)
+      if (t.hasLineCues)
+        t
+      else if (t.mediaType == MediaType.instrumental && reference != null)
+        AudioTrack(
+          id: t.id,
+          mediaType: t.mediaType,
+          storageKey: t.storageKey,
+          duration: t.duration,
+          segments: reference.segments,
+        ),
+  ];
+  int rank(AudioTrack t) => switch (t.mediaType) {
+    MediaType.instrumental => 0,
+    MediaType.accompaniment => 1,
+    _ => 2,
+  };
+  // Tri stable : l'ordre de publication départage les pistes de même rang.
+  return [
+    for (final r in [0, 1, 2]) ...tracks.where((t) => rank(t) == r),
+  ];
+}
+
 /// Vers en cours à [position], ou `null` (introduction, interlude, fin).
 int? currentLine(List<KaraokeLine> lines, Duration position) {
   for (var i = 0; i < lines.length; i++) {
@@ -125,14 +166,8 @@ class _Karaoke extends ConsumerStatefulWidget {
 
 class _KaraokeState extends ConsumerState<_Karaoke> {
   late final HymnAudioPlayer _player = ref.read(audioPlayerProvider);
-  late final List<AudioTrack> _tracks = [
-    for (final t in widget.hymn.audio)
-      if (t.hasLineCues) t,
-  ];
-  late AudioTrack _track = _tracks.firstWhere(
-    (t) => t.mediaType == MediaType.accompaniment,
-    orElse: () => _tracks.first,
-  );
+  late final List<AudioTrack> _tracks = karaokeTracks(widget.hymn);
+  late AudioTrack _track = _tracks.first;
   late List<KaraokeLine> _lines = karaokeLines(widget.hymn, _track);
   Duration? _dragging;
 

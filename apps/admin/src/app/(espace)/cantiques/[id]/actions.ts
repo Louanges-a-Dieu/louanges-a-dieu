@@ -4,8 +4,17 @@ import { StorageKey } from '@lad/shared-contracts';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
-import { parseDuration, parseSegments } from '@/lib/audio';
+import {
+  AUDIO_CONTENT_TYPES,
+  MAX_AUDIO_BYTES,
+  audioExtension,
+  audioUrl,
+  parseDuration,
+  parseSegments,
+  uploadKey,
+} from '@/lib/audio';
 import { requireEditor } from '@/lib/auth';
+import { b2Config, b2ErrorMessage, fileExists, uploadTarget } from '@/lib/backblaze';
 import { back, errorMessage } from '@/lib/redirect';
 import { normalizeSectionText, themeSlug } from '@/lib/text';
 import {
@@ -406,9 +415,86 @@ export async function addAudioTrackAction(form: FormData) {
     back(page(hymnId), { erreur: 'Durée invalide : « 3:05 », ou laisser vide.' });
   }
   const { supabase } = await requireEditor();
+  // Chemin vérifié quand l'adresse publique est connue (erreur de frappe, majuscules).
+  const url = audioUrl(storage_key);
+  if (url && (await fileExists(url)) === false) {
+    back(page(hymnId), {
+      erreur: `Fichier introuvable sur Backblaze : « ${storage_key} » (vérifier le chemin, majuscules comprises).`,
+    });
+  }
   await run(hymnId, 'Enregistrement ajouté.', () =>
     supabase.from('audio_tracks').insert({ ...rest, storage_key, duration_seconds: seconds }),
   );
+}
+
+const UploadRequest = z.object({
+  hymn_id: Uuid,
+  media_type: MediaType,
+  file_name: z.string().min(1).max(300),
+  size: z.int().positive(),
+});
+
+export type UploadTicket =
+  | {
+      ok: true;
+      uploadUrl: string;
+      authorizationToken: string;
+      storageKey: string;
+      contentType: string;
+    }
+  | { ok: false; error: string };
+
+/**
+ * Prépare le dépôt d'un fichier choisi sur la fiche : chemin libre dans le
+ * compartiment et adresse d'envoi Backblaze. Le navigateur envoie ensuite le
+ * fichier lui-même, puis le rattache avec {@link addAudioTrackAction}.
+ */
+export async function prepareAudioUploadAction(request: {
+  hymn_id: string;
+  media_type: string;
+  file_name: string;
+  size: number;
+}): Promise<UploadTicket> {
+  const parsed = UploadRequest.safeParse(request);
+  if (!parsed.success) return { ok: false, error: 'Demande d’envoi invalide.' };
+  const { hymn_id, media_type, file_name, size } = parsed.data;
+  const ext = audioExtension(file_name);
+  if (!ext) return { ok: false, error: 'Format refusé : fichier .mp3, .m4a ou .aac uniquement.' };
+  if (size > MAX_AUDIO_BYTES) return { ok: false, error: 'Fichier trop lourd (100 Mo au plus).' };
+  const config = b2Config();
+  if (!config) return { ok: false, error: 'Envoi direct non configuré (clé Backblaze absente).' };
+
+  const { supabase } = await requireEditor();
+  const { data: hymn } = await supabase
+    .from('hymns')
+    .select('number_numeric, number_suffix')
+    .eq('id', hymn_id)
+    .maybeSingle();
+  if (!hymn) return { ok: false, error: 'Cantique introuvable.' };
+  const first = uploadKey(hymn, media_type, ext);
+  const { data: tracks } = await supabase
+    .from('audio_tracks')
+    .select('storage_key')
+    .like('storage_key', `${first.slice(0, first.lastIndexOf('/') + 1)}%`);
+
+  // Jamais d'écrasement : ni un chemin déjà rattaché, ni un fichier déjà présent.
+  const taken = new Set((tracks ?? []).map((t) => t.storage_key));
+  let storageKey: string | null = null;
+  for (let attempt = 1; attempt <= 20 && !storageKey; attempt++) {
+    const key = uploadKey(hymn, media_type, ext, attempt);
+    if (taken.has(key)) continue;
+    const url = audioUrl(key);
+    if (url && (await fileExists(url)) === true) continue;
+    storageKey = key;
+  }
+  if (!storageKey) return { ok: false, error: 'Trop de fichiers pour cette version du cantique.' };
+
+  try {
+    const target = await uploadTarget(config);
+    return { ok: true, ...target, storageKey, contentType: AUDIO_CONTENT_TYPES[ext]! };
+  } catch (error) {
+    return { ok: false, error: b2ErrorMessage(error) };
+  }
 }
 
 const AudioTrackUpdate = z.object({

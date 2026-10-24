@@ -4,12 +4,15 @@ import { describe, expect, it } from 'vitest';
 
 import { HymnPreview } from '../src/components/hymn-preview';
 import {
+  audioExtension,
   formatClock,
   formatSegments,
+  karaokeReference,
   parseClock,
   parseDuration,
   parseSegments,
   syncLines,
+  uploadKey,
 } from '../src/lib/audio';
 import { canPause, cuesFromTaps, replay, type SyncEvent } from '../src/lib/karaoke';
 import { normalizeSectionText, sectionName, themeSlug } from '../src/lib/text';
@@ -116,6 +119,28 @@ describe('aperçu comme sur mobile', () => {
 });
 
 describe('enregistrements audio', () => {
+  it('chemin d’un fichier déposé : numéro sur 4 chiffres, suffixe, version sans accent', () => {
+    expect(uploadKey({ number_numeric: 37, number_suffix: 'bis' }, 'melody', 'mp3')).toBe(
+      'cantiques/0037bis/melodie.mp3',
+    );
+    expect(uploadKey({ number_numeric: 1100, number_suffix: null }, 'bass', 'm4a', 2)).toBe(
+      'cantiques/1100/basse-2.m4a',
+    );
+    expect(uploadKey({ number_numeric: 6, number_suffix: ' Tér ' }, 'choir', 'aac')).toBe(
+      'cantiques/0006ter/chorale.aac',
+    );
+    expect(uploadKey({ number_numeric: 6, number_suffix: null }, 'inconnu', 'mp3')).toBe(
+      'cantiques/0006/enregistrement.mp3',
+    );
+  });
+
+  it('extension acceptée : mp3, m4a, aac (casse indifférente)', () => {
+    expect(audioExtension('Vieux Pèlerin.MP3')).toBe('mp3');
+    expect(audioExtension('chant.m4a')).toBe('m4a');
+    expect(audioExtension('chant.wav')).toBeNull();
+    expect(audioExtension('mp3')).toBeNull();
+  });
+
   const sections = [
     { id: 's1', section_type: 'verse', section_number: 1 },
     { id: 's2', section_type: 'refrain', section_number: null },
@@ -262,5 +287,16 @@ describe('karaoké : synchronisation vers par vers', () => {
       { section_id: 'c1', line_index: 1, start_ms: 4000, end_ms: 7000 },
       { section_id: 'r', line_index: 0, start_ms: 20000, end_ms: 25000 },
     ]);
+  });
+});
+
+describe('karaoké : instrumental', () => {
+  it('reprend la mélodie synchronisée d’abord, sinon une autre piste synchronisée', () => {
+    const t = (media_type: string, lineCues: number) => ({ media_type, lineCues });
+    expect(karaokeReference([t('instrumental', 0), t('choir', 4), t('melody', 6)])).toEqual(
+      t('melody', 6),
+    );
+    expect(karaokeReference([t('instrumental', 5), t('choir', 4)])).toEqual(t('choir', 4));
+    expect(karaokeReference([t('instrumental', 5), t('melody', 0)])).toBeNull();
   });
 });

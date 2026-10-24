@@ -11,3 +11,10 @@ porte une clé `audio` pour les seuls cantiques qui ont un enregistrement diffus
 restreints). L'app compose l'adresse avec `AUDIO_BASE_URL` (HTTPS) ; si elle est vide, aucun
 bouton « Écouter » n'apparaît. Les sauvegardes de la base restent un sujet distinct.
 
+
+**Complément (2026-10-24, propriétaire).** Dépôt depuis le back-office : le navigateur envoie le
+fichier directement à Backblaze (API native, `b2_upload_file`, règle CORS
+`envoi-back-office`) avec une adresse d'envoi préparée par le serveur. La clé B2 (restreinte au
+compartiment, lecture et écriture) reste côté serveur : exception limitée à ADR-011, qui ne
+concerne que les clés Supabase. Karaoké : l'app préfère l'instrumental, qui reprend la
+synchronisation de l'enregistrement principal s'il n'a pas la sienne.
