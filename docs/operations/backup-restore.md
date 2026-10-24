@@ -15,27 +15,43 @@ empreinte du catalogue publié). Une sauvegarde qui ne se restaure pas à l'iden
 
 ## Mise en service (propriétaire, une fois)
 
-1. **Clé de chiffrement** (sur votre ordinateur) : `age-keygen -o louanges-backup.key`.
-   La ligne « public key: age1… » est la clé publique ; le fichier est la clé **privée** :
-   la ranger dans le coffre de mots de passe **et** sur un support hors ligne. Sans elle,
-   aucune sauvegarde ne peut être relue.
-2. **Cloudflare R2** (compte au nom du projet) : créer le bucket `louanges-sauvegardes`,
-   une règle de cycle de vie (suppression après 180 jours), et un jeton API « Object Read &
-   Write » limité à ce bucket.
-3. **GitHub** (dépôt → Settings → Environments → `production`) :
-   - secrets : `SUPABASE_DB_URL` (chaîne de connexion de la base de production, mode
-     « session », port 5432), `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` ;
-   - variables : `BACKUP_AGE_RECIPIENT` (clé publique age), `R2_ENDPOINT`
-     (`https://<compte>.r2.cloudflarestorage.com`), `R2_BACKUP_BUCKET`.
-4. Lancer une première fois **à la main** (Actions → sauvegarde → Run workflow) et vérifier
+Seule la **clé de chiffrement** est indispensable : l'accès à la base reprend les secrets du
+déploiement (`SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD`, `SUPABASE_ACCESS_TOKEN`), et tant
+que Cloudflare R2 n'est pas configuré, chaque archive chiffrée est gardée **30 jours** dans
+GitHub (Actions → sauvegarde → exécution → *Artifacts*). Sans clé, le workflow échoue avec un
+message « Sauvegarde non configurée ».
+
+1. **Clé de chiffrement** (app Terminal ; `age` est installé dans `~/.local/bin`) :
+
+   ```
+   ~/.local/bin/age-keygen -o ~/Documents/louanges-sauvegarde.key
+   ```
+
+   La ligne « Public key: age1… » est la clé **publique** (elle peut être partagée). Le
+   fichier est la clé **privée** : la ranger dans le coffre de mots de passe **et** sur un
+   support hors ligne (clé USB), puis l'effacer de Documents. Sans elle, aucune sauvegarde ne
+   peut être relue ; ne jamais la transmettre par messagerie.
+2. **GitHub** (dépôt → Settings → Environments → `production` → Variables) :
+   `BACKUP_AGE_RECIPIENT` = la clé publique `age1…`.
+3. Lancer une première fois **à la main** (Actions → sauvegarde → Run workflow) et vérifier
    le message « Restauration vérifiée ».
+4. **Plus tard, facultatif — Cloudflare R2** (conservation longue) : créer le bucket
+   `louanges-sauvegardes`, une règle de cycle de vie (suppression après 180 jours) et un jeton
+   API « Object Read & Write » limité à ce bucket ; puis, dans l'environnement `production` :
+   secrets `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` ; variables `R2_ENDPOINT`
+   (`https://<compte>.r2.cloudflarestorage.com`) et `R2_BACKUP_BUCKET`. Dès que
+   `R2_BACKUP_BUCKET` existe, les archives partent vers R2 au lieu de GitHub.
+
+Facultatif : un secret `SUPABASE_DB_URL` (chaîne de connexion, mode « session », port 5432)
+remplace l'adresse déduite automatiquement.
 
 ## Restaurer après un incident
 
 1. Créer un **nouveau** projet Supabase (même région `eu-west-1`), noter sa chaîne de
    connexion `NOUVELLE_URL`.
-2. Télécharger l'archive voulue depuis R2, puis la déchiffrer :
-   `age --decrypt -i louanges-backup.key -o sauvegarde.tar.gz <archive>.tar.gz.age`
+2. Télécharger l'archive voulue depuis R2 (ou depuis les *Artifacts* GitHub), puis la
+   déchiffrer :
+   `age --decrypt -i louanges-sauvegarde.key -o sauvegarde.tar.gz <archive>.tar.gz.age`
    et `tar -xzf sauvegarde.tar.gz`.
 3. Restaurer (psql 17) :
 

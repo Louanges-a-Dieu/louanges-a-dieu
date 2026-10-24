@@ -2,7 +2,10 @@
 # gratuite de Supabase n'en fait pas (décision du 2026-10-22).
 # Rôles, schéma et données (méthode officielle Supabase), RESTAURATION
 # VÉRIFIÉE à chaque fois dans une base neuve, chiffrement « age » (clé privée
-# détenue hors ligne par le propriétaire), envoi vers Cloudflare R2.
+# détenue hors ligne par le propriétaire), envoi vers Cloudflare R2 ou, tant
+# que R2 n'est pas configuré, conservation 30 jours comme artefact GitHub
+# (archive chiffrée). Seule la clé publique age est indispensable : l'accès à
+# la base reprend les secrets du déploiement (SUPABASE_DB_URL facultative).
 # Procédure complète : docs/operations/backup-restore.md
 name: sauvegarde
 
@@ -24,47 +27,92 @@ jobs:
     runs-on: ubuntu-24.04
     environment: production
     timeout-minutes: 45
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+      R2_BUCKET: ${{ vars.R2_BACKUP_BUCKET }}
     steps:
       - uses: actions/checkout@v7
+
+      # Message clair plutôt qu'une erreur de connexion obscure.
+      - name: Configuration
+        env:
+          HAS_DB_URL: ${{ secrets.SUPABASE_DB_URL != '' }}
+        run: |
+          missing=()
+          [ -n "$BACKUP_AGE_RECIPIENT" ] || missing+=("variable BACKUP_AGE_RECIPIENT (clé publique age)")
+          if [ "$HAS_DB_URL" != true ]; then
+            [ -n "$SUPABASE_PROJECT_REF" ] || missing+=("variable SUPABASE_PROJECT_REF")
+            [ -n "$SUPABASE_DB_PASSWORD" ] || missing+=("secret SUPABASE_DB_PASSWORD")
+            [ -n "$SUPABASE_ACCESS_TOKEN" ] || missing+=("secret SUPABASE_ACCESS_TOKEN")
+          fi
+          if [ ${#missing[@]} -gt 0 ]; then
+            for m in "${missing[@]}"; do
+              echo "::error::Sauvegarde non configurée : ${m} manquant dans l'environnement « production » (docs/operations/backup-restore.md)."
+            done
+            exit 1
+          fi
 
       - uses: supabase/setup-cli@v3
         with:
           version: 2.121.0
 
+      - name: Connexion à la base
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          url="$SUPABASE_DB_URL"
+          if [ -z "$url" ]; then
+            # Adresse du pooler (mode session) relevée par la CLI, mot de passe ajouté.
+            supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD" > /dev/null
+            url=$(python3 -I tools/backup/db-url.py)
+          fi
+          echo "::add-mask::$url"
+          echo "DB_URL=$url" >> "$GITHUB_ENV"
+
       - name: Outils (psql, age)
         run: sudo apt-get update -q && sudo apt-get install -y -q postgresql-client age
 
       - name: Empreinte de la source puis export
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           mkdir -p sauvegarde
-          psql "$SUPABASE_DB_URL" --no-align --tuples-only --file tools/backup/counts.sql \
+          psql "$DB_URL" --no-align --tuples-only --file tools/backup/counts.sql \
             > sauvegarde/source-counts.txt
-          supabase db dump --db-url "$SUPABASE_DB_URL" --role-only -f sauvegarde/roles.sql
-          supabase db dump --db-url "$SUPABASE_DB_URL" -f sauvegarde/schema.sql
-          supabase db dump --db-url "$SUPABASE_DB_URL" --data-only --use-copy -f sauvegarde/data.sql
+          supabase db dump --db-url "$DB_URL" --role-only -f sauvegarde/roles.sql
+          supabase db dump --db-url "$DB_URL" -f sauvegarde/schema.sql
+          supabase db dump --db-url "$DB_URL" --data-only --use-copy -f sauvegarde/data.sql
 
       - name: Restauration vérifiée dans une base neuve
         run: tools/backup/verify-restore.sh sauvegarde
 
       - name: Chiffrement
-        env:
-          BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
         run: |
-          test -n "$BACKUP_AGE_RECIPIENT"
           name="louanges-a-dieu-$(date -u +%Y-%m-%dT%H%MZ).tar.gz.age"
           tar -czf - sauvegarde | age --recipient "$BACKUP_AGE_RECIPIENT" --output "$name"
           echo "ARCHIVE=$name" >> "$GITHUB_ENV"
           rm -rf sauvegarde
 
       - name: Envoi vers Cloudflare R2
+        if: env.R2_BUCKET != ''
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
           R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}
-          R2_BUCKET: ${{ vars.R2_BACKUP_BUCKET }}
         run: |
           aws s3 cp "$ARCHIVE" "s3://${R2_BUCKET}/supabase/${ARCHIVE}" --endpoint-url "$R2_ENDPOINT"
           echo "Sauvegarde envoyée : ${ARCHIVE}"
+
+      # Sans R2 : archive chiffrée gardée 30 jours dans GitHub (Actions → exécution → Artifacts).
+      - name: Conservation dans GitHub (R2 non configuré)
+        if: env.R2_BUCKET == ''
+        run: echo "::warning::R2 non configuré, archive gardée 30 jours comme artefact GitHub."
+      - uses: actions/upload-artifact@v7
+        if: env.R2_BUCKET == ''
+        with:
+          name: ${{ env.ARCHIVE }}
+          path: ${{ env.ARCHIVE }}
+          retention-days: 30
+          if-no-files-found: error
