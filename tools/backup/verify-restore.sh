@@ -44,6 +44,17 @@ select format('create role %I nologin', :'role')
 SQL
 done
 
+# Schémas auth et storage de l'image remplacés par ceux de la source : leurs
+# tables suivent la version des services Supabase, plus récente que l'image.
+if [ -f "$dir/managed-schema.sql" ]; then
+  echo "Schémas auth et storage remis à la version de la source…"
+  psql "$admin" --quiet --single-transaction --variable ON_ERROR_STOP=1 \
+    --command 'drop schema if exists auth cascade' \
+    --command 'drop schema if exists storage cascade' \
+    --file "$dir/managed-schema.sql"
+fi
+echo "Données présentes : $(grep -oE '^COPY "?[a-z_]+"?\.' "$dir/data.sql" | sed -E 's/^COPY //; s/[".]//g' | sort | uniq -c | tr -s ' ' | tr '\n' ',')"
+
 echo "Restauration (rôles, schéma, données) dans une base neuve…"
 psql "$admin" --quiet --single-transaction --variable ON_ERROR_STOP=1 \
   --file "$dir/roles.sql" \

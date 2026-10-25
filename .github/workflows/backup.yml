@@ -83,6 +83,9 @@ jobs:
           supabase db dump --db-url "$DB_URL" --role-only -f sauvegarde/roles.sql
           supabase db dump --db-url "$DB_URL" -f sauvegarde/schema.sql
           supabase db dump --db-url "$DB_URL" --data-only --use-copy -f sauvegarde/data.sql
+          # Structure des schémas gérés par Supabase (auth, storage), à la version de la
+          # source : sert à la restauration vérifiée (un projet neuf les a déjà).
+          supabase db dump --db-url "$DB_URL" --schema auth,storage -f sauvegarde/managed-schema.sql
 
       - name: Restauration vérifiée dans une base neuve
         run: tools/backup/verify-restore.sh sauvegarde
