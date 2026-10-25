@@ -8,7 +8,9 @@
 | Projet | **Sauvegarde quotidienne** (offre gratuite : aucune sauvegarde Supabase) : rôles, schéma, données ; **restauration vérifiée** à chaque fois dans une base Supabase neuve de même version ; archive chiffrée (age) | `.github/workflows/backup.yml` → Cloudflare R2 |
 
 La vérification restaure l'export complet dans un conteneur `supabase/postgres` neuf
-(`tools/backup/verify-restore.sh`) et compare son empreinte à celle relevée sur la source
+(`tools/backup/verify-restore.sh`, en super-utilisateur ; structure prise dans
+`verification-schema.sql`, qui contient aussi les schémas `auth` et `storage` à la version de la
+source, l'image étant plus ancienne que les services Supabase) et compare son empreinte à celle relevée sur la source
 (`tools/backup/counts.sql` : nombre de lignes des tables importantes, dernière release,
 empreinte du catalogue publié). Une sauvegarde qui ne se restaure pas à l'identique fait
 **échouer** le workflow (notification GitHub).
