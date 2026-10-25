@@ -44,21 +44,28 @@ select format('create role %I nologin', :'role')
 SQL
 done
 
-# Schémas auth et storage de l'image remplacés par ceux de la source : leurs
-# tables suivent la version des services Supabase, plus récente que l'image.
-if [ -f "$dir/managed-schema.sql" ]; then
-  echo "Schémas auth et storage remis à la version de la source…"
-  psql "$admin" --quiet --single-transaction --variable ON_ERROR_STOP=1 \
-    --command 'drop schema if exists auth cascade' \
-    --command 'drop schema if exists storage cascade' \
-    --file "$dir/managed-schema.sql"
-fi
 echo "Données présentes : $(grep -oE '^COPY "?[a-z_]+"?\.' "$dir/data.sql" | sed -E 's/^COPY //; s/[".]//g' | sort | uniq -c | tr -s ' ' | tr '\n' ',')"
+
+# Structure : de préférence l'export complet (verification-schema.sql), qui
+# remplace les schémas auth et storage de l'image (leurs tables suivent la
+# version des services Supabase, plus récente que l'image) ; extensions
+# reprises de schema.sql.
+schema=("--file" "$dir/schema.sql")
+if [ -f "$dir/verification-schema.sql" ]; then
+  grep -E '^CREATE EXTENSION' "$dir/schema.sql" > "$dir/extensions.sql" || true
+  schema=(
+    "--file" "$dir/extensions.sql"
+    "--command" "drop schema if exists auth cascade"
+    "--command" "drop schema if exists storage cascade"
+    "--command" "drop schema if exists supabase_migrations cascade"
+    "--file" "$dir/verification-schema.sql"
+  )
+fi
 
 echo "Restauration (rôles, schéma, données) dans une base neuve…"
 psql "$admin" --quiet --single-transaction --variable ON_ERROR_STOP=1 \
   --file "$dir/roles.sql" \
-  --file "$dir/schema.sql" \
+  "${schema[@]}" \
   --command 'set session_replication_role = replica' \
   --file "$dir/data.sql"
 
