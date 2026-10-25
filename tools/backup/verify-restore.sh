@@ -19,6 +19,9 @@ docker run -d --name "$name" -e POSTGRES_PASSWORD=postgres -p "127.0.0.1:${port}
 trap 'docker rm -f "$name" >/dev/null 2>&1 || true' EXIT
 
 url="postgresql://postgres:postgres@127.0.0.1:${port}/postgres"
+# Restauration en super-utilisateur : les rôles réservés de Supabase
+# (supabase_realtime_admin…) ne se modifient pas autrement.
+admin="postgresql://supabase_admin:postgres@127.0.0.1:${port}/postgres"
 for _ in $(seq 1 90); do
   pg_isready -d "$url" -q && break
   sleep 2
@@ -32,17 +35,17 @@ sleep 5
 created=$({ grep -oE 'CREATE ROLE ("[^"]+"|[A-Za-z_][A-Za-z0-9_$]*)' "$dir/roles.sql" || true; } |
   sed -E 's/^CREATE ROLE //; s/"//g' | sort -u)
 mentioned=$({ grep -oE '(ROLE|TO|GRANT|BY) ("[^"]+"|[A-Za-z_][A-Za-z0-9_$]*)' "$dir/roles.sql" || true; } |
-  sed -E 's/^[A-Z]+ //; s/"//g' | { grep -vE '^(DEFAULT|CURRENT_USER|SESSION_USER|PUBLIC)$' || true; } | sort -u)
+  sed -E 's/^[A-Z]+ //; s/"//g' | { grep -vE '^(DEFAULT|CURRENT_USER|SESSION_USER|PUBLIC|SET)$' || true; } | sort -u)
 echo "Rôles attendus avant restauration : $(echo $mentioned)"
 for role in $(comm -23 <(echo "$mentioned") <(echo "$created")); do
-  psql "$url" --quiet --variable ON_ERROR_STOP=1 --variable role="$role" <<'SQL'
+  psql "$admin" --quiet --variable ON_ERROR_STOP=1 --variable role="$role" <<'SQL'
 select format('create role %I nologin', :'role')
  where not exists (select 1 from pg_roles where rolname = :'role') \gexec
 SQL
 done
 
 echo "Restauration (rôles, schéma, données) dans une base neuve…"
-psql "$url" --quiet --single-transaction --variable ON_ERROR_STOP=1 \
+psql "$admin" --quiet --single-transaction --variable ON_ERROR_STOP=1 \
   --file "$dir/roles.sql" \
   --file "$dir/schema.sql" \
   --command 'set session_replication_role = replica' \
