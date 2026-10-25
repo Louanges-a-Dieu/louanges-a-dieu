@@ -29,10 +29,11 @@ sleep 5
 # Rôles des services Supabase (Realtime, Storage…) absents d'une image Postgres
 # seule, mais présents dans tout projet Supabase : créés vides au préalable,
 # pour que l'export des rôles (qui les modifie sans les créer) s'applique.
-created=$(grep -oE 'CREATE ROLE ("[^"]+"|[A-Za-z_][A-Za-z0-9_$]*)' "$dir/roles.sql" |
+created=$({ grep -oE 'CREATE ROLE ("[^"]+"|[A-Za-z_][A-Za-z0-9_$]*)' "$dir/roles.sql" || true; } |
   sed -E 's/^CREATE ROLE //; s/"//g' | sort -u)
-mentioned=$(grep -oE '(ROLE|TO|GRANT|BY) ("[^"]+"|[A-Za-z_][A-Za-z0-9_$]*)' "$dir/roles.sql" |
-  sed -E 's/^[A-Z]+ //; s/"//g' | grep -vE '^(DEFAULT|CURRENT_USER|SESSION_USER|PUBLIC)$' | sort -u)
+mentioned=$({ grep -oE '(ROLE|TO|GRANT|BY) ("[^"]+"|[A-Za-z_][A-Za-z0-9_$]*)' "$dir/roles.sql" || true; } |
+  sed -E 's/^[A-Z]+ //; s/"//g' | { grep -vE '^(DEFAULT|CURRENT_USER|SESSION_USER|PUBLIC)$' || true; } | sort -u)
+echo "Rôles attendus avant restauration : $(echo $mentioned)"
 for role in $(comm -23 <(echo "$mentioned") <(echo "$created")); do
   psql "$url" --quiet --variable ON_ERROR_STOP=1 --variable role="$role" <<'SQL'
 select format('create role %I nologin', :'role')
