@@ -21,6 +21,7 @@ final class PublishedHymn {
     required this.people,
     required this.themes,
     this.audio = const [],
+    this.videos = const [],
   });
 
   /// Lève [FormatException] si le contenu ne respecte pas le contrat.
@@ -42,10 +43,18 @@ final class PublishedHymn {
       audio: json.containsKey('audio')
           ? reader.list('audio', AudioTrack.fromJson)
           : const [],
+      videos: json.containsKey('videos')
+          ? reader.list('videos', HymnVideo.fromJson)
+          : const [],
     );
     if (json.containsKey('audio') && hymn.audio.isEmpty) {
       throw const FormatException(
         'cantique.audio : clé absente attendue quand il n’y a aucun enregistrement',
+      );
+    }
+    if (json.containsKey('videos') && hymn.videos.isEmpty) {
+      throw const FormatException(
+        'cantique.videos : clé absente attendue quand il n’y a aucune vidéo',
       );
     }
     hymn._validate();
@@ -71,6 +80,9 @@ final class PublishedHymn {
 
   /// Enregistrements diffusables (vide si le cantique n'en a aucun).
   final List<AudioTrack> audio;
+
+  /// Vidéos YouTube diffusables (vide si le cantique n'en a aucune).
+  final List<HymnVideo> videos;
 
   void _validate() {
     if (!RegExp(r'^[1-9]\d{0,3}(bis|ter)?$').hasMatch(numberLabel)) {
@@ -342,6 +354,45 @@ final class AudioTrack {
 
   /// Vrai si la piste est synchronisée ligne par ligne : karaoké possible.
   bool get hasLineCues => segments.any((s) => s.lineIndex != null);
+}
+
+/// Vidéo d'un cantique, hébergée sur YouTube (non répertoriée) et lue dans
+/// l'app avec le lecteur YouTube intégré (migration 0026).
+@immutable
+final class HymnVideo {
+  const HymnVideo({
+    required this.id,
+    required this.mediaType,
+    required this.youtubeId,
+    required this.title,
+  });
+
+  factory HymnVideo.fromJson(Map<String, Object?> json) {
+    final reader = _Reader(json, 'video');
+    final youtubeId = reader.string('youtubeId');
+    if (!_youtubeId.hasMatch(youtubeId)) {
+      throw FormatException(
+        'video.youtubeId : identifiant YouTube attendu ($youtubeId)',
+      );
+    }
+    return HymnVideo(
+      id: reader.uuid('id'),
+      mediaType: reader.enumValue('mediaType', MediaType.values),
+      youtubeId: youtubeId,
+      title: reader.nullableString('title'),
+    );
+  }
+
+  static final _youtubeId = RegExp(r'^[A-Za-z0-9_-]{11}$');
+
+  final String id;
+  final MediaType mediaType;
+
+  /// Identifiant YouTube (11 caractères), jamais une adresse.
+  final String youtubeId;
+
+  /// Titre de la vidéo sur YouTube, si connu.
+  final String? title;
 }
 
 /// Passage d'un enregistrement correspondant à une section des paroles.

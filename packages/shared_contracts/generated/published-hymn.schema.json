@@ -371,6 +371,56 @@
         ],
         "additionalProperties": false
       }
+    },
+    "videos": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "mediaType": {
+            "type": "string",
+            "enum": [
+              "melody",
+              "accompaniment",
+              "choir",
+              "soprano",
+              "alto",
+              "tenor",
+              "bass",
+              "instrumental",
+              "other"
+            ]
+          },
+          "youtubeId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{11}$"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "mediaType",
+          "youtubeId",
+          "title"
+        ],
+        "additionalProperties": false
+      }
     }
   },
   "required": [

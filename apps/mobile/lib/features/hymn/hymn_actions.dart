@@ -13,6 +13,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../audio/audio_downloads.dart';
 import '../audio/audio_screen.dart';
 import '../lists/lists.dart';
+import '../video/video_screen.dart';
 import '../worship/worship.dart';
 import 'share_hymn.dart';
 
@@ -130,6 +131,13 @@ class _HymnActionsSheet extends ConsumerWidget {
                 l10n.sing,
                 l10n.singSubtitle,
                 () => then(() => host.push('/karaoke/${hymn.id}')),
+              ),
+            if (canWatch(hymn))
+              item(
+                Icons.smart_display_outlined,
+                l10n.watch,
+                l10n.watchSubtitle,
+                () => then(() => host.push('/video/${hymn.id}')),
               ),
             item(
               Icons.cast,

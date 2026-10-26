@@ -18,6 +18,7 @@ import '../features/reader/reader_screen.dart';
 import '../features/search/search_screen.dart';
 import '../features/settings/settings_screens.dart';
 import '../features/shell/app_shell.dart';
+import '../features/video/video_screen.dart';
 import '../features/worship/worship.dart';
 
 final _rootKey = GlobalKey<NavigatorState>();
@@ -165,6 +166,11 @@ final routerProvider = Provider<GoRouter>(
         parentNavigatorKey: _rootKey,
         builder: (_, state) =>
             KaraokeScreen(hymnId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/video/:id',
+        parentNavigatorKey: _rootKey,
+        builder: (_, state) => VideoScreen(hymnId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/lecture/:id',

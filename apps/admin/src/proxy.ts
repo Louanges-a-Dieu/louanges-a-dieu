@@ -20,7 +20,8 @@ export async function proxy(request: NextRequest) {
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ''}`,
     `style-src 'self'${dev ? " 'unsafe-inline'" : ` 'nonce-${nonce}'`}`,
-    "img-src 'self' data:",
+    // Miniatures des vidéos YouTube sur la fiche d'un cantique.
+    "img-src 'self' data: https://i.ytimg.com",
     "font-src 'self'",
     // Écoute des enregistrements (Backblaze B2) sur la fiche d'un cantique ;
     // blob: pour lire la durée d'un fichier avant son envoi.

@@ -1,0 +1,35 @@
+{
+  "id": "00000000-0000-4000-8000-000000000001",
+  "numberLabel": "1",
+  "numberNumeric": 1,
+  "numberSuffix": null,
+  "title": "Titre de test",
+  "openingLine": null,
+  "languageCode": "fr",
+  "sections": [
+    {
+      "id": "00000000-0000-4000-8000-000000000201",
+      "type": "verse",
+      "number": null,
+      "order": 0,
+      "lines": [
+        {
+          "text": "Une seule ligne de test.",
+          "repeat": null
+        }
+      ]
+    }
+  ],
+  "bibleReferences": [],
+  "relations": [],
+  "people": [],
+  "themes": [],
+  "videos": [
+    {
+      "id": "00000000-0000-4000-8000-0000000000a1",
+      "mediaType": "choir",
+      "youtubeId": "https://youtu.be/dQw4w9WgXcQ",
+      "title": null
+    }
+  ]
+}

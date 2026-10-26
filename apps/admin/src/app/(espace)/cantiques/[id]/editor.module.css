@@ -48,6 +48,19 @@
   margin-bottom: var(--lad-space-sm);
 }
 
+.video {
+  display: flex;
+  gap: var(--lad-space-md);
+  align-items: flex-start;
+  margin-bottom: var(--lad-space-sm);
+}
+
+.video img {
+  flex: none;
+  border-radius: var(--lad-radius-sm);
+  background: var(--lad-color-surface-warm);
+}
+
 .add summary {
   cursor: pointer;
   color: var(--lad-color-gold-text);

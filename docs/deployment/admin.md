@@ -43,7 +43,7 @@ en `.env.local`.
 |---|---|---|
 | Tableau de bord | éditeur | compteurs par statut, anomalies ouvertes, progression, dernière release |
 | Cantiques | éditeur | recherche sans accents (numéro, titre, texte), filtres statut / anomalies / droits / édition, **validation par lots** (Q-03 : chaque refus est expliqué) |
-| Cantique | éditeur | informations, sections (type, numéro, texte, ordre), références, liens, **registre des droits**, statut, anomalies, historique, **aperçu comme sur mobile** (contenu exact d'une publication) |
+| Cantique | éditeur | informations, sections (type, numéro, texte, ordre), références, liens, enregistrements audio, **vidéos YouTube** (lien collé, vérifié auprès de YouTube ; ADR-020), **registre des droits**, statut, anomalies, historique, **aperçu comme sur mobile** (contenu exact d'une publication) |
 | Anomalies | éditeur | file filtrable ; résoudre, ignorer (justification obligatoire), rouvrir |
 | Publication | éditeur | **diff** de la prochaine release, publication, historique, **retour arrière** (nouvelle release au contenu d'une précédente, reçue par les apps comme une mise à jour) |
 | Import | éditeur | `catalog.draft.json` validé par le contrat Zod, **simulation** (diff de réimport) puis import ; jamais d'écrasement (A-20 / A-21) |
@@ -56,7 +56,8 @@ L'archivage d'un cantique est réservé au super administrateur (règle de la ba
 
 - CSP stricte à **nonce** par requête (`src/proxy.ts`) : `script-src 'self' 'nonce-…'
   'strict-dynamic'`, `connect-src 'self'` (le navigateur ne parle jamais à Supabase),
-  `frame-ancestors 'none'`, `form-action 'self'`. Toutes les pages sont rendues à la demande
+  `frame-ancestors 'none'`, `form-action 'self'`, `img-src` limité au site et aux miniatures
+  YouTube (`https://i.ytimg.com`). Toutes les pages sont rendues à la demande
   (nécessaire au nonce). Aucun attribut `style` en ligne.
 - En-têtes : `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: no-referrer`,
   `X-Robots-Tag: noindex`, `Cache-Control: private, no-store`, HSTS, `Permissions-Policy`.

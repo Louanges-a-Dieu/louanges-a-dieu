@@ -122,6 +122,19 @@ export const AudioTrack = z.object({
   segments: z.array(AudioSegment),
 });
 
+/** Identifiant d'une vidéo YouTube (11 caractères) : jamais une adresse. */
+export const YoutubeId = z.string().regex(/^[A-Za-z0-9_-]{11}$/, {
+  message: 'identifiant YouTube invalide (11 caractères attendus)',
+});
+
+/** Vidéo d'un cantique, hébergée sur YouTube et lue dans l'app (migration 0026). */
+export const HymnVideo = z.object({
+  id: z.uuid(),
+  mediaType: MediaType,
+  youtubeId: YoutubeId,
+  title: nonBlank.max(300).nullable(),
+});
+
 export const PublishedHymn = z
   .object({
     id: z.uuid(),
@@ -138,6 +151,8 @@ export const PublishedHymn = z
     themes: z.array(nonBlank),
     /** Enregistrements diffusables ; clé absente si le cantique n'en a aucun. */
     audio: z.array(AudioTrack).min(1).optional(),
+    /** Vidéos diffusables ; clé absente si le cantique n'en a aucune. */
+    videos: z.array(HymnVideo).min(1).optional(),
   })
   .superRefine((hymn, ctx) => {
     const expected = `${hymn.numberNumeric}${hymn.numberSuffix ?? ''}`;

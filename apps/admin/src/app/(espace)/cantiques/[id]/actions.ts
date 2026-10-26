@@ -17,6 +17,7 @@ import { requireEditor } from '@/lib/auth';
 import { b2Config, b2ErrorMessage, fileExists, uploadTarget } from '@/lib/backblaze';
 import { back, errorMessage } from '@/lib/redirect';
 import { normalizeSectionText, themeSlug } from '@/lib/text';
+import { checkYoutubeVideo, youtubeId } from '@/lib/video';
 import {
   OptionalInt,
   OptionalText,
@@ -591,5 +592,84 @@ export async function saveAudioCuesAction(form: FormData) {
   const { supabase } = await requireEditor();
   await run(hymnId, `Karaoké : ${cues.length} vers synchronisés.`, () =>
     supabase.rpc('set_audio_segments', { p_track_id: trackId.data, p_segments: cues }),
+  );
+}
+
+// ------------------------------------------------------------------ vidéos
+const VideoForm = z.object({
+  hymn_id: Uuid,
+  link: z.string().max(500),
+  media_type: MediaType,
+  rights_status: RightsStatus,
+});
+
+/**
+ * Rattache une vidéo YouTube (migration 0026) : l'identifiant est extrait du
+ * lien collé, puis YouTube confirme que la vidéo existe et qu'elle peut être
+ * lue dans l'application (intégration autorisée) ; son titre est conservé.
+ */
+export async function addVideoAction(form: FormData) {
+  const hymnId = String(form.get('hymn_id'));
+  const parsed = VideoForm.safeParse(Object.fromEntries(form));
+  if (!parsed.success) back(page(hymnId), { erreur: 'Vidéo invalide.' });
+  const { link, ...rest } = parsed.data;
+  const youtube_id = youtubeId(link);
+  if (!youtube_id) {
+    back(page(hymnId), {
+      erreur:
+        'Lien YouTube non reconnu : coller l’adresse de la vidéo (« youtube.com/watch?v=… » ou « youtu.be/… »).',
+    });
+  }
+  const check = await checkYoutubeVideo(youtube_id);
+  if (check.status === 'refused') {
+    back(page(hymnId), {
+      erreur:
+        'YouTube refuse la lecture de cette vidéo hors de son site : elle est privée, ou l’intégration ' +
+        'n’est pas autorisée. Dans YouTube Studio : visibilité « Non répertoriée » et case « Autoriser ' +
+        'l’intégration » cochée.',
+    });
+  }
+  if (check.status === 'not_found') {
+    back(page(hymnId), { erreur: 'Vidéo introuvable sur YouTube : vérifier le lien.' });
+  }
+  const { supabase } = await requireEditor();
+  await run(
+    hymnId,
+    check.status === 'ok'
+      ? 'Vidéo ajoutée.'
+      : 'Vidéo ajoutée, sans vérification : YouTube ne répond pas. Vérifier qu’elle se lit dans l’app.',
+    () =>
+      supabase
+        .from('hymn_videos')
+        .insert({ ...rest, youtube_id, title: check.status === 'ok' ? check.title : null }),
+  );
+}
+
+const VideoUpdate = z.object({
+  hymn_id: Uuid,
+  video_id: Uuid,
+  media_type: MediaType,
+  rights_status: RightsStatus,
+});
+
+export async function updateVideoAction(form: FormData) {
+  const hymnId = String(form.get('hymn_id'));
+  const parsed = VideoUpdate.safeParse(Object.fromEntries(form));
+  if (!parsed.success) back(page(hymnId), { erreur: 'Vidéo invalide.' });
+  const { supabase } = await requireEditor();
+  await run(hymnId, 'Vidéo modifiée.', () =>
+    supabase
+      .from('hymn_videos')
+      .update({ media_type: parsed.data.media_type, rights_status: parsed.data.rights_status })
+      .eq('id', parsed.data.video_id)
+      .eq('hymn_id', hymnId),
+  );
+}
+
+export async function deleteVideoAction(form: FormData) {
+  const parsed = z.object({ hymn_id: Uuid, video_id: Uuid }).parse(Object.fromEntries(form));
+  const { supabase } = await requireEditor();
+  await run(parsed.hymn_id, 'Vidéo retirée (elle reste sur YouTube).', () =>
+    supabase.from('hymn_videos').delete().eq('id', parsed.video_id).eq('hymn_id', parsed.hymn_id),
   );
 }

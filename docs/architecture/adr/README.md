@@ -24,3 +24,4 @@ remplace par un nouvel ADR qui le **supplante**.
 | [017](017-pinned-toolchain.md) | Outillage épinglé | Accepté |
 | [018](018-rights-gating.md) | Publication conditionnée par les droits | Accepté |
 | [019](019-vercel.md) | Hébergement web Vercel | Accepté |
+| [020](020-youtube-videos.md) | Vidéos des cantiques sur YouTube | Accepté |

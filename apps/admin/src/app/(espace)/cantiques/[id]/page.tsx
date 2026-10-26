@@ -25,6 +25,7 @@ import {
 import { editableCues } from '@/lib/karaoke';
 import { sectionName } from '@/lib/text';
 import { transitions } from '@/lib/transitions';
+import { youtubeThumbnail, youtubeWatchUrl } from '@/lib/video';
 
 import { resolveIssuesAction } from '../../anomalies/actions';
 import {
@@ -34,11 +35,14 @@ import {
   addThemeAction,
   addRightsAction,
   addAudioTrackAction,
+  addVideoAction,
   deleteAudioTrackAction,
+  deleteVideoAction,
   prepareAudioUploadAction,
   saveAudioCuesAction,
   saveAudioSegmentsAction,
   updateAudioTrackAction,
+  updateVideoAction,
   deletePersonAction,
   deleteReferenceAction,
   deleteRelationAction,
@@ -94,6 +98,7 @@ export default async function HymnEditorPage({
     allPeople,
     allThemes,
     audio,
+    videos,
   ] = await Promise.all([
     supabase.from('hymns').select('*').eq('id', id).maybeSingle(),
     supabase.from('hymn_sections').select('*').eq('hymn_id', id).order('display_order'),
@@ -130,6 +135,11 @@ export default async function HymnEditorPage({
       .select(
         'id, media_type, storage_key, duration_seconds, rights_status, segments:audio_segments(section_id, line_index, start_ms, end_ms, display_order)',
       )
+      .eq('hymn_id', id)
+      .order('created_at'),
+    supabase
+      .from('hymn_videos')
+      .select('id, media_type, youtube_id, title, rights_status')
       .eq('hymn_id', id)
       .order('created_at'),
   ]);
@@ -754,6 +764,125 @@ export default async function HymnEditorPage({
                 <label className={ui.field}>
                   <span className={ui.label}>Durée (facultative)</span>
                   <input className={ui.input} name="duration" placeholder="3:05" />
+                </label>
+                <label className={ui.field}>
+                  <span className={ui.label}>Droits</span>
+                  <select className={ui.select} name="rights_status" defaultValue="unknown">
+                    {Object.entries(RIGHTS_LABELS).map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <SubmitButton variant="primary">Ajouter</SubmitButton>
+              </form>
+            </details>
+          </section>
+
+          {/* ---------------------------------------------------------- vidéos */}
+          <section className={ui.card} id="videos">
+            <h2 className={ui.h2}>Vidéos</h2>
+            <p className={ui.hint}>
+              Vidéos hébergées sur YouTube et lues dans l’application. Les mettre en « Non
+              répertoriée » (absentes des recherches et de la chaîne) avec « Autoriser l’intégration
+              » coché. Une vidéo est diffusée à la prochaine publication, sans repasser le cantique
+              en brouillon ; aux droits « Restreint », elle n’est jamais diffusée.
+            </p>
+            {(videos.data ?? []).length === 0 && <p className={ui.muted}>Aucune.</p>}
+            {(videos.data ?? []).map((video) => {
+              const label = MEDIA_LABELS[video.media_type] ?? video.media_type;
+              return (
+                <div key={video.id} className={styles.section}>
+                  <div className={styles.video}>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- miniature YouTube distante */}
+                    <img
+                      src={youtubeThumbnail(video.youtube_id)}
+                      alt=""
+                      width={160}
+                      height={90}
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div>
+                      <strong>{label}</strong>
+                      {video.title && <div>{video.title}</div>}
+                      <a href={youtubeWatchUrl(video.youtube_id)} target="_blank" rel="noreferrer">
+                        Ouvrir sur YouTube ↗
+                      </a>
+                      {video.rights_status === 'restricted' && (
+                        <div className={ui.muted}>Non diffusée (droits restreints)</div>
+                      )}
+                    </div>
+                  </div>
+                  <form action={updateVideoAction} className={styles.grid}>
+                    <input type="hidden" name="hymn_id" value={id} />
+                    <input type="hidden" name="video_id" value={video.id} />
+                    <label className={ui.field}>
+                      <span className={ui.label}>Version</span>
+                      <select
+                        className={ui.select}
+                        name="media_type"
+                        defaultValue={video.media_type}
+                      >
+                        {Object.entries(MEDIA_LABELS).map(([v, l]) => (
+                          <option key={v} value={v}>
+                            {l}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className={ui.field}>
+                      <span className={ui.label}>Droits</span>
+                      <select
+                        className={ui.select}
+                        name="rights_status"
+                        defaultValue={video.rights_status}
+                      >
+                        {Object.entries(RIGHTS_LABELS).map(([v, l]) => (
+                          <option key={v} value={v}>
+                            {l}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <SubmitButton>Enregistrer</SubmitButton>
+                  </form>
+                  <form action={deleteVideoAction}>
+                    <input type="hidden" name="hymn_id" value={id} />
+                    <input type="hidden" name="video_id" value={video.id} />
+                    <SubmitButton
+                      variant="ghost"
+                      confirm="Retirer cette vidéo du cantique ? Elle reste sur YouTube."
+                    >
+                      Retirer
+                    </SubmitButton>
+                  </form>
+                </div>
+              );
+            })}
+            <details className={styles.add} open={(videos.data ?? []).length === 0}>
+              <summary>Ajouter une vidéo</summary>
+              <form action={addVideoAction} className={styles.grid}>
+                <input type="hidden" name="hymn_id" value={id} />
+                <label className={ui.field}>
+                  <span className={ui.label}>Lien YouTube</span>
+                  <input
+                    className={ui.input}
+                    name="link"
+                    placeholder="https://youtu.be/…"
+                    required
+                  />
+                </label>
+                <label className={ui.field}>
+                  <span className={ui.label}>Version</span>
+                  <select className={ui.select} name="media_type" defaultValue="choir">
+                    {Object.entries(MEDIA_LABELS).map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label className={ui.field}>
                   <span className={ui.label}>Droits</span>

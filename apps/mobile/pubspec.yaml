@@ -29,6 +29,7 @@ dependencies:
   supabase_flutter: ^2.18.3
   url_launcher: 6.3.2
   wakelock_plus: ^1.8.1
+  youtube_player_iframe: ^6.0.2
 
 dev_dependencies:
   flutter_test:

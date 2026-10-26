@@ -16,6 +16,7 @@ import '../../core/preferences/preferences.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../audio/audio_screen.dart';
 import '../favorites/favorite_button.dart';
+import '../video/video_screen.dart';
 import 'hymn_actions.dart';
 import 'reviews.dart';
 import 'share_hymn.dart';
@@ -261,6 +262,13 @@ class _ActionBar extends ConsumerWidget {
                       l10n.karaokeTooltip,
                       '/karaoke/${hymn.id}',
                     ),
+                  if (canWatch(hymn))
+                    action(
+                      Icons.smart_display_outlined,
+                      l10n.watch,
+                      l10n.watchTooltip,
+                      '/video/${hymn.id}',
+                    ),
                   action(
                     Icons.cast,
                     l10n.project,
@@ -303,7 +311,7 @@ class HymnContent extends ConsumerWidget {
     final tabs = [
       _Tab.lyrics,
       _Tab.details,
-      if (canListen(ref.watch(envProvider), hymn)) _Tab.media,
+      if (canListen(ref.watch(envProvider), hymn) || canWatch(hymn)) _Tab.media,
       if (hymn.relations.isNotEmpty) _Tab.similar,
       if (ref.watch(communityRemoteProvider) != null) _Tab.reviews,
     ];
@@ -571,8 +579,8 @@ class _Details extends StatelessWidget {
   }
 }
 
-/// Enregistrements publiés : chaque version ouvre l'écoute ; karaoké si une
-/// piste est synchronisée.
+/// Vidéos et enregistrements publiés : chaque vidéo ouvre « Regarder », chaque
+/// version audio l'écoute ; karaoké si une piste est synchronisée.
 class _Media extends ConsumerWidget {
   const _Media({required this.hymn});
 
@@ -585,29 +593,42 @@ class _Media extends ConsumerWidget {
     String? duration(Duration? d) => d == null
         ? null
         : '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+    // Material transparent : l'effet du toucher reste visible sur le panneau.
     return _Panel(
       padding: const EdgeInsets.symmetric(vertical: LadSpace.sm),
-      child: Column(
-        children: [
-          for (final track in hymn.audio)
-            ListTile(
-              leading: Icon(Icons.headphones_outlined, color: p.goldText),
-              title: Text(mediaTypeName(track.mediaType)),
-              subtitle: duration(track.duration) == null
-                  ? null
-                  : Text(duration(track.duration)!),
-              trailing: Icon(Icons.play_circle_outline, color: p.goldText),
-              onTap: () => context.push('/ecoute/${hymn.id}'),
-            ),
-          if (canKaraoke(ref.watch(envProvider), hymn))
-            ListTile(
-              leading: Icon(Icons.mic_none, color: p.goldText),
-              title: Text(l10n.sing),
-              subtitle: Text(l10n.singSubtitle),
-              trailing: Icon(Icons.chevron_right, color: p.textSecondary),
-              onTap: () => context.push('/karaoke/${hymn.id}'),
-            ),
-        ],
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(
+          children: [
+            for (final video in hymn.videos)
+              ListTile(
+                leading: Icon(Icons.smart_display_outlined, color: p.goldText),
+                title: Text(videoName(hymn.videos, video)),
+                subtitle: Text(video.title ?? l10n.watchSubtitle),
+                trailing: Icon(Icons.play_circle_outline, color: p.goldText),
+                onTap: () => context.push('/video/${hymn.id}'),
+              ),
+            if (canListen(ref.watch(envProvider), hymn))
+              for (final track in hymn.audio)
+                ListTile(
+                  leading: Icon(Icons.headphones_outlined, color: p.goldText),
+                  title: Text(mediaTypeName(track.mediaType)),
+                  subtitle: duration(track.duration) == null
+                      ? null
+                      : Text(duration(track.duration)!),
+                  trailing: Icon(Icons.play_circle_outline, color: p.goldText),
+                  onTap: () => context.push('/ecoute/${hymn.id}'),
+                ),
+            if (canKaraoke(ref.watch(envProvider), hymn))
+              ListTile(
+                leading: Icon(Icons.mic_none, color: p.goldText),
+                title: Text(l10n.sing),
+                subtitle: Text(l10n.singSubtitle),
+                trailing: Icon(Icons.chevron_right, color: p.textSecondary),
+                onTap: () => context.push('/karaoke/${hymn.id}'),
+              ),
+          ],
+        ),
       ),
     );
   }
