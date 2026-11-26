@@ -5,6 +5,7 @@
  *   content-tools import <recueil.docx> --edition-name "<nom>" [--edition-number 6] [--out <dossier>]
  *   content-tools load <catalog.draft.json> --as <uuid-éditeur> [--dry-run]
  *   content-tools export-snapshot --config <apps/mobile/config/env.json> [--snapshot-out <fichier.gz>]
+ *   content-tools corrections <tableur.xlsx>… --as <uuid-éditeur> [--edition <uuid>] [--dry-run]
  *
  * Produit dans le dossier de sortie (par défaut ./content/out, hors Git) :
  *   catalog.draft.json   catalogue brouillon (contrat CatalogDraft)
@@ -14,6 +15,11 @@
  * « load » charge le catalogue brouillon dans la copie de travail (base de
  * développement), en tant que l'éditeur indiqué : tout entre en brouillon,
  * rien d'existant n'est écrasé (voir src/load.ts).
+ *
+ * « corrections » rapproche les tableurs de relecture (Q-04, A-13) du texte
+ * actuel de la copie de travail et met les propositions encore utiles dans la
+ * file éditoriale (anomalies A-13, écran « Corrections » du back-office). Rien
+ * n'est appliqué : chaque proposition est validée ou refusée par un éditeur.
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
@@ -25,13 +31,17 @@ import pg from 'pg';
 import { connectionConfig } from './db.ts';
 import { exportSnapshot } from './export-snapshot.ts';
 import { loadDraft } from './load.ts';
+import { parseCorrections } from './corrections.ts';
 import { importDocx } from './pipeline.ts';
 import { renderReport } from './report.ts';
+import { loadCorrections } from './suggestions.ts';
+import { readXlsx } from './xlsx.ts';
 
 const USAGE = [
   'Usage : content-tools import <recueil.docx> --edition-name "<nom>" [--edition-number <n>] [--out <dossier>]',
   '        content-tools load <catalog.draft.json> --as <uuid-éditeur> [--dry-run]',
   '        content-tools export-snapshot --config <apps/mobile/config/env.json> [--snapshot-out <fichier.gz>]',
+  '        content-tools corrections <tableur.xlsx>… --as <uuid-éditeur> [--edition <uuid>] [--dry-run]',
 ].join('\n');
 
 const repoRoot = resolve(import.meta.dirname, '../../..');
@@ -61,6 +71,36 @@ async function load(file: string, actor: string, dryRun: boolean): Promise<numbe
   }
 }
 
+async function corrections(
+  paths: string[],
+  actor: string,
+  editionId: string | undefined,
+  dryRun: boolean,
+): Promise<number> {
+  const files = paths.map((path) => ({ name: basename(path), bytes: readFileSync(path) }));
+  const rows = files.flatMap((f) => parseCorrections(readXlsx(f.bytes), f.name));
+  const client = new pg.Client(connectionConfig(repoRoot));
+  await client.connect();
+  try {
+    const s = await loadCorrections(client, { files, rows }, actor, { editionId, dryRun });
+    console.log(`Propositions lues        : ${rows.length} (${files.length} fichier(s))`);
+    console.log(`Déjà dans le texte       : ${s.stats.applied}`);
+    console.log(`Refusées dans le tableur : ${s.stats.declined}`);
+    console.log(`À appliquer              : ${s.stats.pending}`);
+    console.log(`À arbitrer (retouchées)  : ${s.stats.conflict}`);
+    console.log(`Introuvables             : ${s.stats.not_found}`);
+    console.log(`Déjà dans la file        : ${s.alreadyKnown}`);
+    console.log(
+      dryRun
+        ? `Simulation : ${s.new} proposition(s) entreraient dans la file ; rien n’a été enregistré.`
+        : `Ajoutées à la file (A-13): ${s.created}${s.batchId ? ` — lot ${s.batchId}` : ''}`,
+    );
+    return 0;
+  } finally {
+    await client.end();
+  }
+}
+
 async function main(argv: string[]): Promise<number> {
   const { positionals, values } = parseArgs({
     args: argv,
@@ -70,6 +110,7 @@ async function main(argv: string[]): Promise<number> {
       'edition-number': { type: 'string' },
       out: { type: 'string', default: 'content/out' },
       as: { type: 'string' },
+      edition: { type: 'string' },
       'dry-run': { type: 'boolean', default: false },
       config: { type: 'string' },
       'snapshot-out': {
@@ -80,6 +121,14 @@ async function main(argv: string[]): Promise<number> {
   });
 
   const [command, file] = positionals;
+  if (command === 'corrections') {
+    const paths = positionals.slice(1);
+    if (paths.length === 0 || !values.as) {
+      console.error(USAGE);
+      return 2;
+    }
+    return corrections(paths, values.as, values.edition, values['dry-run']);
+  }
   if (command === 'export-snapshot') {
     if (!values.config) {
       console.error(USAGE);
