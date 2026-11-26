@@ -710,7 +710,7 @@ est accompagné d'un test de non-régression.
 - [x] 3.8 Tests : 37 tests unitaires sur .docx **synthétiques** générés à la volée (deux régimes, `w:br`, refrain, bis, référence, index « 1, 4 », italique désactivé, texte supprimé) + 4 tests d'intégration en base (sautés et signalés sans accès base) ; contrôle par mutation (les tests détectent une règle cassée)
 - [x] 3.9 CLI `content-tools import` / `load` documentée (`docs/editorial/import.md`)
 - [x] 3.10 Exécution sur la v8 réelle et chargement en brouillon dans la base de développement ; rapport d'anomalies remis au propriétaire (`content/out/report.html`, hors Git)
-- [~] 3.11 (Optionnel, Q-04) Import des tableurs de corrections comme suggestions — **en cours, mis de côté le 2026-10-19** au profit du restyle de l'app : lecteur .xlsx et rapprochement par le texte écrits et essayés sur les vrais tableurs (446 propositions : 417 déjà dans la v8, 15 à appliquer, 6 passages modifiés depuis, 3 introuvables, 5 refusées « Non » dans le tableur), non commités (`packages/content_tools/src/xlsx.ts`, `corrections.ts`). **Reste** : chargement en base (A-13), fonction d'application, back-office, tests
+- [x] 3.11 (Optionnel, Q-04) Import des tableurs de corrections comme suggestions (2026-11-26) : lecteur .xlsx et rapprochement par le texte (`xlsx.ts`, `corrections.ts`), commande `content-tools corrections` (`suggestions.ts`), migration 0027 (`import_corrections`, `apply_correction` : anomalies A-13 rattachées au cantique, chargement idempotent, application contrôlée — passage retrouvé même décalé, journal, retour en brouillon), écran **Corrections** du back-office (appliquer, ajuster puis appliquer, refuser avec justification). Tests : pgTAP 15 + fonctions privilégiées (10), unitaires et intégration TS, aide du back-office. Essai sur les vrais tableurs et la v8 en base locale : 446 propositions → 24 dans la file (15 à appliquer, 6 à arbitrer, 3 introuvables) ; les 15 appliquées puis recomptées « déjà dans le texte ». Voir `docs/editorial/import.md` § 3. **Reste** : charger sur la base de développement (en pause) puis en production, et la décision éditoriale sur chaque proposition (piste E.2)
 
 **Critères d'acceptation**
 - [x] Sur v8 : 1 143 cantiques, 6 relations `bis_of`, 9 références, **0** auteur/thème/tonalité, **100 % en `draft`**, 0 release (rien de public sans validation humaine) — vérifié en base.
@@ -928,6 +928,7 @@ est accompagné d'un test de non-régression.
 
 | Date | Version | Changement |
 |---|---|---|
+| 2026-11-26 | 1.6 | 3.11 terminée : propositions des tableurs de relecture dans la file éditoriale (A-13), application contrôlée depuis l'écran « Corrections » (migration 0027). |
 | 2026-10-17 | 0.1 | Audit initial et plan (Phase 0). En attente de validation. |
 | 2026-10-18 | 0.8 | Phase 6 : compte sans mot de passe, suppression de compte, listes, synchronisation branchée ; test réel à deux appareils. |
 | 2026-10-18 | 0.9 | Phase 7 : programmes de culte (onglet Culte, archivage), partage par lien réutilisé (0014), page publique `apps/web` ; tests avec le vrai serveur. |

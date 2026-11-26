@@ -27,6 +27,8 @@ declare
     $q$ select public.preview_hymn(gen_random_uuid()) $q$,
     $q$ select public.import_catalog_draft('{"format":"lad.catalog-draft"}'::jsonb) $q$,
     $q$ select public.resolve_issues(array[gen_random_uuid()], 'resolved') $q$,
+    $q$ select public.import_corrections('{"format":"lad.corrections","version":1}'::jsonb) $q$,
+    $q$ select public.apply_correction(gen_random_uuid()) $q$,
     $q$ select * from public.set_hymns_status(array[gen_random_uuid()], 'review') $q$,
     $q$ select public.admin_grant_role('fidele@test.invalid', 'editor') $q$,
     $q$ select public.admin_revoke_role(gen_random_uuid(), 'editor') $q$

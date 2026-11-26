@@ -41,6 +41,42 @@ node packages/content_tools/src/cli.ts load content/out/catalog.draft.json --as 
 - Recharger le même fichier ne crée rien (idempotent).
 - Outil de **développement** : en production, l'import passera par le back-office (Phase 9).
 
+## 3. Corrections des tableurs de relecture (A-13)
+
+Les tableurs de corrections linguistiques (≈ 450 propositions) datent d'une numérotation
+antérieure : chaque proposition est retrouvée **par son texte** (« Extrait fautif » ou
+« Correction »), le titre du tableur départageant seulement plusieurs passages. Le rapprochement
+se fait sur le texte **actuel** de la copie de travail ; rien n'est appliqué automatiquement.
+
+```bash
+source ~/.config/louanges-a-dieu/supabase.env
+node packages/content_tools/src/cli.ts corrections tableur1.xlsx tableur2.xlsx … \
+  --as <uuid-éditeur> [--edition <uuid>] --dry-run      # simulation : décompte seul
+node packages/content_tools/src/cli.ts corrections tableur1.xlsx … --as <uuid-éditeur>
+```
+
+| Résultat | Signification | Dans la file |
+|---|---|---|
+| déjà dans le texte | le texte contient déjà la correction | non |
+| refusée dans le tableur | colonne « Validation » à « Non » | non |
+| à appliquer | le passage fautif est toujours là ; correction prête | A-13 à vérifier |
+| à arbitrer | le passage a été retouché depuis la relecture | A-13 à vérifier |
+| introuvable | aucun passage correspondant | A-13 information |
+
+Une proposition = une ligne de tableur × un cantique ; elle peut toucher le titre, le premier vers
+(affiché dans les listes) et le texte en même temps. Le chargement est **idempotent** : une
+proposition déjà chargée, même refusée, n'est jamais recréée.
+
+Décision dans le back-office, écran **Corrections** : appliquer la correction (le texte peut être
+ajusté avant), refuser (justification obligatoire) ou, pour une proposition introuvable, la
+marquer corrigée à la main. L'application vérifie que le passage est toujours là (il est retrouvé
+même si le texte a bougé autour), journalise la modification et repasse un cantique validé en
+brouillon (T-009). Fonctions : `import_corrections`, `apply_correction` (migration 0027).
+
+Premier essai sur les trois tableurs et la v8 (base locale, 2026-11-26) : 446 propositions, 417 déjà
+dans le texte, 5 refusées dans le tableur, **15 à appliquer**, 6 à arbitrer, 3 introuvables, soit
+24 propositions dans la file.
+
 ## Règles de structuration
 
 | Élément | Reconnu par |
@@ -71,6 +107,7 @@ Rien d'autre n'est déduit : auteurs, compositeurs, thèmes, tonalités restent 
 | A-10 | info | Parenthèse conservée comme texte (réponse chantée) |
 | A-11 | info | Orthographes différentes d'un livre biblique |
 | A-12 | info / à vérifier | Texte en double ou proche d'un autre cantique |
+| A-13 | à vérifier / info | Correction proposée par un tableur de relecture (§ 3) |
 | A-15 | **bloquant** | Cantique sans aucun vers |
 | A-16 | **bloquant** | Numéro en double ou cantique principal introuvable |
 | A-17 | à vérifier | Paragraphe inattendu |

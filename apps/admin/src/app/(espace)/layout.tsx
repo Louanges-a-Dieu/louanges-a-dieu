@@ -31,6 +31,9 @@ export default async function EditorialLayout({ children }: { children: ReactNod
             <NavLink href="/anomalies">Anomalies</NavLink>
           </li>
           <li>
+            <NavLink href="/corrections">Corrections</NavLink>
+          </li>
+          <li>
             <NavLink href="/avis">Avis</NavLink>
           </li>
           <li>

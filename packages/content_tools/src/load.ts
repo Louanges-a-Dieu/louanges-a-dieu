@@ -1,6 +1,8 @@
 import type { CatalogDraft } from '@lad/shared-contracts';
 import type pg from 'pg';
 
+import { actAsEditor } from './db.ts';
+
 /**
  * Chargement du catalogue brouillon dans la copie de travail éditoriale.
  *
@@ -41,14 +43,7 @@ export async function loadDraft(
 ): Promise<LoadSummary> {
   if (manageTransaction) await client.query('begin');
   try {
-    await client.query('set local role authenticated');
-    await client.query(`select set_config('request.jwt.claims', $1, true)`, [
-      JSON.stringify({ sub: actorUserId, role: 'authenticated', aal: 'aal2' }),
-    ]);
-    const { rows: roleRows } = await client.query<{ ok: boolean }>(
-      `select private.has_role('editor') as ok`,
-    );
-    if (!roleRows[0]?.ok) throw new Error('Le compte indiqué n’a pas le rôle éditeur');
+    await actAsEditor(client, actorUserId);
 
     const { rows } = await client.query<{ summary: LoadSummary & { dryRun: boolean } }>(
       `select public.import_catalog_draft($1::jsonb, $2) as summary`,

@@ -1,0 +1,65 @@
+.title {
+  margin: 0 0 var(--lad-space-sm);
+  font-size: var(--lad-type-body-size);
+}
+
+.source {
+  display: grid;
+  gap: var(--lad-space-xxs);
+  margin-bottom: var(--lad-space-md);
+}
+
+.source p {
+  margin: 0;
+}
+
+.passages {
+  display: grid;
+  gap: var(--lad-space-md);
+  margin-bottom: var(--lad-space-md);
+}
+
+.passage {
+  padding-top: var(--lad-space-sm);
+  border-top: var(--lad-stroke-hairline) solid var(--lad-color-hairline);
+}
+
+.passage textarea {
+  min-height: 2.5rem;
+}
+
+.unit {
+  margin: 0 0 var(--lad-space-xxs);
+  font-size: var(--lad-type-caption-size);
+  color: var(--lad-color-text-secondary);
+}
+
+/* Vers entiers, comme dans le recueil : retours à la ligne conservés. */
+.context {
+  margin: 0 0 var(--lad-space-xs);
+  font-family: var(--lad-font-lyrics);
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.context mark {
+  background: var(--lad-color-gold-pale);
+  color: inherit;
+  border-radius: 2px;
+}
+
+.change {
+  margin: 0 0 var(--lad-space-xs);
+  font-family: var(--lad-font-lyrics);
+  white-space: pre-line;
+}
+
+.change del {
+  color: var(--lad-color-error);
+}
+
+.change ins {
+  color: var(--lad-color-success);
+  text-decoration: none;
+  font-weight: 600;
+}
